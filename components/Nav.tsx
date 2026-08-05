@@ -78,7 +78,7 @@ export default function Nav() {
         <div className="hidden items-center gap-4 lg:flex">
           <a
             href={SITE.phoneHref}
-            className="flex items-center gap-2 font-mono text-[13px] text-body hover:text-ink"
+            className="flex items-center gap-2 whitespace-nowrap font-mono text-[13px] text-body hover:text-ink"
           >
             <Phone size={14} strokeWidth={1.7} aria-hidden="true" />
             {SITE.phone}
@@ -90,7 +90,7 @@ export default function Nav() {
             <LogIn size={15} strokeWidth={1.8} aria-hidden="true" />
             Login
           </a>
-          <a href="#contact" className="btn">
+          <a href="#contact" className="btn whitespace-nowrap">
             Request a proposal
           </a>
         </div>
