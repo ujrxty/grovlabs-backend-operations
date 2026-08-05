@@ -47,10 +47,7 @@ services:
       - key: NEXTAUTH_SECRET
         generateValue: true
       - key: NEXTAUTH_URL
-        fromService:
-          type: web
-          name: tbw-dashboard
-          property: hostURL
+        sync: false
 
   # Vendor Portal
   - type: web
