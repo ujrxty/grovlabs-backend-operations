@@ -123,7 +123,7 @@ export function AgreementSigningFlow({ token }: { token: string }) {
       {/* Loading */}
       {step === 'loading' && (
         <div className="flex flex-col items-center justify-center py-16">
-          <Loader2 className="h-10 w-10 text-purple-600 animate-spin mb-4" />
+          <Loader2 className="h-10 w-10 text-[#b87333] animate-spin mb-4" />
           <p className="text-gray-500">Loading agreement...</p>
         </div>
       )}
@@ -149,7 +149,7 @@ export function AgreementSigningFlow({ token }: { token: string }) {
           {/* Agreement Header */}
           <div className="rounded-xl bg-gray-50 border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <FileText className="h-6 w-6 text-purple-600" />
+              <FileText className="h-6 w-6 text-[#b87333]" />
               <h2 className="font-display text-xl font-bold text-gray-900">Lead Purchase Agreement</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -179,9 +179,9 @@ export function AgreementSigningFlow({ token }: { token: string }) {
           </div>
 
           {/* Signature */}
-          <div className="rounded-xl border border-purple-200 bg-purple-50 p-6">
+          <div className="rounded-xl border border-[#b87333]/20 bg-[#b87333]/5 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Pen className="h-5 w-5 text-purple-600" />
+              <Pen className="h-5 w-5 text-[#b87333]" />
               <h3 className="font-display font-semibold text-gray-900">Electronic Signature</h3>
             </div>
             <div className="space-y-4">
@@ -191,7 +191,7 @@ export function AgreementSigningFlow({ token }: { token: string }) {
                   type="text"
                   value={signName}
                   onChange={(e: any) => { setSignName(e?.target?.value ?? ''); setError('') }}
-                  className="w-full rounded-lg border border-purple-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full rounded-lg border border-[#b87333]/20 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
                   placeholder="Enter your full legal name"
                 />
               </div>
@@ -200,7 +200,7 @@ export function AgreementSigningFlow({ token }: { token: string }) {
                   type="checkbox"
                   checked={agreeTerms}
                   onChange={(e: any) => { setAgreeTerms(e?.target?.checked ?? false); setError('') }}
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#b87333] focus:ring-[#b87333]/50"
                 />
                 <p className="text-sm text-gray-700">
                   I have read and agree to the terms of this Lead Purchase Agreement. I understand this constitutes a legally binding agreement.
@@ -209,7 +209,7 @@ export function AgreementSigningFlow({ token }: { token: string }) {
               <button
                 onClick={signAgreement}
                 disabled={loading}
-                className="w-full rounded-lg bg-purple-700 px-6 py-3 text-sm font-semibold text-white hover:bg-purple-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full rounded-lg bg-[#b87333] px-6 py-3 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Pen className="h-4 w-4" /> Sign Lead Purchase Agreement</>}
               </button>

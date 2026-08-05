@@ -171,7 +171,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
         <p className="mt-3 text-green-700">Your application has been received and is being reviewed.</p>
         <div className="mt-6 rounded-lg bg-white border border-green-200 p-4 inline-block">
           <p className="text-sm text-gray-500">Your Status Token</p>
-          <p className="font-mono text-lg font-bold text-purple-700 mt-1">{statusToken}</p>
+          <p className="font-mono text-lg font-bold text-[#b87333] mt-1">{statusToken}</p>
         </div>
         <p className="mt-4 text-sm text-gray-600">
           Save this token to check your application status anytime.
@@ -180,7 +180,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
         <div className="mt-6 flex gap-3 justify-center">
           <button
             onClick={() => router.push(`/status?token=${statusToken}`)}
-            className="rounded-lg bg-purple-700 px-6 py-2.5 text-sm font-semibold text-white hover:bg-purple-800 transition-colors"
+            className="rounded-lg bg-[#b87333] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors"
           >
             Check Status
           </button>
@@ -213,19 +213,19 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
                 className={cn(
                   'cursor-pointer rounded-lg border-2 p-3 transition-all text-sm',
                   isSelected
-                    ? 'border-purple-500 bg-purple-50'
-                    : 'border-gray-100 hover:border-purple-200'
+                    ? 'border-[#b87333]/50 bg-[#b87333]/5'
+                    : 'border-gray-100 hover:border-[#b87333]/20'
                 )}
               >
                 <div className="flex items-center gap-2">
                   <div className={cn(
                     'h-4 w-4 rounded border-2 flex items-center justify-center shrink-0',
-                    isSelected ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
+                    isSelected ? 'border-[#b87333] bg-[#b87333]' : 'border-gray-300'
                   )}>
                     {isSelected && <CheckCircle2 className="h-3 w-3 text-white" />}
                   </div>
                   <span className="font-medium text-gray-900">{c?.name ?? ''}</span>
-                  <span className="text-xs text-purple-600 ml-auto">{(c?.name ?? '').toLowerCase().includes('rtb') ? 'Variable' : (c?.payout_display ?? `$${c?.payout ?? '0'}`)}</span>
+                  <span className="text-xs text-[#b87333] ml-auto">{(c?.name ?? '').toLowerCase().includes('rtb') ? 'Variable' : (c?.payout_display ?? `$${c?.payout ?? '0'}`)}</span>
                 </div>
               </div>
             )
@@ -245,7 +245,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
                 type="text"
                 value={form?.company_name ?? ''}
                 onChange={(e: any) => updateField('company_name', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500', errors?.company_name ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.company_name ? 'border-red-300' : 'border-gray-200')}
                 placeholder="Your company name"
               />
             </div>
@@ -259,7 +259,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
                 type="text"
                 value={form?.contact_name ?? ''}
                 onChange={(e: any) => updateField('contact_name', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500', errors?.contact_name ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.contact_name ? 'border-red-300' : 'border-gray-200')}
                 placeholder="Primary contact name"
               />
             </div>
@@ -273,7 +273,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
                 type="email"
                 value={form?.email ?? ''}
                 onChange={(e: any) => updateField('email', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500', errors?.email ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.email ? 'border-red-300' : 'border-gray-200')}
                 placeholder="contact@company.com"
               />
             </div>
@@ -287,7 +287,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
                 type="tel"
                 value={form?.phone ?? ''}
                 onChange={(e: any) => updateField('phone', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500', errors?.phone ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.phone ? 'border-red-300' : 'border-gray-200')}
                 placeholder="(555) 123-4567"
               />
             </div>
@@ -301,7 +301,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
                 type="url"
                 value={form?.website ?? ''}
                 onChange={(e: any) => updateField('website', e?.target?.value ?? '')}
-                className="w-full rounded-lg border border-gray-200 pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full rounded-lg border border-gray-200 pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
                 placeholder="https://yourcompany.com"
               />
             </div>
@@ -313,7 +313,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
               <select
                 value={form?.estimated_volume ?? ''}
                 onChange={(e: any) => updateField('estimated_volume', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border px-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white', errors?.estimated_volume ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border px-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 bg-white', errors?.estimated_volume ? 'border-red-300' : 'border-gray-200')}
               >
                 <option value="">Select volume...</option>
                 <option value="5-10">5-10 calls/day</option>
@@ -333,7 +333,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
               type="text"
               value={form?.company_address ?? ''}
               onChange={(e: any) => updateField('company_address', e?.target?.value ?? '')}
-              className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500', errors?.company_address ? 'border-red-300' : 'border-gray-200')}
+              className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.company_address ? 'border-red-300' : 'border-gray-200')}
               placeholder={isUS ? '123 Main St, Suite 200, Phoenix, AZ 85001' : 'Street, city, postal code'}
             />
           </div>
@@ -348,7 +348,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
               <select
                 value={form?.company_country ?? ''}
                 onChange={(e: any) => handleCountryChange(e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white', errors?.company_country ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 bg-white', errors?.company_country ? 'border-red-300' : 'border-gray-200')}
               >
                 <option value="">Select country...</option>
                 {COUNTRIES.map((country) => (
@@ -366,7 +366,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
                 <select
                   value={form?.company_state ?? ''}
                   onChange={(e: any) => updateField('company_state', e?.target?.value ?? '')}
-                  className={cn('w-full rounded-lg border px-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white', errors?.company_state ? 'border-red-300' : 'border-gray-200')}
+                  className={cn('w-full rounded-lg border px-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 bg-white', errors?.company_state ? 'border-red-300' : 'border-gray-200')}
                 >
                   <option value="">Select state...</option>
                   {US_STATES.map((state) => (
@@ -379,7 +379,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
                 type="text"
                 value={form?.company_state ?? ''}
                 onChange={(e: any) => updateField('company_state', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500', errors?.company_state ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.company_state ? 'border-red-300' : 'border-gray-200')}
                 placeholder="Province / region (e.g. North Holland)"
               />
             )}
@@ -395,7 +395,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
               <select
                 value={form?.entity_type ?? ''}
                 onChange={(e: any) => updateField('entity_type', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white', errors?.entity_type ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 bg-white', errors?.entity_type ? 'border-red-300' : 'border-gray-200')}
               >
                 <option value="">Select entity type...</option>
                 <option value="LLC">LLC</option>
@@ -412,7 +412,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
                 type="text"
                 value={form?.entity_type ?? ''}
                 onChange={(e: any) => updateField('entity_type', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500', errors?.entity_type ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.entity_type ? 'border-red-300' : 'border-gray-200')}
                 placeholder="Legal entity type (e.g. B.V., GmbH, Ltd, S.A., Pty Ltd)"
               />
             </div>
@@ -426,7 +426,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
             value={form?.experience ?? ''}
             onChange={(e: any) => updateField('experience', e?.target?.value ?? '')}
             rows={3}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
             placeholder="Brief description of your experience in lead generation or call center operations..."
           />
         </div>
@@ -437,7 +437,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
               type="text"
               value={form?.referred_by ?? ''}
               onChange={(e: any) => updateField('referred_by', e?.target?.value ?? '')}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
               placeholder="Who referred you?"
             />
           </div>
@@ -447,7 +447,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
               type="text"
               value={form?.comments ?? ''}
               onChange={(e: any) => updateField('comments', e?.target?.value ?? '')}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
               placeholder="Anything else we should know?"
             />
           </div>
@@ -462,7 +462,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
             type="checkbox"
             checked={form?.tcpa_agreed ?? false}
             onChange={(e: any) => updateField('tcpa_agreed', e?.target?.checked ?? false)}
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#b87333] focus:ring-[#b87333]/50"
           />
           <div>
             <p className="text-sm font-medium text-gray-900">TCPA Compliance *</p>
@@ -475,7 +475,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
             type="checkbox"
             checked={form?.terms_agreed ?? false}
             onChange={(e: any) => updateField('terms_agreed', e?.target?.checked ?? false)}
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#b87333] focus:ring-[#b87333]/50"
           />
           <div>
             <p className="text-sm font-medium text-gray-900">Terms & Conditions *</p>
@@ -488,7 +488,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-lg bg-purple-700 px-6 py-3 text-sm font-semibold text-white hover:bg-purple-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full rounded-lg bg-[#b87333] px-6 py-3 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {submitting ? (
           <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>

@@ -101,14 +101,14 @@ export function StatusChecker() {
             value={token}
             onChange={(e: any) => { setToken(e?.target?.value ?? ''); setError('') }}
             onKeyDown={(e: any) => { if (e?.key === 'Enter') lookupStatus() }}
-            className="w-full rounded-lg border border-gray-200 pl-10 pr-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full rounded-lg border border-gray-200 pl-10 pr-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
             placeholder="Enter your status token..."
           />
         </div>
         <button
           onClick={() => lookupStatus()}
           disabled={loading}
-          className="rounded-lg bg-purple-700 px-6 py-2.5 text-sm font-semibold text-white hover:bg-purple-800 transition-colors disabled:opacity-50 flex items-center gap-2"
+          className="rounded-lg bg-[#b87333] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors disabled:opacity-50 flex items-center gap-2"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Look Up'}
         </button>
@@ -136,12 +136,12 @@ export function StatusChecker() {
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-xl border-2 border-purple-200 bg-purple-50/50 p-5"
+              className="rounded-xl border-2 border-[#b87333]/20 bg-[#b87333]/5/50 p-5"
             >
               <div className="flex items-center gap-2 mb-3">
-                <FileText className="h-5 w-5 text-purple-600" />
-                <span className="font-semibold text-purple-800">Insertion Order</span>
-                <span className="text-xs text-purple-500 font-mono bg-purple-100 rounded-full px-2 py-0.5">{ioData.io_number}</span>
+                <FileText className="h-5 w-5 text-[#b87333]" />
+                <span className="font-semibold text-[#9a5f28]">Insertion Order</span>
+                <span className="text-xs text-[#b87333]/50 font-mono bg-[#b87333]/10 rounded-full px-2 py-0.5">{ioData.io_number}</span>
               </div>
 
               {ioData.status === 'active' ? (
@@ -162,7 +162,7 @@ export function StatusChecker() {
                 </div>
               ) : ioData.status === 'pending_vendor' ? (
                 <div className="space-y-3">
-                  <p className="text-sm text-purple-700">Your Insertion Order is ready for signing. Please review and sign below.</p>
+                  <p className="text-sm text-[#b87333]">Your Insertion Order is ready for signing. Please review and sign below.</p>
                   <Link
                     href={`/sign-io/${ioData.sign_token}`}
                     className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors shadow-sm"

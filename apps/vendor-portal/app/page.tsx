@@ -28,7 +28,7 @@ export default async function HomePage() {
         <div className="hero-gradient">
           <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-12 sm:py-16">
             <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
-              Partner with <span className="text-purple-700">The Broken Wood</span>
+              Partner with <span className="text-[#b87333]">The Broken Wood</span>
             </h1>
             <p className="mt-3 text-lg text-gray-600 max-w-2xl">
               Browse our available campaigns and apply to become a vendor partner. Select one or more campaigns below to get started.

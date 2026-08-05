@@ -57,7 +57,7 @@ export function CampaignListing({ campaigns }: { campaigns: Campaign[] }) {
     <div className="max-w-[1200px] mx-auto px-4 sm:px-6 pb-12">
       {safeCampaigns.length === 0 ? (
         <div className="text-center py-16">
-          <Briefcase className="h-12 w-12 text-purple-300 mx-auto mb-4" />
+          <Briefcase className="h-12 w-12 text-[#b87333]/30 mx-auto mb-4" />
           <p className="text-gray-500">No active campaigns at this time. Please check back later.</p>
         </div>
       ) : (
@@ -76,21 +76,21 @@ export function CampaignListing({ campaigns }: { campaigns: Campaign[] }) {
                     'relative cursor-pointer rounded-xl p-5 transition-all duration-200',
                     'border-2',
                     isSelected
-                      ? 'border-purple-500 bg-purple-50/60 shadow-md'
-                      : 'border-gray-100 bg-white hover:border-purple-200 hover:shadow-sm'
+                      ? 'border-[#b87333]/50 bg-[#b87333]/5/60 shadow-md'
+                      : 'border-gray-100 bg-white hover:border-[#b87333]/20 hover:shadow-sm'
                   )}
                 >
                   <div className="flex items-start gap-3">
                     <div className={cn(
                       'mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors',
-                      isSelected ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
+                      isSelected ? 'border-[#b87333] bg-[#b87333]' : 'border-gray-300'
                     )}>
                       {isSelected && <CheckCircle2 className="h-4 w-4 text-white" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-display font-semibold text-gray-900 text-base">{campaign?.name ?? 'Campaign'}</h3>
-                        <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800">
+                        <span className="inline-flex items-center rounded-full bg-[#b87333]/10 px-2.5 py-0.5 text-xs font-medium text-[#9a5f28]">
                           {campaign?.industry ?? ''}
                         </span>
                       </div>
@@ -99,7 +99,7 @@ export function CampaignListing({ campaigns }: { campaigns: Campaign[] }) {
                       )}
                       <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                         <div className="flex items-center gap-1.5 text-gray-600">
-                          <Phone className="h-3.5 w-3.5 text-purple-500" />
+                          <Phone className="h-3.5 w-3.5 text-[#b87333]/50" />
                           <span>{campaign?.call_type ?? ''}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-gray-600">
@@ -109,13 +109,13 @@ export function CampaignListing({ campaigns }: { campaigns: Campaign[] }) {
                         </div>
                         {campaign?.geographic_focus && (
                           <div className="flex items-center gap-1.5 text-gray-600">
-                            <MapPin className="h-3.5 w-3.5 text-purple-500" />
+                            <MapPin className="h-3.5 w-3.5 text-[#b87333]/50" />
                             <span>{campaign.geographic_focus}</span>
                           </div>
                         )}
                         {campaign?.min_duration != null && (campaign?.min_duration ?? 0) > 0 && (
                           <div className="flex items-center gap-1.5 text-gray-600">
-                            <Clock className="h-3.5 w-3.5 text-purple-500" />
+                            <Clock className="h-3.5 w-3.5 text-[#b87333]/50" />
                             <span>{campaign.min_duration}s min duration</span>
                           </div>
                         )}
@@ -134,16 +134,16 @@ export function CampaignListing({ campaigns }: { campaigns: Campaign[] }) {
 
           {/* Sticky bottom bar */}
           <div className={cn(
-            'fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 bg-white border-t border-purple-100 shadow-lg',
+            'fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 bg-white border-t border-[#b87333]/10 shadow-lg',
             selected.size > 0 ? 'translate-y-0' : 'translate-y-full'
           )}>
             <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
               <p className="text-sm text-gray-600">
-                <span className="font-semibold text-purple-700">{selected.size}</span> campaign{selected.size !== 1 ? 's' : ''} selected
+                <span className="font-semibold text-[#b87333]">{selected.size}</span> campaign{selected.size !== 1 ? 's' : ''} selected
               </p>
               <button
                 onClick={handleApply}
-                className="inline-flex items-center gap-2 rounded-lg bg-purple-700 px-6 py-2.5 text-sm font-semibold text-white hover:bg-purple-800 transition-colors shadow-md"
+                className="inline-flex items-center gap-2 rounded-lg bg-[#b87333] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors shadow-md"
               >
                 Apply Now <ArrowRight className="h-4 w-4" />
               </button>

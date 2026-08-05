@@ -315,8 +315,8 @@ export function AdminCampaignManager() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
           <div className="rounded-2xl bg-white border border-gray-200 shadow-lg p-8">
             <div className="flex items-center justify-center mb-6">
-              <div className="h-14 w-14 rounded-full bg-purple-100 flex items-center justify-center">
-                <Shield className="h-7 w-7 text-purple-700" />
+              <div className="h-14 w-14 rounded-full bg-[#b87333]/10 flex items-center justify-center">
+                <Shield className="h-7 w-7 text-[#b87333]" />
               </div>
             </div>
             <h1 className="text-xl font-bold text-center text-gray-900 mb-1">Admin Access</h1>
@@ -332,14 +332,14 @@ export function AdminCampaignManager() {
               value={password}
               onChange={(e: any) => { setPassword(e?.target?.value ?? ''); setAuthError('') }}
               onKeyDown={(e: any) => { if (e?.key === 'Enter') handleLogin() }}
-              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 mb-4"
               placeholder="Password"
               autoFocus
             />
             <button
               onClick={handleLogin}
               disabled={authLoading}
-              className="w-full rounded-lg bg-purple-700 px-4 py-3 text-sm font-semibold text-white hover:bg-purple-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full rounded-lg bg-[#b87333] px-4 py-3 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {authLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
               {authLoading ? 'Verifying...' : 'Unlock'}
@@ -357,7 +357,7 @@ export function AdminCampaignManager() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Shield className="h-6 w-6 text-purple-600" />
+            <Shield className="h-6 w-6 text-[#b87333]" />
             Campaign Manager
           </h1>
           <p className="text-sm text-gray-500 mt-1">{campaigns.length} campaigns total</p>
@@ -373,7 +373,7 @@ export function AdminCampaignManager() {
           </button>
           <button
             onClick={openAdd}
-            className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-800 transition-colors flex items-center gap-1.5"
+            className="rounded-lg bg-[#b87333] px-4 py-2 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors flex items-center gap-1.5"
           >
             <Plus className="h-4 w-4" />
             Add Campaign
@@ -389,7 +389,7 @@ export function AdminCampaignManager() {
             type="text"
             value={search}
             onChange={(e: any) => setSearch(e?.target?.value ?? '')}
-            className="w-full rounded-lg border border-gray-200 pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full rounded-lg border border-gray-200 pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
             placeholder="Search campaigns..."
           />
         </div>
@@ -397,7 +397,7 @@ export function AdminCampaignManager() {
           onClick={() => setShowInactive(!showInactive)}
           className={cn(
             'rounded-lg border px-3 py-2 text-sm transition-colors flex items-center gap-1.5',
-            showInactive ? 'border-purple-200 bg-purple-50 text-purple-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+            showInactive ? 'border-[#b87333]/20 bg-[#b87333]/5 text-[#b87333]' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
           )}
         >
           {showInactive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
@@ -408,7 +408,7 @@ export function AdminCampaignManager() {
       {/* Campaign Table */}
       {loading && campaigns.length === 0 ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#b87333]" />
         </div>
       ) : (
         <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
@@ -478,7 +478,7 @@ export function AdminCampaignManager() {
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => openEdit(c)}
-                              className="rounded-md p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
+                              className="rounded-md p-1.5 text-gray-400 hover:text-[#b87333] hover:bg-[#b87333]/5 transition-colors"
                               title="Edit"
                             >
                               <Pencil className="h-4 w-4" />
@@ -549,7 +549,7 @@ export function AdminCampaignManager() {
                       type="text"
                       value={form.name}
                       onChange={(e: any) => setForm({ ...form, name: e?.target?.value ?? '' })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
                       placeholder="e.g. Auto Insurance RTB"
                     />
                   </div>
@@ -559,7 +559,7 @@ export function AdminCampaignManager() {
                       type="text"
                       value={form.industry}
                       onChange={(e: any) => setForm({ ...form, industry: e?.target?.value ?? '' })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
                       placeholder="e.g. Insurance, Home Services"
                     />
                   </div>
@@ -572,7 +572,7 @@ export function AdminCampaignManager() {
                     <select
                       value={form.call_type}
                       onChange={(e: any) => setForm({ ...form, call_type: e?.target?.value ?? '' })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 bg-white"
                     >
                       {CALL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
@@ -582,7 +582,7 @@ export function AdminCampaignManager() {
                     <select
                       value={form.payout_type}
                       onChange={(e: any) => setForm({ ...form, payout_type: e?.target?.value ?? '' })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 bg-white"
                     >
                       {PAYOUT_TYPES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
                     </select>
@@ -597,7 +597,7 @@ export function AdminCampaignManager() {
                       type="number"
                       value={form.payout}
                       onChange={(e: any) => setForm({ ...form, payout: e?.target?.value ?? 0 })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
                       placeholder="25.00"
                       step="0.01"
                     />
@@ -608,7 +608,7 @@ export function AdminCampaignManager() {
                       type="text"
                       value={form.payout_display ?? ''}
                       onChange={(e: any) => setForm({ ...form, payout_display: e?.target?.value ?? '' })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
                       placeholder="e.g. $20-$90 or leave blank"
                     />
                   </div>
@@ -618,7 +618,7 @@ export function AdminCampaignManager() {
                       type="number"
                       value={form.min_duration ?? ''}
                       onChange={(e: any) => setForm({ ...form, min_duration: e?.target?.value ? parseInt(e.target.value) : null })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
                       placeholder="120"
                     />
                   </div>
@@ -631,7 +631,7 @@ export function AdminCampaignManager() {
                     <select
                       value={form.billing_cycle}
                       onChange={(e: any) => setForm({ ...form, billing_cycle: e?.target?.value ?? '' })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 bg-white"
                     >
                       <option value="bi-weekly_net15">Bi-Weekly Net 15</option>
                       <option value="monthly">Monthly</option>
@@ -646,7 +646,7 @@ export function AdminCampaignManager() {
                       type="number"
                       value={form.sort_order}
                       onChange={(e: any) => setForm({ ...form, sort_order: parseInt(e?.target?.value ?? '0') || 0 })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
                     />
                   </div>
                   <div className="flex items-end pb-1">
@@ -655,7 +655,7 @@ export function AdminCampaignManager() {
                         type="checkbox"
                         checked={form.is_active}
                         onChange={(e: any) => setForm({ ...form, is_active: e?.target?.checked ?? false })}
-                        className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        className="h-4 w-4 rounded border-gray-300 text-[#b87333] focus:ring-[#b87333]/50"
                       />
                       <span className="text-sm text-gray-700">Active</span>
                     </label>
@@ -669,7 +669,7 @@ export function AdminCampaignManager() {
                     type="text"
                     value={form.geographic_focus ?? ''}
                     onChange={(e: any) => setForm({ ...form, geographic_focus: e?.target?.value ?? '' })}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
                     placeholder="Nationwide"
                   />
                 </div>
@@ -680,7 +680,7 @@ export function AdminCampaignManager() {
                   <textarea
                     value={form.description ?? ''}
                     onChange={(e: any) => setForm({ ...form, description: e?.target?.value ?? '' })}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 resize-none"
                     rows={2}
                     placeholder="Brief campaign description..."
                   />
@@ -693,7 +693,7 @@ export function AdminCampaignManager() {
                     <textarea
                       value={form.allowed_traffic ?? ''}
                       onChange={(e: any) => setForm({ ...form, allowed_traffic: e?.target?.value ?? '' })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 resize-none"
                       rows={2}
                       placeholder="SEO, PPC, Social Media..."
                     />
@@ -703,7 +703,7 @@ export function AdminCampaignManager() {
                     <textarea
                       value={form.restricted_traffic ?? ''}
                       onChange={(e: any) => setForm({ ...form, restricted_traffic: e?.target?.value ?? '' })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 resize-none"
                       rows={2}
                       placeholder="Robocalls, Cold Transfers..."
                     />
@@ -717,7 +717,7 @@ export function AdminCampaignManager() {
                     <textarea
                       value={form.requirements ?? ''}
                       onChange={(e: any) => setForm({ ...form, requirements: e?.target?.value ?? '' })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 resize-none"
                       rows={2}
                       placeholder="Qualification requirements..."
                     />
@@ -727,7 +727,7 @@ export function AdminCampaignManager() {
                     <textarea
                       value={form.compliance_notes ?? ''}
                       onChange={(e: any) => setForm({ ...form, compliance_notes: e?.target?.value ?? '' })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 resize-none"
                       rows={2}
                       placeholder="TCPA, FCC, state-specific..."
                     />
@@ -746,7 +746,7 @@ export function AdminCampaignManager() {
                 <button
                   onClick={saveCampaign}
                   disabled={saving}
-                  className="rounded-lg bg-purple-700 px-5 py-2 text-sm font-semibold text-white hover:bg-purple-800 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                  className="rounded-lg bg-[#b87333] px-5 py-2 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   {saving ? 'Saving...' : (editingId ? 'Save Changes' : 'Create Campaign')}
