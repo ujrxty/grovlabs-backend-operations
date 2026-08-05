@@ -67,7 +67,7 @@ services:
     name: tbw-qa-agent
     runtime: node
     plan: free
-    rootDir: apps/qa-agent
+    rootDir: apps/qa-agent/nodejs_space
     buildCommand: npm install --legacy-peer-deps && ./node_modules/.bin/prisma generate && npm run build
     startCommand: npm run start:prod
     envVars:
