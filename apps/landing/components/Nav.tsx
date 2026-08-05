@@ -12,7 +12,7 @@ const DASHBOARD_URL = rawDashboardUrl === "#" ? "#" :
 export function Wordmark() {
   return (
     <a href="#top" className="flex items-center gap-2.5">
-      <span className="grid h-8 w-8 place-items-center rounded-[3px] bg-ink font-mono text-[11px] font-medium text-paper">
+      <span className="grid h-8 w-10 place-items-center rounded-[3px] bg-ink font-mono text-[10px] font-medium text-paper tracking-tight">
         TBW
       </span>
       <span className="text-[15px] font-semibold tracking-[-0.01em]">{SITE.name}</span>
