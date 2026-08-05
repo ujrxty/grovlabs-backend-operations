@@ -24,10 +24,7 @@ services:
           name: tbw-database
           property: connectionString
       - key: NEXT_PUBLIC_DASHBOARD_URL
-        fromService:
-          type: web
-          name: tbw-dashboard
-          property: host
+        sync: false
 
   # Admin Dashboard
   - type: web
