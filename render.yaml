@@ -35,7 +35,7 @@ services:
     runtime: node
     plan: free
     rootDir: apps/dashboard
-    buildCommand: npm install && npx prisma generate && npx prisma db push && npm run build
+    buildCommand: npm install --legacy-peer-deps && npx prisma generate && npx prisma db push && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -55,7 +55,7 @@ services:
     runtime: node
     plan: free
     rootDir: apps/vendor-portal
-    buildCommand: npm install && npx prisma generate && npm run build
+    buildCommand: npm install --legacy-peer-deps && npx prisma generate && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -71,7 +71,7 @@ services:
     runtime: node
     plan: free
     rootDir: apps/qa-agent
-    buildCommand: npm install && npx prisma generate && npm run build
+    buildCommand: npm install --legacy-peer-deps && npx prisma generate && npm run build
     startCommand: npm run start:prod
     envVars:
       - key: NODE_ENV
@@ -80,3 +80,5 @@ services:
         fromDatabase:
           name: tbw-database
           property: connectionString
+      - key: HOME
+        value: /tmp
