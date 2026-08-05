@@ -1,0 +1,526 @@
+// CRITICAL: This schema file is shared across multiple applications. Only make edits with explicit user consent. Changes here affect all apps using this database.
+
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/bsbw_vendor_portal/nextjs_space/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model affiliate {
+  id                     String    @id @default(uuid())
+  trackdrive_id          String    @unique
+  name                   String
+  trust_score            Float     @default(100)
+  high_sensitivity_until DateTime?
+  total_calls            Int       @default(0)
+  flagged_calls          Int       @default(0)
+  notes                  String?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+  calls                  call[]
+  flags                  flag[]
+
+  @@index([trackdrive_id])
+  @@index([high_sensitivity_until])
+}
+
+model call {
+  id                 String       @id @default(uuid())
+  trackdrive_call_id String       @unique
+  affiliate_id       String?
+  campaign_id        String?
+  campaign_name      String?
+  buyer_id           String?
+  buyer_name         String?
+  caller_number      String?
+  duration           Int          @default(0)
+  recording_url      String?
+  status             String       @default("pending")
+  trackdrive_data    Json?
+  created_at         DateTime     @default(now())
+  updated_at         DateTime     @updatedAt
+  affiliate          affiliate?   @relation(fields: [affiliate_id], references: [id])
+  flags              flag[]
+  qa_analysis        qa_analysis?
+  transcript         transcript?
+
+  @@index([affiliate_id])
+  @@index([campaign_id])
+  @@index([status])
+  @@index([created_at])
+}
+
+model transcript {
+  id                    String   @id @default(uuid())
+  call_id               String   @unique
+  transcript_text       String
+  transcription_service String   @default("whisper")
+  created_at            DateTime @default(now())
+  call                  call     @relation(fields: [call_id], references: [id], onDelete: Cascade)
+}
+
+model qa_analysis {
+  id                String   @id @default(uuid())
+  call_id           String   @unique
+  detected_triggers String[] @default([])
+  confidence_score  Float    @default(0)
+  is_flagged        Boolean  @default(false)
+  flag_reason       String?
+  ai_summary        String?
+  high_sensitivity  Boolean  @default(false)
+  raw_ai_response   Json?
+  analyzed_at       DateTime @default(now())
+  call              call     @relation(fields: [call_id], references: [id], onDelete: Cascade)
+
+  @@index([is_flagged])
+  @@index([confidence_score])
+}
+
+model bot_setting {
+  id         String   @id @default(uuid())
+  key        String   @unique
+  value      String
+  updated_at DateTime @updatedAt
+
+  @@index([key])
+}
+
+model autopause_log {
+  id              String   @id @default(uuid())
+  vendor_id       String
+  vendor_name     String
+  reason          String
+  calls           Int      @default(0)
+  conversion_rate Float    @default(0)
+  paused_at       DateTime @default(now())
+
+  @@index([paused_at])
+}
+
+model campaign {
+  id                 String               @id @default(uuid())
+  name               String               @unique
+  industry           String
+  call_type          String
+  description        String?
+  payout             Decimal              @db.Decimal(10, 2)
+  payout_type        String
+  billing_cycle      String               @default("weekly")
+  min_duration       Int?
+  geographic_focus   String?
+  allowed_traffic    String?
+  restricted_traffic String?
+  requirements       String?
+  compliance_notes   String?
+  terms_template     String?
+  is_active          Boolean              @default(true)
+  sort_order         Int                  @default(0)
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
+  payout_display     String?
+  insertion_orders   insertion_order[]
+  applications       vendor_application[]
+
+  @@index([industry])
+  @@index([is_active])
+}
+
+model vendor_application {
+  id               String          @id @default(uuid())
+  company_name     String
+  contact_name     String
+  email            String
+  phone            String
+  website          String?
+  traffic_types    String
+  estimated_volume String?
+  experience       String?
+  referred_by      String?
+  comments         String?
+  company_address  String?
+  company_state    String?
+  company_country  String?
+  entity_type      String?
+  campaign_id      String
+  status           String          @default("pending")
+  status_reason    String?
+  reviewed_at      DateTime?
+  reviewed_by      String?
+  tcpa_agreed      Boolean         @default(false)
+  terms_agreed     Boolean         @default(false)
+  agreed_ip        String?
+  agreed_at        DateTime?
+  status_token     String          @unique
+  group_token      String?
+  vendor_id        String?
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
+  campaign         campaign        @relation(fields: [campaign_id], references: [id])
+  vendor           vendor_profile? @relation(fields: [vendor_id], references: [id])
+
+  @@index([email])
+  @@index([status])
+  @@index([status_token])
+  @@index([group_token])
+  @@index([campaign_id])
+}
+
+model vendor_profile {
+  id               String               @id @default(uuid())
+  company_name     String
+  contact_name     String
+  email            String               @unique
+  phone            String
+  website          String?
+  company_address  String?
+  company_state    String?
+  company_country  String?
+  entity_type      String?
+  td_source_id     String?
+  td_source_name   String?
+  td_number        String?
+  status           String               @default("active")
+  created_at       DateTime             @default(now())
+  updated_at       DateTime             @updatedAt
+  insertion_orders          insertion_order[]
+  lead_purchase_agreements  lead_purchase_agreement[]
+  applications              vendor_application[]
+  billing_contacts          vendor_billing_contact[]
+  payment_records           vendor_payment_record[]
+  payment_methods           vendor_payment_method[]
+
+  @@index([email])
+  @@index([status])
+}
+
+// Stored payment instructions per vendor. Sensitive fields (account/routing #, handles)
+// are AES-256-GCM encrypted in details_encrypted; only a non-sensitive mask is kept in plaintext.
+model vendor_payment_method {
+  id                String         @id @default(uuid())
+  vendor_id         String
+  method_type       String // wire, ach, paypal, zelle, check, other
+  label             String?
+  is_default        Boolean        @default(false)
+  mask              String? // non-sensitive preview e.g. "••1234"
+  details_encrypted String         @db.Text // encrypted JSON blob of the full details
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
+  vendor            vendor_profile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@index([vendor_id])
+}
+
+model vendor_billing_contact {
+  id         String         @id @default(uuid())
+  vendor_id  String
+  email      String
+  label      String?
+  is_default Boolean        @default(true)
+  created_at DateTime       @default(now())
+  updated_at DateTime       @updatedAt
+  vendor     vendor_profile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@unique([vendor_id, email])
+  @@index([vendor_id])
+}
+
+model vendor_payment_record {
+  id             String         @id @default(uuid())
+  vendor_id      String
+  period_start   DateTime
+  period_end     DateTime
+  amount         Decimal        @db.Decimal(10, 2)
+  status         String         @default("unpaid") // unpaid, paid
+  paid_at        DateTime?
+  paid_method    String? // wire, ach, paypal, zelle, check, other
+  paid_reference String? // confirmation / check number
+  notes          String?
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
+  vendor         vendor_profile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+
+  @@unique([vendor_id, period_start, period_end])
+  @@index([vendor_id])
+  @@index([status])
+}
+
+// Saved billing recipient emails for buyers (buyers are external TrackDrive entities, keyed by td_buyer_id)
+model buyer_billing_contact {
+  id          String   @id @default(uuid())
+  td_buyer_id String
+  email       String
+  label       String?
+  is_default  Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@unique([td_buyer_id, email])
+  @@index([td_buyer_id])
+}
+
+model insertion_order {
+  id                String         @id @default(uuid())
+  io_number         String         @unique
+  vendor_id         String
+  campaign_id       String
+  payout            Decimal        @db.Decimal(10, 2)
+  payout_type       String
+  billing_cycle     String
+  min_duration      Int?
+  terms             String
+  special_terms     String?
+  status            String         @default("pending_vendor")
+  sign_token        String         @unique
+  vendor_signed_at  DateTime?
+  vendor_sign_name  String?
+  vendor_sign_ip    String?
+  counter_signed_at DateTime?
+  counter_sign_by   String?
+  effective_date    DateTime?
+  expiry_date       DateTime?
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
+  campaign_ids      String?
+  campaign                  campaign                 @relation(fields: [campaign_id], references: [id])
+  vendor                    vendor_profile             @relation(fields: [vendor_id], references: [id])
+  lead_purchase_agreements  lead_purchase_agreement[]
+
+  @@index([vendor_id])
+  @@index([io_number])
+  @@index([sign_token])
+  @@index([status])
+}
+
+model lead_purchase_agreement {
+  id                String         @id @default(uuid())
+  io_id             String
+  vendor_id         String
+  agreement_text    String
+  status            String         @default("pending_vendor") // pending_vendor, pending_counter, active, terminated
+  sign_token        String         @unique
+  vendor_signed_at  DateTime?
+  vendor_sign_name  String?
+  vendor_sign_ip    String?
+  counter_signed_at DateTime?
+  counter_sign_by   String?
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
+  insertion_order   insertion_order @relation(fields: [io_id], references: [id])
+  vendor            vendor_profile @relation(fields: [vendor_id], references: [id])
+
+  @@index([io_id])
+  @@index([vendor_id])
+  @@index([sign_token])
+  @@index([status])
+}
+
+model io_counter {
+  id    String @id @default("singleton")
+  year  Int
+  count Int    @default(0)
+}
+
+model flag {
+  id           String     @id @default(uuid())
+  call_id      String
+  affiliate_id String?
+  flag_type    String
+  severity     String     @default("medium")
+  details      String?
+  notified     Boolean    @default(false)
+  notified_at  DateTime?
+  created_at   DateTime   @default(now())
+  affiliate    affiliate? @relation(fields: [affiliate_id], references: [id])
+  call         call       @relation(fields: [call_id], references: [id], onDelete: Cascade)
+
+  @@index([call_id])
+  @@index([affiliate_id])
+  @@index([flag_type])
+  @@index([created_at])
+}
+
+model admin_user {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password_hash String
+  name          String
+  role          String   @default("admin")
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([email])
+}
+
+model outreach {
+  id                  Int       @id @default(autoincrement())
+  candidate_name      String
+  candidate_headline  String?
+  linkedin_url        String
+  proposed_message    String?
+  status              String    @default("pending_approval")
+  telegram_message_id Int?
+  callback_id         String?
+  created_at          DateTime  @default(now())
+  approved_at         DateTime?
+  sent_at             DateTime?
+  accepted_at         DateTime?
+
+  @@index([status])
+  @@index([callback_id])
+}
+
+model daily_metrics {
+  id                       Int      @id @default(autoincrement())
+  run_date                 DateTime @unique @db.Date
+  follower_count           Int?
+  post_published           Boolean  @default(false)
+  post_index               Int?
+  post_title               String?
+  likes_given              Int      @default(0)
+  comments_made            Int      @default(0)
+  connection_requests_sent Int      @default(0)
+  new_acceptances          Int      @default(0)
+  inbound_messages         Int      @default(0)
+  post_impressions         Int      @default(0)
+  created_at               DateTime @default(now())
+}
+
+model inbound_message {
+  id              Int      @id @default(autoincrement())
+  sender_name     String?
+  sender_url      String?
+  message_preview String?
+  message_type    String?
+  observed_at     DateTime @default(now())
+  alerted         Boolean  @default(false)
+}
+
+model non_conversion_review {
+  id                 String   @id @default(uuid())
+  trackdrive_call_id String
+  review_date        String
+  vendor_name        String
+  vendor_td_id       String?
+  buyer_name         String?
+  buyer_td_id        String?
+  campaign_name      String?
+  caller_number      String?
+  caller_city        String?
+  caller_state       String?
+  number_called      String?
+  duration           Int      @default(0)
+  call_status        String?
+  buyer_leg_answered Boolean?
+  fault_side         String
+  outcome_reason     String
+  what_happened      String
+  fix_suggestion     String?
+  recording_url      String?
+  raw_ai_response    Json?
+  created_at         DateTime @default(now())
+
+  @@unique([trackdrive_call_id, review_date])
+  @@index([review_date])
+  @@index([vendor_name])
+  @@index([buyer_name])
+  @@index([fault_side])
+}
+
+model loss_monitor_settings {
+  id                    String   @id @default("singleton")
+  alerts_enabled        Boolean  @default(true)
+  recipients            String   @default("Jake@bsbwinc.com")
+  active_from_hour      Int      @default(8)
+  active_to_hour        Int      @default(18)
+
+  low_conv_enabled      Boolean  @default(true)
+  low_conv_pct          Float    @default(15)
+  low_conv_min_calls    Int      @default(5)
+
+  no_answer_enabled     Boolean  @default(true)
+  no_answer_threshold   Int      @default(5)
+
+  low_rpc_enabled       Boolean  @default(true)
+  low_rpc_threshold     Float    @default(5)
+  low_rpc_min_calls     Int      @default(10)
+
+  near_cap_enabled      Boolean  @default(false)
+  near_cap_pct          Float    @default(80)
+
+  no_connect_enabled    Boolean  @default(true)
+  no_connect_min_calls  Int      @default(5)
+
+  zero_conv_enabled     Boolean  @default(true)
+  zero_conv_min_calls   Int      @default(10)
+
+  short_dur_enabled     Boolean  @default(true)
+  short_dur_seconds     Int      @default(60)
+  short_dur_min_calls   Int      @default(10)
+
+  last_check_at         DateTime?
+  last_alert_at         DateTime?
+
+  updated_at            DateTime @updatedAt
+}
+
+model sales_qa_review {
+  id                       String   @id @default(uuid())
+  trackdrive_call_id       String
+  review_date              String
+  vendor_name              String
+  vendor_td_id             String?
+  buyer_name               String?
+  buyer_td_id              String?
+  campaign_name            String?
+  campaign_category        String?
+  caller_number            String?
+  caller_city              String?
+  caller_state             String?
+  number_called            String?
+  duration                 Int      @default(0)
+  call_status              String?
+  revenue                  Float?
+  quote_issued             Boolean  @default(false)
+  outcome_category         String
+  follow_through_likelihood String
+  quote_type               String?
+  quote_amount             String?
+  payment_mentioned        Boolean  @default(false)
+  what_happened            String
+  key_quote                String?
+  caller_response          String?
+  review_version           Int      @default(1)
+  recording_url            String?
+  raw_ai_response          Json?
+  created_at               DateTime @default(now())
+
+  @@unique([trackdrive_call_id, review_date])
+  @@index([review_date])
+  @@index([buyer_name])
+  @@index([outcome_category])
+  @@index([campaign_category])
+  @@index([review_date, campaign_category])
+  @@index([campaign_category, vendor_name])
+}
+
+model sales_qa_snapshot {
+  id                  String   @id @default(uuid())
+  snapshot_date       String
+  review_month        String
+  campaign_category   String
+  total_quotes_given  Int      @default(0)
+  sale_completed      Int      @default(0)
+  buyer_intent        Int      @default(0)
+  quote_declined      Int      @default(0)
+  undecided_reviewing Int      @default(0)
+  revenue             Float    @default(0)
+  created_at          DateTime @default(now())
+
+  @@unique([snapshot_date, review_month, campaign_category])
+  @@index([review_month, campaign_category])
+}

@@ -1,22 +1,85 @@
+# The Broken Wood - Full Stack Blueprint
+# Landing Page + Admin Dashboard + Vendor Portal + QA Agent
+
 databases:
-  - name: the-broken-wood-db
+  - name: tbw-database
     plan: free
     databaseName: tbw
     user: tbw
 
 services:
+  # Landing Page (Marketing Site)
   - type: web
-    name: the-broken-wood
+    name: tbw-landing
     runtime: node
     plan: free
-    buildCommand: npm install && npx prisma db push && npm run build
+    rootDir: apps/landing
+    buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: the-broken-wood-db
+          name: tbw-database
           property: connectionString
       - key: NEXT_PUBLIC_DASHBOARD_URL
-        sync: false
+        fromService:
+          type: web
+          name: tbw-dashboard
+          property: host
+
+  # Admin Dashboard
+  - type: web
+    name: tbw-dashboard
+    runtime: node
+    plan: free
+    rootDir: apps/dashboard
+    buildCommand: npm install && npx prisma generate && npx prisma db push && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tbw-database
+          property: connectionString
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: NEXTAUTH_URL
+        fromService:
+          type: web
+          name: tbw-dashboard
+          property: hostURL
+
+  # Vendor Portal
+  - type: web
+    name: tbw-vendor-portal
+    runtime: node
+    plan: free
+    rootDir: apps/vendor-portal
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tbw-database
+          property: connectionString
+
+  # QA Agent (NestJS Backend)
+  - type: web
+    name: tbw-qa-agent
+    runtime: node
+    plan: free
+    rootDir: apps/qa-agent
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tbw-database
+          property: connectionString

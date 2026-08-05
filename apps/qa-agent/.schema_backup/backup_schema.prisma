@@ -1,0 +1,275 @@
+// CRITICAL: This schema file is shared across multiple applications. Only make edits with explicit user consent. Changes here affect all apps using this database.
+
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/bsbw_qa_agent/nodejs_space/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model affiliate {
+  id                   String    @id @default(uuid())
+  trackdrive_id        String    @unique
+  name                 String
+  trust_score          Float     @default(100)
+  high_sensitivity_until DateTime?
+  total_calls          Int       @default(0)
+  flagged_calls        Int       @default(0)
+  notes                String?
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+
+  calls  call[]
+  flags  flag[]
+
+  @@index([trackdrive_id])
+  @@index([high_sensitivity_until])
+}
+
+model call {
+  id              String    @id @default(uuid())
+  trackdrive_call_id String  @unique
+  affiliate_id    String?
+  campaign_id     String?
+  campaign_name   String?
+  buyer_id        String?
+  buyer_name      String?
+  caller_number   String?
+  duration        Int       @default(0)
+  recording_url   String?
+  status          String    @default("pending") // pending, processing, analyzed, skipped, error
+  trackdrive_data Json?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  affiliate   affiliate?  @relation(fields: [affiliate_id], references: [id])
+  transcript  transcript?
+  qa_analysis qa_analysis?
+  flags       flag[]
+
+  @@index([affiliate_id])
+  @@index([campaign_id])
+  @@index([status])
+  @@index([created_at])
+}
+
+model transcript {
+  id                    String   @id @default(uuid())
+  call_id               String   @unique
+  transcript_text       String
+  transcription_service String   @default("whisper")
+  created_at            DateTime @default(now())
+
+  call call @relation(fields: [call_id], references: [id], onDelete: Cascade)
+}
+
+model qa_analysis {
+  id                String   @id @default(uuid())
+  call_id           String   @unique
+  detected_triggers String[] @default([])
+  confidence_score  Float    @default(0)
+  is_flagged        Boolean  @default(false)
+  flag_reason       String?
+  ai_summary        String?
+  high_sensitivity  Boolean  @default(false)
+  raw_ai_response   Json?
+  analyzed_at       DateTime @default(now())
+
+  call call @relation(fields: [call_id], references: [id], onDelete: Cascade)
+
+  @@index([is_flagged])
+  @@index([confidence_score])
+}
+
+model bot_setting {
+  id         String   @id @default(uuid())
+  key        String   @unique
+  value      String
+  updated_at DateTime @updatedAt
+
+  @@index([key])
+}
+
+model autopause_log {
+  id              String   @id @default(uuid())
+  vendor_id       String
+  vendor_name     String
+  reason          String
+  calls           Int      @default(0)
+  conversion_rate Float    @default(0)
+  paused_at       DateTime @default(now())
+
+  @@index([paused_at])
+}
+
+// ==================== VENDOR ONBOARDING ====================
+
+model campaign {
+  id               String   @id @default(uuid())
+  name             String   @unique
+  industry         String   // "Insurance", "Home Improvement"
+  call_type        String   // "Inbound Calls", "Live Transfers", "Warm Transfers"
+  description      String?
+  payout           Decimal  @db.Decimal(10,2)
+  payout_display   String?  // optional display override e.g. "$20-$90"
+  payout_type      String   // "per_conversion", "per_call", "per_qualified_call"
+  billing_cycle    String   @default("weekly") // weekly, biweekly, monthly
+  min_duration     Int?     // minimum qualifying call duration (seconds)
+  geographic_focus String?  // "Nationwide", "Select States", etc.
+  allowed_traffic  String?  // "SEO, PPC, Social Media, Radio, TV"
+  restricted_traffic String? // "Robocalls, Cold Transfers, Auto-dialers"
+  requirements     String?  // qualification requirements text
+  compliance_notes String?  // TCPA, FCC, state-specific notes
+  terms_template   String?  @db.Text // default IO terms for this campaign
+  is_active        Boolean  @default(true)
+  sort_order       Int      @default(0)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  applications     vendor_application[]
+  insertion_orders insertion_order[]
+
+  @@index([industry])
+  @@index([is_active])
+}
+
+model vendor_application {
+  id              String    @id @default(uuid())
+  // Vendor info
+  company_name    String
+  contact_name    String
+  email           String
+  phone           String
+  website         String?
+  traffic_types   String    // what traffic they run (SEO, PPC, etc.)
+  estimated_volume String?  // "10-50/day", "50-100/day", etc.
+  experience      String?   @db.Text // brief background
+  referred_by     String?   // referral tracking
+  comments        String?   @db.Text
+
+  // Campaign link
+  campaign_id     String
+  campaign        campaign  @relation(fields: [campaign_id], references: [id])
+
+  // Status tracking
+  status          String    @default("pending") // pending, under_review, approved, rejected, withdrawn
+  status_reason   String?   // rejection reason or approval notes
+  reviewed_at     DateTime?
+  reviewed_by     String?   // "telegram" or admin name
+
+  // Compliance agreement
+  tcpa_agreed     Boolean   @default(false)
+  terms_agreed    Boolean   @default(false)
+  agreed_ip       String?
+  agreed_at       DateTime?
+
+  // Linking
+  status_token    String    @unique // short token for vendor to check status
+  group_token     String?   // links multi-campaign apps from same submission
+  vendor_id       String?
+  vendor          vendor_profile? @relation(fields: [vendor_id], references: [id])
+
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([status_token])
+  @@index([group_token])
+  @@index([campaign_id])
+}
+
+model vendor_profile {
+  id               String   @id @default(uuid())
+  company_name     String
+  contact_name     String
+  email            String   @unique
+  phone            String
+  website          String?
+
+  // TrackDrive integration
+  td_source_id     String?  // traffic source ID in TrackDrive
+  td_source_name   String?  // company name in TrackDrive
+  td_number        String?  // assigned tracking number
+
+  status           String   @default("active") // active, paused, terminated
+
+  applications     vendor_application[]
+  insertion_orders insertion_order[]
+
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+}
+
+model insertion_order {
+  id              String    @id @default(uuid())
+  io_number       String    @unique // BSBW-IO-2026-0001
+  vendor_id       String
+  vendor          vendor_profile @relation(fields: [vendor_id], references: [id])
+  campaign_id     String
+  campaign        campaign  @relation(fields: [campaign_id], references: [id])
+  campaign_ids    String?   @db.Text // JSON array of all campaign IDs when IO covers multiple campaigns
+
+  // IO details
+  payout          Decimal   @db.Decimal(10,2)
+  payout_type     String
+  billing_cycle   String
+  min_duration    Int?
+  terms           String    @db.Text // full terms text
+  special_terms   String?   @db.Text // custom terms added during approval
+
+  // Signing flow
+  status          String    @default("pending_vendor") // pending_vendor, pending_counter, active, terminated
+  sign_token      String    @unique // token for vendor signing page
+  vendor_signed_at  DateTime?
+  vendor_sign_name  String?
+  vendor_sign_ip    String?
+  counter_signed_at DateTime?
+  counter_sign_by   String?
+
+  effective_date  DateTime?
+  expiry_date     DateTime?
+
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  @@index([vendor_id])
+  @@index([io_number])
+  @@index([sign_token])
+  @@index([status])
+}
+
+model io_counter {
+  id    String @id @default("singleton")
+  year  Int
+  count Int    @default(0)
+}
+
+// ==================== QA FLAGS ====================
+
+model flag {
+  id            String   @id @default(uuid())
+  call_id       String
+  affiliate_id  String?
+  flag_type     String   // cold_transfer, short_duration, high_sensitivity
+  severity      String   @default("medium") // low, medium, high, critical
+  details       String?
+  notified      Boolean  @default(false)
+  notified_at   DateTime?
+  created_at    DateTime @default(now())
+
+  call      call       @relation(fields: [call_id], references: [id], onDelete: Cascade)
+  affiliate affiliate? @relation(fields: [affiliate_id], references: [id])
+
+  @@index([call_id])
+  @@index([affiliate_id])
+  @@index([flag_type])
+  @@index([created_at])
+}
