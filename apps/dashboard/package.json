@@ -12,7 +12,6 @@
   },
   "devDependencies": {
     "@next/swc-wasm-nodejs": "13.5.1",
-    "@types/bcryptjs": "2.4.6",
     "@types/jsonwebtoken": "9.0.5",
     "@types/plotly.js": "2.35.5",
     "@types/react-plotly.js": "2.6.3",
@@ -119,7 +118,8 @@
     "typescript": "5.2.2",
     "@types/node": "20.6.2",
     "@types/react": "18.2.22",
-    "@types/react-dom": "18.2.7"
+    "@types/react-dom": "18.2.7",
+    "@types/bcryptjs": "2.4.6"
   },
   "browserslist": [
     "ie >= 11",

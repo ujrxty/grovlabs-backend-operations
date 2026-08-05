@@ -71,11 +71,13 @@ services:
     runtime: node
     plan: free
     rootDir: apps/qa-agent
-    buildCommand: HOME=/tmp npm install --legacy-peer-deps && HOME=/tmp ./node_modules/.bin/prisma generate && npm run build
+    buildCommand: npm install --legacy-peer-deps && ./node_modules/.bin/prisma generate && npm run build
     startCommand: npm run start:prod
     envVars:
       - key: NODE_ENV
         value: production
+      - key: HOME
+        value: /tmp
       - key: DATABASE_URL
         fromDatabase:
           name: tbw-database
