@@ -68,7 +68,7 @@ services:
     runtime: node
     plan: free
     rootDir: apps/qa-agent/nodejs_space
-    buildCommand: npm install --legacy-peer-deps && ./node_modules/.bin/prisma generate && npm run build
+    buildCommand: npm install --legacy-peer-deps && npm run build
     startCommand: npm run start:prod
     envVars:
       - key: NODE_ENV
