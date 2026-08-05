@@ -34,14 +34,7 @@ export default function FAQ() {
                     />
                   </summary>
                   <div className="pb-5 pr-10">
-                    {item.a ? (
-                      <p className="text-[14.5px] leading-relaxed text-body">{item.a}</p>
-                    ) : (
-                      <div className="placeholder">
-                        <span className="placeholder-tag">Needs your input</span>
-                        <p className="mt-2.5 text-[14px] text-body">{item.todo}</p>
-                      </div>
-                    )}
+                    <p className="text-[14.5px] leading-relaxed text-body">{item.a}</p>
                   </div>
                 </details>
               </Reveal>
