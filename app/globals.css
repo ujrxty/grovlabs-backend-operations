@@ -437,29 +437,9 @@ a { color: inherit; text-decoration: none; }
   }
 }
 
-/* Copper highlight sweep - elegant shimmer */
+/* Copper highlight - simple and reliable */
 .highlight-sweep {
-  position: relative;
-  background: linear-gradient(
-    90deg,
-    var(--color-copper) 0%,
-    var(--color-copper) 35%,
-    #e8a870 48%,
-    #ffd4a8 50%,
-    #e8a870 52%,
-    var(--color-copper) 65%,
-    var(--color-copper) 100%
-  );
-  background-size: 300% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  animation: highlightSweep 2.5s cubic-bezier(0.4, 0, 0.2, 1) 1.2s forwards;
-  background-position: 100% 0;
-}
-@keyframes highlightSweep {
-  0% { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
+  color: var(--color-copper);
 }
 
 /* Respect reduced motion */
@@ -474,11 +454,7 @@ a { color: inherit; text-decoration: none; }
     animation: none;
   }
   .highlight-sweep {
-    background: none;
-    -webkit-background-clip: unset;
-    background-clip: unset;
     color: var(--color-copper);
-    animation: none;
   }
 }
 
