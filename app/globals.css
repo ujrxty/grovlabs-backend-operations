@@ -1,0 +1,545 @@
+@import "tailwindcss";
+
+/* ============================================================
+   THE BROKEN WOOD
+   Warm paper base, near-black text, ONE copper accent taken
+   from the logo. Flat colour only — no gradient fills on text,
+   borders or surfaces. Structure is carried by rules and
+   spacing, not by decoration.
+   ============================================================ */
+@theme {
+  --color-paper: #f6f3ee;
+  --color-surface: #ffffff;
+  --color-ink: #16120f;
+  --color-body: #443c36;
+  --color-muted: #776c64;
+  --color-line: #e2dbd2;
+  --color-line-strong: #cabfb2;
+  --color-copper: #a65a2e;
+  --color-copper-deep: #7c3f1e;
+  --color-copper-wash: #f5ebe3;
+  /* Dark band, pulled from the darkest tone in the logo. Used once or
+     twice down the page to break the paper up, never as a base. */
+  --color-espresso: #1b120c;
+  --color-espresso-line: #3a2a1e;
+  --color-espresso-text: #cbbcae;
+
+  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+:root {
+  --gut: clamp(20px, 5vw, 72px);
+}
+
+html { scroll-behavior: smooth; }
+html.is-locked { overflow: hidden; }
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv05" 1;
+}
+
+/* Every figure in the page aligns in columns. */
+.num, .tabular, table, dd, .figure-xl { font-variant-numeric: tabular-nums; }
+
+/* Layered surfaces. Barely-there shadows do the work of separating
+   a card from the paper without any visible drop-shadow effect. */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(22, 18, 15, 0.035);
+}
+.card-raised {
+  box-shadow:
+    0 1px 2px rgba(22, 18, 15, 0.04),
+    0 10px 28px -12px rgba(22, 18, 15, 0.14);
+}
+
+/* Hairline that reads as a deliberate rule rather than a default border. */
+.rule {
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-line-strong), var(--color-line) 40%, transparent);
+}
+
+::selection { background: var(--color-copper); color: #fff; }
+
+a { color: inherit; text-decoration: none; }
+
+:focus-visible {
+  outline: 2px solid var(--color-copper);
+  outline-offset: 2px;
+}
+
+@utility gut { padding-inline: var(--gut); }
+
+/* ---------- type scale ----------
+   Deliberately wide range. The gap between a 10.5px label and an 84px
+   headline is what makes a page look authored rather than generated. */
+.h1 {
+  font-size: clamp(40px, 6.4vw, 84px);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+.h2 {
+  font-size: clamp(27px, 3.3vw, 44px);
+  line-height: 1.04;
+  letter-spacing: -0.028em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+.h3 {
+  font-size: 16px;
+  line-height: 1.35;
+  letter-spacing: -0.011em;
+  font-weight: 600;
+}
+
+/* Section label — small and precise, to sit against the large headings. */
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--color-copper);
+}
+.section-label::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: var(--color-copper);
+}
+
+.lead {
+  font-size: clamp(16px, 1.35vw, 19px);
+  line-height: 1.58;
+  color: var(--color-body);
+  max-width: 58ch;
+  letter-spacing: -0.006em;
+}
+
+/* Large figures read as data, not decoration. */
+.figure-xl {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(30px, 3.6vw, 46px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 19px;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.006em;
+  background: var(--color-copper);
+  color: #fff;
+  border: 1px solid var(--color-copper-deep);
+  /* Top inner highlight — the detail that stops a flat fill looking cheap. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 1px 2px rgba(22, 18, 15, 0.12);
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+.btn:hover {
+  background: var(--color-copper-deep);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 2px 6px rgba(22, 18, 15, 0.16);
+}
+.btn:active { transform: translateY(0.5px); }
+.btn:disabled { opacity: 0.55; cursor: default; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-ink);
+  border-color: var(--color-line-strong);
+}
+.btn-secondary:hover { background: var(--color-surface); border-color: var(--color-ink); }
+
+/* ---------- data table ---------- */
+.data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.data-table th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-line-strong);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: middle;
+}
+.data-table tbody tr:hover { background: var(--color-surface); }
+.data-table .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+/* Empty cell — reads as "no data", never as a real value. */
+.data-table .empty { color: var(--color-line-strong); font-family: var(--font-mono); }
+
+/* ---------- status pills ---------- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--color-line-strong);
+  color: var(--color-body);
+  white-space: nowrap;
+}
+.pill-live { border-color: #b6d4bd; background: #eef6f0; color: #2f6b41; }
+.pill-onboarding { border-color: #e4cfae; background: #fbf3e6; color: #8a5f16; }
+.pill-seasonal { border-color: var(--color-line-strong); background: var(--color-surface); }
+
+/* ---------- placeholder ---------- */
+/* Deliberately ugly. If it ships to production it should be obvious. */
+.placeholder {
+  border: 1px dashed var(--color-line-strong);
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 9px,
+    rgba(166, 90, 46, 0.05) 9px,
+    rgba(166, 90, 46, 0.05) 18px
+  );
+  padding: 22px;
+}
+.placeholder-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-copper);
+  border: 1px solid var(--color-copper);
+  border-radius: 3px;
+  padding: 2px 7px;
+}
+
+/* ---------- form ---------- */
+.field label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: 6px;
+}
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 4px;
+  padding: 11px 13px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--color-ink);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.field textarea { resize: vertical; min-height: 108px; }
+.field input:focus,
+.field select:focus,
+.field textarea:focus { border-color: var(--color-copper); }
+.field input::placeholder, .field textarea::placeholder { color: var(--color-line-strong); }
+
+/* ---------- dark band ---------- */
+.band {
+  background: var(--color-espresso);
+  color: #f2ece5;
+}
+.band .section-label { color: #d69a6a; }
+.band .mono-label { color: #94826f; }
+.band p { color: var(--color-espresso-text); }
+
+/* ---------- reveal ---------- */
+/* Slow, luxurious scroll reveals matching the hero style */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  filter: blur(4px);
+  transition:
+    opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; filter: none; transition: none; }
+}
+
+/* New row sliding into the live feed. */
+@keyframes rowIn {
+  from { opacity: 0; transform: translateY(-7px); background: var(--color-copper-wash); }
+  to   { opacity: 1; transform: none; background: transparent; }
+}
+
+/* Post arriving on the hero live wire. */
+@keyframes wireIn {
+  from { opacity: 0; transform: translateX(-10px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Audience switch in the hero. */
+.switch {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 100px;
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-surface);
+}
+.switch button {
+  padding: 8px 17px;
+  border-radius: 100px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-body);
+  transition: color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+  cursor: pointer;
+}
+.switch button:hover { color: var(--color-ink); }
+.switch button[aria-pressed="true"] {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  box-shadow: 0 1px 2px rgba(22, 18, 15, 0.18);
+}
+
+/* Swap of hero copy when the audience changes. */
+@keyframes swapIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.swap { animation: swapIn 0.32s cubic-bezier(0.19, 1, 0.22, 1); }
+@media (prefers-reduced-motion: reduce) { .swap { animation: none; } }
+
+/* ---------- hero typography animations ---------- */
+/* Slow, luxurious timing inspired by premium Framer sites */
+
+/* Line-by-line headline reveal - dramatic and slow */
+.line-reveal {
+  opacity: 0;
+  transform: translateY(45px);
+  filter: blur(4px);
+  animation: lineReveal 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes lineReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(45px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* Text fade-up reveal */
+.text-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  filter: blur(3px);
+  animation: textReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes textReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* Button reveal */
+.btn-reveal {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  animation: btnReveal 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes btnReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Stat counter reveal */
+.stat-reveal {
+  opacity: 0;
+  transform: translateY(25px);
+  filter: blur(2px);
+  animation: statReveal 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes statReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(25px);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* Copper highlight sweep - elegant shimmer */
+.highlight-sweep {
+  position: relative;
+  background: linear-gradient(
+    90deg,
+    var(--color-copper) 0%,
+    var(--color-copper) 35%,
+    #e8a870 48%,
+    #ffd4a8 50%,
+    #e8a870 52%,
+    var(--color-copper) 65%,
+    var(--color-copper) 100%
+  );
+  background-size: 300% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: highlightSweep 2.5s cubic-bezier(0.4, 0, 0.2, 1) 1.2s forwards;
+  background-position: 100% 0;
+}
+@keyframes highlightSweep {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .line-reveal,
+  .text-reveal,
+  .btn-reveal,
+  .stat-reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    animation: none;
+  }
+  .highlight-sweep {
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    color: var(--color-copper);
+    animation: none;
+  }
+}
+
+/* ---------- gradient mesh ---------- */
+@keyframes mesh-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(8%, 5%) scale(1.05); }
+  66% { transform: translate(-5%, 8%) scale(0.98); }
+}
+@keyframes mesh-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-10%, -8%) scale(1.08); }
+}
+@keyframes mesh-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+  40% { transform: translate(12%, -6%) scale(1.1); opacity: 1; }
+  70% { transform: translate(-8%, 10%) scale(0.95); opacity: 0.8; }
+}
+
+/* ---------- interactive chips ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-surface);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--color-body);
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+.chip:hover { border-color: var(--color-copper); color: var(--color-ink); }
+.chip[aria-pressed="true"] {
+  background: var(--color-copper);
+  border-color: var(--color-copper-deep);
+  color: #fff;
+}
+
+/* Rows respond to the pointer with a copper edge, not just a tint. */
+.data-table tbody tr {
+  transition: background 0.14s ease, box-shadow 0.14s ease;
+}
+.data-table tbody tr:hover {
+  background: var(--color-surface);
+  box-shadow: inset 3px 0 0 var(--color-copper);
+}
+
+/* ---------- accordion ---------- */
+.faq-item summary { list-style: none; cursor: pointer; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary .chev { transition: transform 0.2s ease; }
+.faq-item[open] summary .chev { transform: rotate(180deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}

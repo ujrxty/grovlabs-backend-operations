@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model campaign {
+  id                 String               @id @default(uuid())
+  name               String               @unique
+  industry           String
+  call_type          String
+  description        String?
+  payout             Decimal              @db.Decimal(10, 2)
+  payout_type        String
+  billing_cycle      String               @default("weekly")
+  min_duration       Int?
+  geographic_focus   String?
+  allowed_traffic    String?
+  restricted_traffic String?
+  requirements       String?
+  compliance_notes   String?
+  terms_template     String?
+  is_active          Boolean              @default(true)
+  sort_order         Int                  @default(0)
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
+  payout_display     String?
+  insertion_orders   insertion_order[]
+  applications       vendor_application[]
+
+  @@index([industry])
+  @@index([is_active])
+}
+
+model vendor_application {
+  id               String          @id @default(uuid())
+  company_name     String
+  contact_name     String
+  email            String
+  phone            String
+  website          String?
+  traffic_types    String
+  estimated_volume String?
+  experience       String?
+  referred_by      String?
+  comments         String?
+  company_address  String?
+  company_state    String?
+  company_country  String?
+  entity_type      String?
+  campaign_id      String
+  status           String          @default("pending")
+  status_reason    String?
+  reviewed_at      DateTime?
+  reviewed_by      String?
+  tcpa_agreed      Boolean         @default(false)
+  terms_agreed     Boolean         @default(false)
+  agreed_ip        String?
+  agreed_at        DateTime?
+  status_token     String          @unique
+  group_token      String?
+  vendor_id        String?
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
+  campaign         campaign        @relation(fields: [campaign_id], references: [id])
+  vendor           vendor_profile? @relation(fields: [vendor_id], references: [id])
+
+  @@index([email])
+  @@index([status])
+  @@index([status_token])
+  @@index([group_token])
+  @@index([campaign_id])
+}
+
+model vendor_profile {
+  id                       String                    @id @default(uuid())
+  company_name             String
+  contact_name             String
+  email                    String                    @unique
+  phone                    String
+  website                  String?
+  company_address          String?
+  company_state            String?
+  company_country          String?
+  entity_type              String?
+  td_source_id             String?
+  td_source_name           String?
+  td_number                String?
+  status                   String                    @default("active")
+  created_at               DateTime                  @default(now())
+  updated_at               DateTime                  @updatedAt
+  insertion_orders         insertion_order[]
+  lead_purchase_agreements lead_purchase_agreement[]
+  applications             vendor_application[]
+
+  @@index([email])
+  @@index([status])
+}
+
+model insertion_order {
+  id                       String                    @id @default(uuid())
+  io_number                String                    @unique
+  vendor_id                String
+  campaign_id              String
+  payout                   Decimal                   @db.Decimal(10, 2)
+  payout_type              String
+  billing_cycle            String
+  min_duration             Int?
+  terms                    String
+  special_terms            String?
+  status                   String                    @default("pending_vendor")
+  sign_token               String                    @unique
+  vendor_signed_at         DateTime?
+  vendor_sign_name         String?
+  vendor_sign_ip           String?
+  counter_signed_at        DateTime?
+  counter_sign_by          String?
+  effective_date           DateTime?
+  expiry_date              DateTime?
+  created_at               DateTime                  @default(now())
+  updated_at               DateTime                  @updatedAt
+  campaign_ids             String?
+  campaign                 campaign                  @relation(fields: [campaign_id], references: [id])
+  vendor                   vendor_profile            @relation(fields: [vendor_id], references: [id])
+  lead_purchase_agreements lead_purchase_agreement[]
+
+  @@index([vendor_id])
+  @@index([io_number])
+  @@index([sign_token])
+  @@index([status])
+}
+
+model lead_purchase_agreement {
+  id                String          @id @default(uuid())
+  io_id             String
+  vendor_id         String
+  agreement_text    String
+  status            String          @default("pending_vendor")
+  sign_token        String          @unique
+  vendor_signed_at  DateTime?
+  vendor_sign_name  String?
+  vendor_sign_ip    String?
+  counter_signed_at DateTime?
+  counter_sign_by   String?
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @updatedAt
+  insertion_order   insertion_order @relation(fields: [io_id], references: [id])
+  vendor            vendor_profile  @relation(fields: [vendor_id], references: [id])
+
+  @@index([io_id])
+  @@index([vendor_id])
+  @@index([sign_token])
+  @@index([status])
+}
+
+model io_counter {
+  id    String @id @default("singleton")
+  year  Int
+  count Int    @default(0)
+}
