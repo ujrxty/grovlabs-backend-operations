@@ -71,7 +71,7 @@ services:
     runtime: node
     plan: free
     rootDir: apps/qa-agent
-    buildCommand: npm install --legacy-peer-deps && HOME=/tmp ./node_modules/.bin/prisma generate && npm run build
+    buildCommand: export HOME=/tmp && npm install --legacy-peer-deps && ./node_modules/.bin/prisma generate && npm run build
     startCommand: npm run start:prod
     envVars:
       - key: NODE_ENV
