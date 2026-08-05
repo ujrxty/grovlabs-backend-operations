@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { Menu, X, Phone, LogIn } from "lucide-react";
 import { NAV, SITE } from "@/lib/content";
 
-const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "#";
+const rawDashboardUrl = process.env.NEXT_PUBLIC_DASHBOARD_URL || "#";
+const DASHBOARD_URL = rawDashboardUrl === "#" ? "#" :
+  rawDashboardUrl.startsWith("http") ? rawDashboardUrl : `https://${rawDashboardUrl}`;
 
 /** Placeholder wordmark. Drop the real logo in /public and swap for next/image. */
 export function Wordmark() {
