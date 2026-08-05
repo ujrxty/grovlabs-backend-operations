@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Menu, X, Phone, LogIn } from "lucide-react";
 import { NAV, SITE } from "@/lib/content";
 
-const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "/dashboard";
+const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "#";
 
 /** Placeholder wordmark. Drop the real logo in /public and swap for next/image. */
 export function Wordmark() {
@@ -60,7 +60,7 @@ export default function Nav() {
                 key={item.href}
                 href={item.href}
                 aria-current={on ? "true" : undefined}
-                className={`relative rounded-[3px] px-3 py-2 text-[14px] transition-colors ${
+                className={`relative whitespace-nowrap rounded-[3px] px-3 py-2 text-[14px] transition-colors ${
                   on ? "text-ink" : "text-body hover:bg-surface hover:text-ink"
                 }`}
               >
