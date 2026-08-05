@@ -1,11 +1,22 @@
+databases:
+  - name: the-broken-wood-db
+    plan: free
+    databaseName: tbw
+    user: tbw
+
 services:
   - type: web
     name: the-broken-wood
     runtime: node
-    buildCommand: npm install && npm run build
+    plan: free
+    buildCommand: npm install && npx prisma db push && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: the-broken-wood-db
+          property: connectionString
       - key: NEXT_PUBLIC_DASHBOARD_URL
         sync: false
