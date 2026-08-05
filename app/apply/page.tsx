@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -98,7 +98,7 @@ interface Campaign {
   payout_type: string;
 }
 
-export default function ApplyPage() {
+function ApplyPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -769,5 +769,17 @@ export default function ApplyPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ApplyPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#f6f3ee]">
+        <Loader2 className="h-8 w-8 animate-spin text-[#8b5a2b]" />
+      </div>
+    }>
+      <ApplyPageContent />
+    </Suspense>
   );
 }
