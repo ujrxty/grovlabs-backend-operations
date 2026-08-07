@@ -1,164 +1,213 @@
 # CLAUDE.md
 
-Marketing site for **The Broken Wood** — a US performance marketing and lead
-generation company. Single static page, Next.js App Router.
+Full-stack monorepo for **The Broken Wood** — a US performance marketing and
+lead generation company. Deployed to Render as a single Blueprint.
 
-Rebuilt from the live site at thebrokenwood.com. The audience is carriers,
-agencies and publishers evaluating a lead partner — not consumers.
+## Monorepo Structure
+
+```
+apps/
+  landing/           Next.js 14 — Marketing site (thebrokenwood.com)
+  dashboard/         Next.js 14 — Admin dashboard (internal)
+  vendor-portal/     Next.js 14 — Vendor self-service portal
+  qa-agent/
+    nodejs_space/    NestJS — Backend API, Telegram bot, TrackDrive integration
+
+render.yaml          Render Blueprint — all 4 services + shared PostgreSQL
+```
+
+All apps share one PostgreSQL database via Prisma. The schema lives in
+`apps/qa-agent/nodejs_space/prisma/schema.prisma` — **do not duplicate**.
 
 ## Commands
 
+Each app has its own package.json. Run from the app directory:
+
 ```bash
-npm run dev     # dev server on :3000
-npm run build   # production build (static prerender)
-npm start       # serve the production build
+# Landing Page (apps/landing)
+npm run dev          # dev server :3000
+npm run build        # production build
+
+# Dashboard (apps/dashboard)
+npm run dev          # dev server :3000
+npx prisma db seed   # seed admin users
+
+# Vendor Portal (apps/vendor-portal)
+npm run dev          # dev server :3000
+
+# QA Agent (apps/qa-agent/nodejs_space)
+npm run start:dev    # NestJS dev with hot reload
+npm run build        # compile TypeScript to dist/
+npm run start:prod   # run compiled dist/main.js
 ```
 
 ### Never run `npm run build` while the dev server is running
 
-`next build` overwrites `.next/` underneath the running dev server and
-corrupts it. The page then 500s with `__webpack_modules__[moduleId] is not a
-function` or `Cannot find module './###.js'`. Same thing happens after
-`npm install`/`uninstall` while dev is up.
+Next.js `build` overwrites `.next/` and corrupts a running dev server.
+Stop dev first, then: `rm -rf .next && npm run build`
 
-Recovery, and the correct order:
+## Deployment (Render Blueprint)
 
 ```bash
-# stop dev server first, then:
-rm -rf .next && npm run build
+git push origin master   # auto-deploys all services
 ```
 
-## Architecture
+Manual deploy: Render Dashboard → select service → Manual Deploy
+
+### Environment Variables (set in Render)
+
+**All services:**
+- `DATABASE_URL` — auto-injected from `tbw-database`
+- `NODE_ENV=production`
+
+**Landing Page (`tbw-landing`):**
+- `NEXT_PUBLIC_DASHBOARD_URL` — URL to dashboard for Login button
+
+**Dashboard (`tbw-dashboard`):**
+- `NEXTAUTH_SECRET` — auto-generated
+- `NEXTAUTH_URL` — the dashboard's public URL
+
+**QA Agent (`tbw-qa-agent`):**
+- `TRACKDRIVE_PUBLIC_KEY` — TrackDrive API public key
+- `TRACKDRIVE_PRIVATE_KEY` — TrackDrive API private key
+- `TRACKDRIVE_BASE_URL` — e.g. `https://bsbwinc.trackdrive.com`
+- `TELEGRAM_BOT_TOKEN` — from @BotFather
+- `TELEGRAM_CHAT_ID` — group/channel for notifications
+- `VENDOR_PORTAL_URL` — e.g. `https://tbw-vendor-portal.onrender.com`
+
+## Vendor Onboarding Flow
+
+```
+1. Vendor browses campaigns on Vendor Portal
+2. Submits application (company info, traffic types, campaigns)
+3. QA Agent saves to DB, sends Telegram notification with Approve/Reject buttons
+4. Admin taps "Approve" on Telegram (or uses Dashboard)
+5. QA Agent creates Insertion Order, emails vendor sign link
+6. Vendor signs IO on Vendor Portal
+7. Telegram alert with "Countersign" button sent to admin
+8. Admin countersigns → TrackDrive source created → Welcome email sent
+```
+
+Key models: `campaign`, `vendor_application`, `vendor_profile`, `insertion_order`, `lead_purchase_agreement`
+
+## Database Schema
+
+Schema in `apps/qa-agent/nodejs_space/prisma/schema.prisma`. Key models:
+
+- **campaign** — Available campaigns vendors can apply to
+- **vendor_application** — Submitted applications (pending → approved/rejected)
+- **vendor_profile** — Approved vendors with contact info and TD source ID
+- **insertion_order** — Contracts per vendor/campaign, signed by both parties
+- **lead_purchase_agreement** — Master LPA per vendor, signed once
+- **call** / **transcript** / **qa_analysis** — Call QA pipeline
+- **affiliate** / **flag** — Affiliate trust scoring and compliance flags
+
+Run migrations: `npx prisma db push` (from qa-agent/nodejs_space)
+
+## QA Agent API
+
+NestJS backend at `apps/qa-agent/nodejs_space`. Key modules:
+
+- **OnboardingModule** — Application CRUD, IO/agreement signing, Telegram callbacks
+- **TrackDriveModule** — API client for calls, publishers, traffic sources
+- **TelegramModule** — Send alerts, inline keyboard callbacks
+- **BotModule** — Telegram webhook handler for button callbacks
+- **CallsModule** — Call ingestion and QA pipeline
+- **AnalysisModule** — AI-powered call transcript analysis
+
+Telegram callback patterns:
+- `oa_{shortId}` — Approve single application
+- `or_{shortId}` — Show rejection reason picker
+- `oaa_{groupId}` — Approve all in group
+- `ocs_{shortId}` — Countersign IO
+- `acs_{shortId}` — Countersign Lead Purchase Agreement
+
+## Landing Page (apps/landing)
+
+Marketing site for thebrokenwood.com. Next.js 14 + Tailwind v4.
+
+### Architecture
 
 ```
 app/layout.tsx        fonts, metadata, OG tags
-app/page.tsx          section order — the whole page is composed here
-app/globals.css       Tailwind v4 theme + all shared classes
-lib/content.ts        ALL copy and data. Single source of truth.
-components/           one per section, plus shared primitives
+app/page.tsx          section order
+app/globals.css       Tailwind v4 theme (@theme block)
+lib/content.ts        ALL copy and data — single source of truth
+components/           one per section
 ```
 
-Tailwind v4 — there is **no `tailwind.config`**. Theme tokens live in the
-`@theme` block at the top of `app/globals.css`.
+Tailwind v4 — **no `tailwind.config`**. Theme in `@theme` block in globals.css.
 
-`lib/content.ts` drives everything. The hero, the inventory table and the
-qualifier all read the same arrays, so they cannot drift apart. Change copy
-there, not in components.
+### Design System
 
-## Content integrity — the important part
+- Warm paper base (#faf8f5), near-black text (#1a1a1a)
+- **One** copper accent (#b87333) — links, buttons, highlights
+- Fonts: Instrument Sans (body) + IBM Plex Mono (figures/labels)
+- No gradient text, minimal shadows, structure via borders/spacing
 
-This site had fabricated content in an early draft (invented testimonials
-with invented job titles). It was removed. **Do not reintroduce anything of
-that kind.**
+### Content Integrity
 
-Rules:
+**Never invent** customers, quotes, case studies, or performance figures.
+Source notes in `lib/content.ts`: `verified`, `derived`, `standard`, `TODO`.
+Unknown values are `null` and render as em-dash or "quoted on request".
 
-- **Never invent** a customer, quote, case study, result, client logo, or
-  performance figure.
-- Every entry in `lib/content.ts` carries a source note. Keep the convention:
-  - `verified` — taken from thebrokenwood.com
-  - `derived` — follows factually from verified data (e.g. geo is `US`
-    because SSDI/ACA/Medicare are US-only programmes)
-  - `standard` — true of the industry regardless of operator (how CPA vs CPL
-    works, what TCPA consent requires)
-  - `TODO` / `claim` — unsubstantiated; must be marked in the UI
-- Unknown values are `null` and render as an em-dash or "quoted on request".
-  Never fill a gap with a plausible-looking number.
-- Unverified claims carried over from the current site (the 37,800 customer
-  figure, the 4.9 Clutch rating, the partner badges) render inside a
-  collapsed `<details>` in `Compliance.tsx` labelled **Unverified**. They are
-  not headline stats. Substantiate or delete them — don't promote them.
-- `Placeholder.tsx` is **deliberately ugly** (dashed border, hatched fill,
-  a "PLACEHOLDER" tag). If one reaches production it should be obvious.
-  Don't restyle it to look intentional.
-- The live dashboards use illustrative numbers and are captioned
-  *"Interface preview — sample values, not reported performance."*
-  Keep that caption on any component showing sample data.
+## Vendor Portal (apps/vendor-portal)
 
-## Design conventions
+Self-service portal for vendors. Branded with TBW copper colors.
 
-Warm paper base, near-black text, **one** copper accent from the logo.
+Features:
+- Browse active campaigns
+- Submit applications
+- Check application status (via status token)
+- Sign Insertion Orders
+- Sign Lead Purchase Agreements
 
-- Palette and fonts: `@theme` in `globals.css`. Copper is for links, the
-  accent rule, primary buttons, and the one highlighted word in the hero.
-  Don't add a second accent hue.
-- **No gradient-filled text.** Flat colour only.
-- Type scale is deliberately wide — 10.5px mono labels against an 84px
-  headline. That contrast is what stops the page reading as generic. Don't
-  flatten it toward a uniform mid-size.
-- Structure comes from rules, borders and spacing, not from shadows.
-  `.card` / `.card-raised` shadows are near-invisible on purpose.
-- One dark espresso band (`.band`) in the hero live strip and the delivery
-  section, for rhythm. It is not a base colour — don't extend it.
-- Figures use `font-variant-numeric: tabular-nums` so columns align.
-- Fonts: Instrument Sans (display/body) + IBM Plex Mono (all figures, labels,
-  codes). Both via `next/font`, self-hosted.
+Key components:
+- `components/portal-header.tsx` — TBW branded nav
+- `app/page.tsx` — Campaign listing
+- `app/status/page.tsx` — Status checker
+- `app/io/sign/[token]/page.tsx` — IO signing
+- `app/agreement/sign/[token]/page.tsx` — LPA signing
 
-## Live / interactive components
+## Dashboard (apps/dashboard)
 
-`LiveWire.tsx` (hero strip) and `ReportingPreview.tsx` (reporting section)
-both animate. They follow the same pattern — **keep it** if you add another:
+Internal admin dashboard. Next.js 14 + NextAuth.
 
-```ts
-const live = onScreen && tabVisible && allowMotion;
-```
+Default admin users (from seed):
+- sammyabdel@thebrokenwood.com / Admin123!
+- uj@thebrokenwood.com / BSBW26!
 
-Three signals tracked separately, then combined:
+Features:
+- Campaign management (CRUD, activate/deactivate)
+- Application review (approve/reject)
+- Vendor management
+- IO/Agreement management and countersigning
+- Call QA review
+- Analytics and reporting
 
-- `onScreen` — IntersectionObserver, `threshold: 0`. Not a percentage: a tall
-  panel on a short viewport can never clear one.
-- `tabVisible` — `visibilitychange`. Must set **both** directions. An earlier
-  version only ever paused, so returning to the tab left the widget dead
-  forever.
-- `allowMotion` — `prefers-reduced-motion`, watched via `addEventListener`
-  on the media query, not read once.
+## Telegram Bot Setup
 
-Server-rendered first paint uses a fixed `SEED` array so hydration matches.
-Randomisation only starts in `useEffect`.
+1. Create bot via @BotFather, get token
+2. Get chat ID (add bot to group, send message, check updates API)
+3. Set webhook: `https://api.telegram.org/bot{TOKEN}/setWebhook?url={QA_AGENT_URL}/api/bot/webhook`
+4. Add env vars to QA Agent on Render
 
-`Reveal.tsx` **fails open**: the `.reveal` class is added by JS, so if JS
-never runs, content stays visible. Never invert that.
+## TrackDrive Integration
 
-## The qualifier
+QA Agent connects to TrackDrive API for:
+- Creating traffic sources (vendors)
+- Fetching call data
+- Pausing/unpausing sources
+- Listing campaigns, publishers, buyers
 
-`Qualifier.tsx` replaces the contact form. It's a branching conversation:
-side → verticals → volume → timeline → contact details.
+API uses Basic Auth with public/private key pair.
 
-It reflects real data back at the user — picking a vertical surfaces that
-vertical's actual qualifying note from `content.ts`. On the publisher path
-it reads `PUBLISHER_OPEN` and **tells the user plainly** when a vertical they
-picked isn't open to publisher traffic. Keep that honesty; don't soften it
-into a generic confirmation.
+## Common Issues
 
-Contact details are the last step, never the first.
+**Prisma version mismatch:** Always use `./node_modules/.bin/prisma`, never `npx prisma` (npx may pull wrong version).
 
-## Directions already tried and rejected
+**devDependencies not installed in prod:** Move build tools (typescript, @types/*, prisma) to dependencies.
 
-Don't reach for these again — they were built and removed after review:
+**tsconfig.build.json missing include:** Must have `"include": ["src/**/*.ts"]` for tsc to find files.
 
-- Dark maximalist "awwwards" treatment: Fraunces display serif, gradient
-  text, grain + vignette, rotating rings.
-- Preloader with a fake progress counter.
-- Custom cursor (dot + lagging ring).
-- Magnetic buttons.
-- Per-character headline animation.
-- 400vh scroll-hijacked horizontal card section.
-- Marquee tickers.
-- `motion` / framer-motion — removed as a dependency. Animation is CSS plus
-  IntersectionObserver. Don't add it back for scroll reveals.
-
-The feedback that drove each removal: it read as generic AI output, it wasn't
-professional, and decoration was standing in for substance.
-
-## Open gaps
-
-- **Logo** — nav and footer use a placeholder `TBW` block (`Wordmark` in
-  `Nav.tsx`). Drop the real file in `public/` and swap for `next/image`.
-- **No form endpoint** — `Qualifier.tsx` collects answers into one object and
-  stops. The success screen says so explicitly. Wire to the CRM.
-- **Compliance specifics** — certification provider (TrustedForm / Jornaya),
-  retention policy, DNC handling. Placeholder in `Compliance.tsx`.
-- **Case studies** — placeholder in `Compliance.tsx`.
-- **Two FAQ answers** are `null` pending real payout terms and the CRM
-  integration list.
-- Social links in the footer are `#`.
+**Path alias (@/) not resolving:** Needs `baseUrl: "."` in tsconfig.json.
