@@ -20,7 +20,7 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://thebrokenwood.com"),
-  title: "The Broken Wood — Performance Marketing & Lead Generation",
+  title: "The Broken Wood | Performance Marketing & Lead Generation",
   description:
     "The Broken Wood runs paid acquisition and sells qualified leads on CPA and CPL terms across insurance, legal and financial verticals. Real-time delivery for advertisers, open campaigns for publishers.",
   icons: {
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://thebrokenwood.com",
     siteName: "The Broken Wood",
-    title: "The Broken Wood — Performance Marketing & Lead Generation",
+    title: "The Broken Wood | Performance Marketing & Lead Generation",
     description:
       "Paid acquisition and qualified lead generation on CPA and CPL terms across insurance, legal and financial verticals.",
   },
