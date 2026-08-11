@@ -11,15 +11,16 @@ const DASHBOARD_URL = rawDashboardUrl === "#" ? "#" :
 
 export function Wordmark() {
   return (
-    <a href="#top" className="flex items-center">
+    <a href="#top" className="flex shrink-0 items-center gap-2.5 mr-4">
       <Image
         src="/logo.png"
         alt={SITE.name}
-        width={180}
-        height={54}
-        className="h-10 w-auto"
+        width={40}
+        height={40}
+        className="h-9 w-auto"
         priority
       />
+      <span className="text-[15px] font-semibold tracking-[-0.01em] whitespace-nowrap">{SITE.name}</span>
     </a>
   );
 }
