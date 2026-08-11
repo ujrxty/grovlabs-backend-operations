@@ -129,12 +129,20 @@ Marketing site for thebrokenwood.com. Next.js 14 + Tailwind v4.
 ### Architecture
 
 ```
-app/layout.tsx        fonts, metadata, OG tags
+app/layout.tsx        fonts, metadata, OG tags, favicon
 app/page.tsx          section order
 app/globals.css       Tailwind v4 theme (@theme block)
 lib/content.ts        ALL copy and data — single source of truth
 components/           one per section
+public/logo.png       TBW logo (headphones + wood texture)
+public/favicon.svg    SVG favicon (wood-themed)
 ```
+
+### Branding Assets
+
+- **Logo:** `public/logo.png` — TBW headphones logo with wood texture. Source file at repo root: `Company Logo.png`
+- **Favicon:** `public/favicon.svg` — wood-themed SVG favicon
+- **Header:** `components/Nav.tsx` — logo + "The Broken Wood" text in Wordmark component
 
 Tailwind v4 — **no `tailwind.config`**. Theme in `@theme` block in globals.css.
 
