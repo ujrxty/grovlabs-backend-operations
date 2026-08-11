@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   title: "The Broken Wood — Performance Marketing & Lead Generation",
   description:
     "The Broken Wood runs paid acquisition and sells qualified leads on CPA and CPL terms across insurance, legal and financial verticals. Real-time delivery for advertisers, open campaigns for publishers.",
+  icons: {
+    icon: "/favicon.svg",
+  },
   openGraph: {
     type: "website",
     url: "https://thebrokenwood.com",

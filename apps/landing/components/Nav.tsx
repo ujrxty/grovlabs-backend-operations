@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Menu, X, Phone, LogIn } from "lucide-react";
 import { NAV, SITE } from "@/lib/content";
 
@@ -8,14 +9,17 @@ const rawDashboardUrl = process.env.NEXT_PUBLIC_DASHBOARD_URL || "#";
 const DASHBOARD_URL = rawDashboardUrl === "#" ? "#" :
   rawDashboardUrl.startsWith("http") ? rawDashboardUrl : `https://${rawDashboardUrl}`;
 
-/** Placeholder wordmark. Drop the real logo in /public and swap for next/image. */
 export function Wordmark() {
   return (
-    <a href="#top" className="flex items-center gap-2.5">
-      <span className="grid h-8 w-10 place-items-center rounded-[3px] bg-ink font-mono text-[10px] font-medium text-paper tracking-tight">
-        TBW
-      </span>
-      <span className="text-[15px] font-semibold tracking-[-0.01em]">{SITE.name}</span>
+    <a href="#top" className="flex items-center">
+      <Image
+        src="/logo.png"
+        alt={SITE.name}
+        width={180}
+        height={54}
+        className="h-10 w-auto"
+        priority
+      />
     </a>
   );
 }
