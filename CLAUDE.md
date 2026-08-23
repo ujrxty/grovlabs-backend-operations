@@ -66,12 +66,19 @@ Manual deploy: Render Dashboard → select service → Manual Deploy
 **Dashboard (`grovlabs-dashboard`):**
 - `NEXTAUTH_SECRET` — auto-generated
 - `NEXTAUTH_URL` — the dashboard's public URL
+- `RESEND_API_KEY` — for sending invoices/emails
+- `TD_PUBLIC_KEY` — TrackDrive API (for billing page)
+- `TD_PRIVATE_KEY` — TrackDrive API (for billing page)
+- `TD_SUBDOMAIN` — e.g. `grovlabs`
+- `QA_AGENT_URL` — e.g. `https://api.grovlabs.com`
 
 **QA Agent (`grovlabs-qa-agent`):**
 - `TRACKDRIVE_PUBLIC_KEY` — TrackDrive API public key
 - `TRACKDRIVE_PRIVATE_KEY` — TrackDrive API private key
 - `TRACKDRIVE_BASE_URL` — e.g. `https://grovlabs.trackdrive.com`
-- `TELEGRAM_BOT_TOKEN` — from @BotFather
+- `OPENAI_API_KEY` — for Whisper transcription + GPT-4o analysis
+- `DISCORD_WEBHOOK_URL` — for QA flagged call alerts
+- `TELEGRAM_BOT_TOKEN` — from @BotFather (for onboarding notifications)
 - `TELEGRAM_CHAT_ID` — group/channel for notifications
 - `VENDOR_PORTAL_URL` — e.g. `https://grovlabs-vendor-portal.onrender.com`
 
@@ -141,8 +148,11 @@ public/favicon.svg    SVG favicon
 ### Branding Assets
 
 - **Logo:** `public/logo.png` — GrovLabs logo
-- **Favicon:** `public/favicon.svg` — GrovLabs favicon
+- **Favicon:** `public/favicon.svg` — Black square with white "G" and lime dot
 - **Header:** `components/Nav.tsx` — logo + "GrovLabs" text in Wordmark component
+
+The favicon (`public/favicon.svg` and `app/icon.svg`) is consistent across all apps:
+dashboard, vendor-portal, and landing. Same as grovlabs.com (agency website).
 
 Tailwind v4 — **no `tailwind.config`**. Theme in `@theme` block in globals.css.
 
@@ -190,8 +200,60 @@ Features:
 - Application review (approve/reject)
 - Vendor management
 - IO/Agreement management and countersigning
-- Call QA review
+- Call QA review and logs
+- QA Settings (thresholds, triggers, schedule)
+- Billing (vendor payouts, buyer invoices)
 - Analytics and reporting
+
+### QA Settings (`/qa-settings`)
+
+Configurable settings stored in `system_settings` table:
+- **Confidence thresholds** — normal and high-sensitivity
+- **Duration thresholds** — per campaign type (medicare, solar, etc.)
+- **Primary/Secondary triggers** — phrases indicating cold transfers
+- **Schedule** — start hour, end hour, timezone for QA bot runs
+
+### Billing (`/billing`)
+
+Two tabs:
+- **Vendor Payouts** — generate payout reports for vendors
+- **Buyer Invoices** — generate and email invoices to buyers
+
+Requires TrackDrive credentials (`TD_*` env vars) and Resend (`RESEND_API_KEY`).
+
+## Email Templates
+
+Professional email templates in `apps/dashboard/lib/email-templates.ts`.
+
+Uses Resend for sending. Templates available:
+- `invoiceEmail` — buyer invoices with campaign breakdown
+- `welcomeEmail` — IO executed / welcome to network
+- `signRequestEmail` — IO/MSA signing requests
+- `applicationStatusEmail` — approved/rejected notifications
+- `notificationEmail` — generic notifications
+
+Design: Clean light theme with dark header, GrovLabs branding.
+
+## Call QA System
+
+Automatic call quality analysis pipeline:
+
+1. TrackDrive webhook triggers on call end
+2. If duration meets threshold, recording downloaded
+3. OpenAI Whisper transcribes audio
+4. GPT-4o analyzes for cold transfer patterns
+5. Flagged calls sent to Discord with details
+6. All results stored in `qa_analysis` table
+
+Key modules in QA Agent:
+- **QASettingsModule** — configurable thresholds and triggers
+- **TranscriptionModule** — Whisper API integration
+- **AnalysisModule** — GPT-4o cold transfer detection
+- **DiscordModule** — flagged call alerts
+
+Test endpoints:
+- `GET /webhooks/test/recent-calls` — list recent TrackDrive calls
+- `POST /webhooks/test/process-call` — manually process a call
 
 ## Telegram Bot Setup
 
