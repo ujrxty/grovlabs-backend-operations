@@ -21,6 +21,10 @@ function getTransporter() {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    // Force IPv4 to avoid ENETUNREACH on IPv6
+    family: 4,
+    connectionTimeout: 30000,
+    greetingTimeout: 15000,
   });
 }
 
