@@ -305,7 +305,7 @@ export function LossMonitorContent() {
               <FieldLabel>Who gets the alert emails</FieldLabel>
               <Input value={settings.recipients}
                 onChange={(e) => update({ recipients: e.target.value })}
-                placeholder="sammyabdel@thebrokenwood.com" />
+                placeholder="uj@grovlabs.com" />
               <p className="text-xs text-muted-foreground mt-3">
                 Comma-separated. One grouped email is sent per check when campaigns are flagged.
               </p>

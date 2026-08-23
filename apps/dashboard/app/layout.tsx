@@ -12,8 +12,8 @@ const jakartaSans = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-di
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' })
 
 export const metadata = {
-  title: 'The Broken Wood Admin Dashboard',
-  description: 'Internal admin dashboard for The Broken Wood Inc',
+  title: 'GrovLabs Admin Dashboard',
+  description: 'Internal admin dashboard for GrovLabs Inc',
   metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
   icons: {
     icon: '/favicon.svg',
@@ -31,14 +31,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <script src="https://apps.abacus.ai/chatllm/appllm-lib.js"></script>
-      </head>
+      <head />
       <body className={`${dmSans.variable} ${jakartaSans.variable} ${jetbrainsMono.variable} font-sans`}>
         <Providers>
           <ThemeProvider
             attribute="class"
-            defaultTheme="light"
+            defaultTheme="dark"
+            forcedTheme="dark"
             enableSystem={false}
             disableTransitionOnChange
           >

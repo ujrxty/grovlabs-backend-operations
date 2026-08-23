@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db'
 import { sendNotificationEmail, emailTemplate } from '@/lib/email'
 import crypto from 'crypto'
 
-const BACKEND_URL = 'https://bsbwqa.abacusai.app'
+const BACKEND_URL = process.env.QA_AGENT_URL || 'http://localhost:3003'
 
 function generateToken(): string {
   return crypto.randomBytes(8).toString('hex')
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     // Send confirmation to vendor
     const vendorContent = `
-      <p style="color: #374151; line-height: 1.6;">Thank you for submitting your vendor application to The Broken Wood Inc.</p>
+      <p style="color: #374151; line-height: 1.6;">Thank you for submitting your vendor application to GrovLabs Inc.</p>
       <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
         <p style="margin: 6px 0; color: #374151;"><strong>Company:</strong> ${company_name}</p>
         <p style="margin: 6px 0; color: #374151;"><strong>Campaign(s):</strong> ${campaignNames}</p>
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     `
     const vendorEmailResult = await sendNotificationEmail({
       notificationId: process.env.NOTIF_ID_APPLICATION_RECEIVED_VENDOR_CONFIRMATION ?? '',
-      subject: `Application Received — ${subjectCampaigns} — The Broken Wood Inc`,
+      subject: `Application Received — ${subjectCampaigns} — GrovLabs Inc`,
       body: emailTemplate('Application Received', vendorContent),
       recipientEmail: email?.trim?.()?.toLowerCase?.() ?? '',
     })

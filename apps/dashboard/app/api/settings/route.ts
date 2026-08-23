@@ -10,13 +10,29 @@ const SETTINGS_KEY = 'system_settings'
 // Default settings
 const DEFAULT_SETTINGS = {
   timezone: 'America/New_York',
-  companyName: 'The Broken Wood Inc',
-  companyAddress: 'Downtown Santa Monica, CA 90402',
-  signatoryName: 'Sammy Abdel',
+  companyName: 'GrovLabs Inc',
+  companyAddress: '8301 State Line Rd Ste 220, Kansas City, MO 64114',
+  signatoryName: 'UJ',
   signatoryTitle: 'Chief Executive Officer',
-  contactEmail: 'sammyabdel@thebrokenwood.com',
-  contactPhone: '+1 (862) 366-7366',
+  contactEmail: 'uj@grovlabs.com',
+  contactPhone: '+1 (754) 344-0773',
   brandColor: '#8b5a2b',
+  // SMTP Settings
+  smtpEnabled: false,
+  smtpProvider: 'gmail',
+  smtpHost: 'smtp.gmail.com',
+  smtpPort: '587',
+  smtpUser: '',
+  smtpPass: '',
+  smtpFromEmail: '',
+  smtpFromName: 'GrovLabs Inc',
+  smtpSecure: true,
+  // AI Settings
+  openaiApiKey: '',
+  // TrackDrive Settings
+  trackdriveSubdomain: 'grovlabs',
+  trackdrivePublicKey: '',
+  trackdrivePrivateKey: '',
 }
 
 export async function GET() {

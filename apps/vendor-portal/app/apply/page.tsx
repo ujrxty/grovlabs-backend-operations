@@ -22,14 +22,14 @@ export default async function ApplyPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-[#050505]">
       <PortalHeader />
       <main className="flex-1">
         <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
-          <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-white">
             Vendor Application
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-white/60">
             Complete the form below to apply for your selected campaigns. All fields marked with * are required.
           </p>
           <ApplicationForm campaigns={campaigns} />

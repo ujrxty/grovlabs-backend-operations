@@ -49,7 +49,9 @@ export function IOContent() {
   const [detailLoading, setDetailLoading] = useState(false)
   const [detail, setDetail] = useState<any>(null)
   const [countersigning, setCountersigning] = useState(false)
+  const [countersigningIO, setCountersigningIO] = useState(false)
   const [voiding, setVoiding] = useState(false)
+  const [resending, setResending] = useState(false)
 
   const fetchOrders = useCallback(async () => {
     setLoading(true)
@@ -113,6 +115,25 @@ export function IOContent() {
     setCountersigning(false)
   }
 
+  const countersignIO = async (ioId: string, ioNumber: string) => {
+    if (!confirm(`Are you sure you want to countersign ${ioNumber}?`)) return
+    setCountersigningIO(true)
+    try {
+      const res = await fetch(`/api/insertion-orders/${ioId}/countersign`, { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || data?.error) {
+        toast.error(data?.error || 'Failed to countersign IO.')
+      } else {
+        toast.success(`${ioNumber} countersigned successfully!`)
+        setViewIO(null); setDetail(null)
+        fetchOrders()
+      }
+    } catch {
+      toast.error('Failed to countersign IO.')
+    }
+    setCountersigningIO(false)
+  }
+
   const voidIO = async (ioId: string, ioNumber: string) => {
     if (!confirm(`Are you sure you want to cancel ${ioNumber}? This will void the IO and any pending agreements attached to it. This cannot be undone.`)) return
     setVoiding(true)
@@ -133,6 +154,22 @@ export function IOContent() {
       toast.error('Failed to void insertion order.')
     }
     setVoiding(false)
+  }
+
+  const resendIOEmail = async (ioId: string, ioNumber: string) => {
+    setResending(true)
+    try {
+      const res = await fetch(`/api/insertion-orders/${ioId}/resend-email`, { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || data?.error) {
+        toast.error(data?.error || 'Failed to resend email.')
+      } else {
+        toast.success(`IO signing email resent for ${ioNumber}`)
+      }
+    } catch {
+      toast.error('Failed to resend email.')
+    }
+    setResending(false)
   }
 
   const getLpa = (io: InsertionOrder): LeadPurchaseAgreement | null => {
@@ -324,7 +361,14 @@ export function IOContent() {
                         </span>
                       </div>
                     </div>
-                    {/* IO doesn't have an external download endpoint — terms are in-DB */}
+                    {detail?.status === 'pending_counter' && (
+                      <div className="pt-1">
+                        <Button size="sm" className="text-xs h-7" onClick={() => countersignIO(detail.id, detail.io_number)} disabled={countersigningIO}>
+                          {countersigningIO ? <Loader2 className="h-3 w-3 mr-1.5 animate-spin" /> : <PenLine className="h-3 w-3 mr-1.5" />}
+                          Countersign IO
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {/* LPA Document Card */}
@@ -416,6 +460,22 @@ export function IOContent() {
                 <div className="border-t pt-4">
                   <h4 className="font-medium text-sm mb-2">Special Terms</h4>
                   <pre className="text-xs bg-muted p-3 rounded-lg whitespace-pre-wrap">{detail.special_terms}</pre>
+                </div>
+              )}
+
+              {/* Resend Email — only for pending_vendor IOs */}
+              {detail?.status === 'pending_vendor' && (
+                <div className="border-t pt-4">
+                  <Button
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={resending}
+                    onClick={() => resendIOEmail(detail.id, detail.io_number)}
+                  >
+                    {resending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
+                    Resend IO Email
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1.5">Resends the IO signing link email to the vendor.</p>
                 </div>
               )}
 

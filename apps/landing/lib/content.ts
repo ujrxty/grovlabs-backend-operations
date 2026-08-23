@@ -1,7 +1,7 @@
 /**
  * CONTENT SOURCE NOTES
  * --------------------
- * verified  — taken directly from thebrokenwood.com
+ * verified  — taken directly from grovlabs.com
  * derived   — factually follows from the above (e.g. SSDI/ACA/Medicare are US-only programmes)
  * standard  — how this model works industry-wide; true regardless of operator
  * TODO      — company-specific detail that must be supplied
@@ -10,13 +10,13 @@
  */
 
 export const SITE = {
-  name: "The Broken Wood",
+  name: "GrovLabs",
   descriptor: "Inbound call generation and real-time lead exchange",
   tagline: "High-intent calls. Verified consent. Posted in real time.",
-  phone: "(862) 366-7366",
-  phoneHref: "tel:8623667366",
-  email: "info@thebrokenwood.com",
-  hq: { label: "Headquarters", city: "Noblesville, IN", lines: ["435 Bayshore Drive, Unit 301", "Noblesville, IN 46060"] },
+  phone: "(754) 344-0773",
+  phoneHref: "tel:7543440773",
+  email: "info@grovlabs.com",
+  hq: { label: "Headquarters", city: "Kansas City, MO", lines: ["8301 State Line Rd Ste 220", "Kansas City, MO 64114"] },
   west: { label: "West Coast", city: "Santa Monica, CA", lines: ["Downtown Santa Monica", "CA 90402"] },
 };
 

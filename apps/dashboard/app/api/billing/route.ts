@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
-const TD_BASE_URL = `https://${process.env.TD_SUBDOMAIN || 'bsbwinc'}.trackdrive.com/api/v1`
+const TD_BASE_URL = `https://${process.env.TD_SUBDOMAIN || 'grovlabs'}.trackdrive.com/api/v1`
 
 function getAuthHeader(): string {
   const pub = process.env.TD_PUBLIC_KEY || ''

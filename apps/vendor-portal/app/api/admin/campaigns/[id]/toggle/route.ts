@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 
-const BACKEND_URL = 'https://bsbwqa.abacusai.app'
+const BACKEND_URL = process.env.QA_AGENT_URL || 'http://localhost:3003'
 
 function checkAuth(request: NextRequest): boolean {
   const pw = request.headers.get('x-admin-password') ?? ''

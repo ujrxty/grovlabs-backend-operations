@@ -57,8 +57,8 @@ export function CampaignListing({ campaigns }: { campaigns: Campaign[] }) {
     <div className="max-w-[1200px] mx-auto px-4 sm:px-6 pb-12">
       {safeCampaigns.length === 0 ? (
         <div className="text-center py-16">
-          <Briefcase className="h-12 w-12 text-[#b87333]/30 mx-auto mb-4" />
-          <p className="text-gray-500">No active campaigns at this time. Please check back later.</p>
+          <Briefcase className="h-12 w-12 text-[#c4ff00]/30 mx-auto mb-4" />
+          <p className="text-white/50">No active campaigns at this time. Please check back later.</p>
         </div>
       ) : (
         <>
@@ -74,55 +74,55 @@ export function CampaignListing({ campaigns }: { campaigns: Campaign[] }) {
                   onClick={() => toggleCampaign(campaign?.id ?? '')}
                   className={cn(
                     'relative cursor-pointer rounded-xl p-5 transition-all duration-200',
-                    'border-2',
+                    'border',
                     isSelected
-                      ? 'border-[#b87333]/50 bg-[#b87333]/5/60 shadow-md'
-                      : 'border-gray-100 bg-white hover:border-[#b87333]/20 hover:shadow-sm'
+                      ? 'border-[#c4ff00]/50 bg-[#a3e635]/5 shadow-[0_0_20px_rgba(196,255,0,0.1)]'
+                      : 'border-white/[0.08] bg-white/[0.02] hover:border-[#c4ff00]/20 hover:bg-white/[0.04]'
                   )}
                 >
                   <div className="flex items-start gap-3">
                     <div className={cn(
                       'mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors',
-                      isSelected ? 'border-[#b87333] bg-[#b87333]' : 'border-gray-300'
+                      isSelected ? 'border-[#c4ff00] bg-[#a3e635]' : 'border-white/30'
                     )}>
-                      {isSelected && <CheckCircle2 className="h-4 w-4 text-white" />}
+                      {isSelected && <CheckCircle2 className="h-4 w-4 text-[#050505]" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-display font-semibold text-gray-900 text-base">{campaign?.name ?? 'Campaign'}</h3>
-                        <span className="inline-flex items-center rounded-full bg-[#b87333]/10 px-2.5 py-0.5 text-xs font-medium text-[#9a5f28]">
+                        <h3 className="font-display font-semibold text-white text-base">{campaign?.name ?? 'Campaign'}</h3>
+                        <span className="inline-flex items-center rounded-full bg-[#a3e635]/10 px-2.5 py-0.5 text-xs font-medium text-[#c4ff00]">
                           {campaign?.industry ?? ''}
                         </span>
                       </div>
                       {campaign?.description && (
-                        <p className="mt-1 text-sm text-gray-500 line-clamp-2">{campaign.description}</p>
+                        <p className="mt-1 text-sm text-white/50 line-clamp-2">{campaign.description}</p>
                       )}
                       <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                        <div className="flex items-center gap-1.5 text-gray-600">
-                          <Phone className="h-3.5 w-3.5 text-[#b87333]/50" />
+                        <div className="flex items-center gap-1.5 text-white/60">
+                          <Phone className="h-3.5 w-3.5 text-[#c4ff00]/50" />
                           <span>{campaign?.call_type ?? ''}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-gray-600">
-                          <DollarSign className="h-3.5 w-3.5 text-green-600" />
-                          <span className="font-medium text-green-700">{(campaign?.name ?? '').toLowerCase().includes('rtb') ? 'Variable' : (campaign?.payout_display ?? `$${campaign?.payout ?? '0'}`)}</span>
-                          <span className="text-xs text-gray-400">{formatPayoutType(campaign?.payout_type ?? '')}</span>
+                        <div className="flex items-center gap-1.5 text-white/60">
+                          <DollarSign className="h-3.5 w-3.5 text-[#c4ff00]" />
+                          <span className="font-medium text-[#c4ff00]">{(campaign?.name ?? '').toLowerCase().includes('rtb') ? 'Variable' : (campaign?.payout_display ?? `$${campaign?.payout ?? '0'}`)}</span>
+                          <span className="text-xs text-white/40">{formatPayoutType(campaign?.payout_type ?? '')}</span>
                         </div>
                         {campaign?.geographic_focus && (
-                          <div className="flex items-center gap-1.5 text-gray-600">
-                            <MapPin className="h-3.5 w-3.5 text-[#b87333]/50" />
+                          <div className="flex items-center gap-1.5 text-white/60">
+                            <MapPin className="h-3.5 w-3.5 text-[#c4ff00]/50" />
                             <span>{campaign.geographic_focus}</span>
                           </div>
                         )}
                         {campaign?.min_duration != null && (campaign?.min_duration ?? 0) > 0 && (
-                          <div className="flex items-center gap-1.5 text-gray-600">
-                            <Clock className="h-3.5 w-3.5 text-[#b87333]/50" />
+                          <div className="flex items-center gap-1.5 text-white/60">
+                            <Clock className="h-3.5 w-3.5 text-[#c4ff00]/50" />
                             <span>{campaign.min_duration}s min duration</span>
                           </div>
                         )}
                       </div>
                       {campaign?.requirements && (
-                        <p className="mt-2 text-xs text-gray-500 line-clamp-2">
-                          <span className="font-medium text-gray-600">Requirements:</span> {campaign.requirements}
+                        <p className="mt-2 text-xs text-white/40 line-clamp-2">
+                          <span className="font-medium text-white/60">Requirements:</span> {campaign.requirements}
                         </p>
                       )}
                     </div>
@@ -134,16 +134,16 @@ export function CampaignListing({ campaigns }: { campaigns: Campaign[] }) {
 
           {/* Sticky bottom bar */}
           <div className={cn(
-            'fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 bg-white border-t border-[#b87333]/10 shadow-lg',
+            'fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 bg-[#0a0a0a] border-t border-white/[0.08]',
             selected.size > 0 ? 'translate-y-0' : 'translate-y-full'
           )}>
             <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-              <p className="text-sm text-gray-600">
-                <span className="font-semibold text-[#b87333]">{selected.size}</span> campaign{selected.size !== 1 ? 's' : ''} selected
+              <p className="text-sm text-white/60">
+                <span className="font-semibold text-[#c4ff00]">{selected.size}</span> campaign{selected.size !== 1 ? 's' : ''} selected
               </p>
               <button
                 onClick={handleApply}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#b87333] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors shadow-md"
+                className="inline-flex items-center gap-2 rounded-lg bg-[#a3e635] px-6 py-2.5 text-sm font-semibold text-[#050505] hover:bg-[#bef264] hover:shadow-[0_0_20px_rgba(196,255,0,0.3)] transition-all"
               >
                 Apply Now <ArrowRight className="h-4 w-4" />
               </button>

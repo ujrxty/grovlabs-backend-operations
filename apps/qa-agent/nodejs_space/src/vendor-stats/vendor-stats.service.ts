@@ -293,7 +293,7 @@ export class VendorStatsService {
       <!-- Footer -->
       <table width="100%" cellpadding="0" cellspacing="0" style="background: #edf2f7; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none;">
         <tr><td style="padding: 20px 24px; text-align: center;">
-          <p style="margin: 0; font-size: 12px; color: #718096;">This is an automated daily report from The Broken Wood Inc.</p>
+          <p style="margin: 0; font-size: 12px; color: #718096;">This is an automated daily report from GrovLabs Inc.</p>
           <p style="margin: 6px 0 0; font-size: 12px; color: #a0aec0;">Questions? Reply to this email or contact your account manager.</p>
         </td></tr>
       </table>
@@ -319,7 +319,7 @@ export class VendorStatsService {
         `${o.offerName}: ${o.totalCalls} calls, ${o.convertedCalls} converted (${o.conversionRate.toFixed(1)}%), $${o.payout.toFixed(2)} payout, ${o.noBuyerCalls} no-buyer, avg ${Math.round(o.avgDurationSec)}s duration`
       ).join('\n');
 
-      const prompt = `You are a performance marketing analyst at The Broken Wood Inc, a call campaign brokerage. A vendor named "${stats.vendorName}" just finished their day. Analyze their stats and give them 2-3 short, specific, actionable tips to improve tomorrow.
+      const prompt = `You are a performance marketing analyst at GrovLabs Inc, a call campaign brokerage. A vendor named "${stats.vendorName}" just finished their day. Analyze their stats and give them 2-3 short, specific, actionable tips to improve tomorrow.
 
 THEIR STATS FOR ${stats.date}:
 - Total Calls: ${stats.totalCalls}
@@ -345,7 +345,7 @@ RULES:
 - If no-buyer rate is high (>20%), mention it — it means calls are coming in at times/geos where buyers aren't active
 - If conversion is strong (>15%), acknowledge it and suggest scaling
 - Keep each tip to 1-2 sentences max
-- Do not mention BSBW by name in the tips
+- Do not mention GrovLabs by name in the tips
 
 Respond in JSON format:
 {
@@ -392,9 +392,9 @@ Respond with raw JSON only.`;
     try {
       const hostname = (() => {
         try {
-          return new URL(process.env.APP_ORIGIN || 'https://bsbw-qa-agent.abacusai.app').hostname;
+          return new URL(process.env.APP_ORIGIN || 'https://grovlabs.com').hostname;
         } catch {
-          return 'bsbw-qa-agent.abacusai.app';
+          return 'grovlabs.com';
         }
       })();
 
@@ -416,8 +416,8 @@ Respond with raw JSON only.`;
           is_html: true,
           recipient_email: stats.vendorEmail,
           sender_email: `noreply@${hostname}`,
-          sender_alias: 'The Broken Wood Inc',
-          reply_to: 'sammyabdel@thebrokenwood.com',
+          sender_alias: 'GrovLabs Inc',
+          reply_to: 'uj@grovlabs.com',
         }),
       });
 
@@ -440,9 +440,9 @@ Respond with raw JSON only.`;
             subject: `[Copy] ${subject}`,
             body: html,
             is_html: true,
-            recipient_email: 'sammyabdel@thebrokenwood.com',
+            recipient_email: 'uj@grovlabs.com',
             sender_email: `noreply@${hostname}`,
-            sender_alias: 'The Broken Wood Inc',
+            sender_alias: 'GrovLabs Inc',
           }),
         });
       } catch (ccErr: any) {

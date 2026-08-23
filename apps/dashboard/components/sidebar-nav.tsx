@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button'
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/applications', label: 'Applications', icon: FileText },
   { href: '/vendors', label: 'Vendors', icon: Users },
   { href: '/campaigns', label: 'Campaigns', icon: Megaphone },
   { href: '/insertion-orders', label: 'Insertion Orders', icon: FileText },
@@ -43,12 +44,12 @@ export function SidebarNav() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-2 py-3 mb-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#a3e635] text-[#050505]">
           <Shield className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="font-display text-base font-semibold tracking-tight">TBW</h2>
-          <p className="text-[11px] text-muted-foreground leading-none">Admin Dashboard</p>
+          <h2 className="font-display text-base font-semibold tracking-tight text-white">GrovLabs</h2>
+          <p className="text-[11px] text-white/50 leading-none">Admin Dashboard</p>
         </div>
       </div>
 
@@ -63,8 +64,8 @@ export function SidebarNav() {
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  ? 'bg-[#a3e635]/10 text-[#a3e635]'
+                  : 'text-white/50 hover:bg-white/5 hover:text-white'
               )}
             >
               {Icon && <Icon className="h-4 w-4 shrink-0" />}

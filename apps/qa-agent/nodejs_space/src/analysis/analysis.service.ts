@@ -33,12 +33,12 @@ export class AnalysisService {
   ): Promise<AnalysisResult> {
     this.logger.log(`Analyzing transcript for call ${callContext.callId}`);
 
-    const apiKey = this.configService.get<string>('ABACUSAI_API_KEY', '');
+    const apiKey = this.configService.get<string>('OPENAI_API_KEY', '');
     const sensitivityNote = callContext.isHighSensitivity
       ? `\n\nIMPORTANT: This affiliate is under HIGH-SENSITIVITY MONITORING. Apply stricter evaluation criteria. Flag calls even with lower confidence indicators. Any hint of cold transfer patterns should be flagged.`
       : '';
 
-    const prompt = `You are a QA analyst for BSBW Inc, a performance marketing company that brokers INBOUND call campaigns. Your ONLY job is to detect "cold transfers" — outbound calls from marketing vendors/affiliates that are fraudulently transferred into our inbound-only DID (phone number) to appear as if the consumer called us.
+    const prompt = `You are a QA analyst for GrovLabs Inc, a performance marketing company that brokers INBOUND call campaigns. Your ONLY job is to detect "cold transfers" — outbound calls from marketing vendors/affiliates that are fraudulently transferred into our inbound-only DID (phone number) to appear as if the consumer called us.
 
 CRITICAL CONTEXT — WHAT IS NORMAL FOR THESE CAMPAIGNS:
 - These are INBOUND calls. Consumers see our ads, visit websites, or find our number and CALL US. This is normal and expected.
@@ -90,17 +90,16 @@ Analyze ONLY for evidence of cold transfers (vendor calling consumer outbound an
 Respond with raw JSON only. Do not include code blocks, markdown, or any other formatting.`;
 
     try {
-      const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
+          model: 'gpt-4o',
           messages: [{ role: 'user', content: prompt }],
           response_format: { type: 'json_object' },
-          stream: false,
         }),
       });
 

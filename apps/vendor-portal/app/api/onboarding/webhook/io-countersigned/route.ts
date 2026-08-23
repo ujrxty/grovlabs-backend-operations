@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       data: {
         status: 'active',
         counter_signed_at: new Date(),
-        counter_sign_by: 'Sammy Abdel, CEO - The Broken Wood Inc',
+        counter_sign_by: 'UJ, CEO - GrovLabs Inc',
       },
     })
 
@@ -81,9 +81,9 @@ export async function POST(request: NextRequest) {
 
     // Send welcome email to vendor
     const content = `
-      <p style="color: #374151;">Welcome to The Broken Wood Inc vendor network, ${displayContactName || displayCompanyName}! 🎉</p>
+      <p style="color: #374151;">Welcome to GrovLabs vendor network, ${displayContactName || displayCompanyName}! 🎉</p>
       <p style="color: #374151;">Your Insertion Order has been <strong style="color: #16a34a;">fully executed</strong>. You are now an active vendor partner.</p>
-      
+
       <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 16px 0; border: 1px solid #a7f3d0;">
         <p style="margin: 6px 0; color: #065f46;"><strong>IO Number:</strong> ${io?.io_number ?? ''}</p>
         <p style="margin: 6px 0; color: #065f46;"><strong>Vendor:</strong> ${displayCompanyName}</p>
@@ -97,21 +97,21 @@ export async function POST(request: NextRequest) {
 
       <h3 style="color: #1f2937; margin: 24px 0 12px 0;">What's Next?</h3>
       <p style="color: #374151;">Please add us on the platforms below so we can get your campaigns set up and provide you with DIDs and posting specs:</p>
-      
+
       <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 16px 0; border: 1px solid #bae6fd;">
         <p style="margin: 0 0 12px 0; color: #0c4a6e; font-weight: 700; font-size: 15px;">📞 Contact Information</p>
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
-            <td style="padding: 6px 0; color: #374151; vertical-align: top; width: 40%;"><strong>Sammy Abdel</strong></td>
-            <td style="padding: 6px 0; color: #374151;">Owner / Campaign Manager</td>
+            <td style="padding: 6px 0; color: #374151; vertical-align: top; width: 40%;"><strong>UJ</strong></td>
+            <td style="padding: 6px 0; color: #374151;">CEO / Campaign Manager</td>
           </tr>
           <tr>
             <td style="padding: 4px 0; color: #6b7280;">Email:</td>
-            <td style="padding: 4px 0; color: #374151; font-weight: 600;">sammyabdel@thebrokenwood.com</td>
+            <td style="padding: 4px 0; color: #374151; font-weight: 600;">uj@grovlabs.com</td>
           </tr>
           <tr>
             <td style="padding: 4px 0; color: #6b7280;">WhatsApp:</td>
-            <td style="padding: 4px 0; color: #374151; font-weight: 600;">+1 (862) 366-7366</td>
+            <td style="padding: 4px 0; color: #374151; font-weight: 600;">+1 (754) 344-0773</td>
           </tr>
         </table>
       </div>
@@ -121,8 +121,8 @@ export async function POST(request: NextRequest) {
 
     await sendNotificationEmail({
       notificationId: process.env.NOTIF_ID_IO_FULLY_EXECUTED ?? '',
-      subject: `Welcome to The Broken Wood Inc! IO ${io?.io_number ?? ''} Fully Executed`,
-      body: emailTemplate('Welcome to The Broken Wood Inc! 🎉', content),
+      subject: `Welcome to GrovLabs! IO ${io?.io_number ?? ''} Fully Executed`,
+      body: emailTemplate('Welcome to GrovLabs! 🎉', content),
       recipientEmail: io?.vendor?.email ?? '',
     })
 

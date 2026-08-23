@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Token and code are required' }, { status: 400 })
     }
 
-    const result = verifyCode(token?.trim?.(), code?.trim?.())
+    const result = await verifyCode(token?.trim?.(), code?.trim?.())
     if (!result?.valid) {
       return NextResponse.json({ success: false, error: result?.error ?? 'Invalid code' }, { status: 400 })
     }

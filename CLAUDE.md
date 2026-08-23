@@ -1,13 +1,13 @@
 # CLAUDE.md
 
-Full-stack monorepo for **The Broken Wood** — a US performance marketing and
+Full-stack monorepo for **GrovLabs** — a US performance marketing and
 lead generation company. Deployed to Render as a single Blueprint.
 
 ## Monorepo Structure
 
 ```
 apps/
-  landing/           Next.js 14 — Marketing site (thebrokenwood.com)
+  landing/           Next.js 14 — Marketing site (grovlabs.com)
   dashboard/         Next.js 14 — Admin dashboard (internal)
   vendor-portal/     Next.js 14 — Vendor self-service portal
   qa-agent/
@@ -57,23 +57,23 @@ Manual deploy: Render Dashboard → select service → Manual Deploy
 ### Environment Variables (set in Render)
 
 **All services:**
-- `DATABASE_URL` — auto-injected from `tbw-database`
+- `DATABASE_URL` — auto-injected from `grovlabs-database`
 - `NODE_ENV=production`
 
-**Landing Page (`tbw-landing`):**
+**Landing Page (`grovlabs-landing`):**
 - `NEXT_PUBLIC_DASHBOARD_URL` — URL to dashboard for Login button
 
-**Dashboard (`tbw-dashboard`):**
+**Dashboard (`grovlabs-dashboard`):**
 - `NEXTAUTH_SECRET` — auto-generated
 - `NEXTAUTH_URL` — the dashboard's public URL
 
-**QA Agent (`tbw-qa-agent`):**
+**QA Agent (`grovlabs-qa-agent`):**
 - `TRACKDRIVE_PUBLIC_KEY` — TrackDrive API public key
 - `TRACKDRIVE_PRIVATE_KEY` — TrackDrive API private key
-- `TRACKDRIVE_BASE_URL` — e.g. `https://bsbwinc.trackdrive.com`
+- `TRACKDRIVE_BASE_URL` — e.g. `https://grovlabs.trackdrive.com`
 - `TELEGRAM_BOT_TOKEN` — from @BotFather
 - `TELEGRAM_CHAT_ID` — group/channel for notifications
-- `VENDOR_PORTAL_URL` — e.g. `https://tbw-vendor-portal.onrender.com`
+- `VENDOR_PORTAL_URL` — e.g. `https://grovlabs-vendor-portal.onrender.com`
 
 ## Vendor Onboarding Flow
 
@@ -124,7 +124,7 @@ Telegram callback patterns:
 
 ## Landing Page (apps/landing)
 
-Marketing site for thebrokenwood.com. Next.js 14 + Tailwind v4.
+Marketing site for grovlabs.com. Next.js 14 + Tailwind v4.
 
 ### Architecture
 
@@ -134,15 +134,15 @@ app/page.tsx          section order
 app/globals.css       Tailwind v4 theme (@theme block)
 lib/content.ts        ALL copy and data — single source of truth
 components/           one per section
-public/logo.png       TBW logo (headphones + wood texture)
-public/favicon.svg    SVG favicon (wood-themed)
+public/logo.png       GrovLabs logo
+public/favicon.svg    SVG favicon
 ```
 
 ### Branding Assets
 
-- **Logo:** `public/logo.png` — TBW headphones logo with wood texture. Source file at repo root: `Company Logo.png`
-- **Favicon:** `public/favicon.svg` — wood-themed SVG favicon
-- **Header:** `components/Nav.tsx` — logo + "The Broken Wood" text in Wordmark component
+- **Logo:** `public/logo.png` — GrovLabs logo
+- **Favicon:** `public/favicon.svg` — GrovLabs favicon
+- **Header:** `components/Nav.tsx` — logo + "GrovLabs" text in Wordmark component
 
 Tailwind v4 — **no `tailwind.config`**. Theme in `@theme` block in globals.css.
 
@@ -161,7 +161,7 @@ Unknown values are `null` and render as em-dash or "quoted on request".
 
 ## Vendor Portal (apps/vendor-portal)
 
-Self-service portal for vendors. Branded with TBW copper colors.
+Self-service portal for vendors. Branded with GrovLabs colors.
 
 Features:
 - Browse active campaigns
@@ -171,7 +171,7 @@ Features:
 - Sign Lead Purchase Agreements
 
 Key components:
-- `components/portal-header.tsx` — TBW branded nav
+- `components/portal-header.tsx` — GrovLabs branded nav
 - `app/page.tsx` — Campaign listing
 - `app/status/page.tsx` — Status checker
 - `app/io/sign/[token]/page.tsx` — IO signing
@@ -182,8 +182,8 @@ Key components:
 Internal admin dashboard. Next.js 14 + NextAuth.
 
 Default admin users (from seed):
-- sammyabdel@thebrokenwood.com / Admin123!
-- uj@thebrokenwood.com / BSBW26!
+- rayan@grovlabs.com / Admin123!
+- uj@grovlabs.com / GrovLabs26!
 
 Features:
 - Campaign management (CRUD, activate/deactivate)

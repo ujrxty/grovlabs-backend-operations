@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { sendNotificationEmail, emailTemplate } from '@/lib/email'
 
-const BACKEND_URL = 'https://bsbwqa.abacusai.app'
+const BACKEND_URL = process.env.QA_AGENT_URL || 'http://localhost:3003'
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,6 +65,18 @@ export async function POST(request: NextRequest) {
       console.error('Backend sign error:', backendErr?.message ?? backendErr)
     }
 
+    // Fallback: get LPA sign token directly from local DB if backend didn't return it
+    if (!agreementSignToken) {
+      const lpa = await prisma.lead_purchase_agreement.findFirst({
+        where: { io_id: io?.id ?? '' },
+        select: { sign_token: true, status: true },
+      })
+      if (lpa?.sign_token && lpa?.status === 'pending_vendor') {
+        agreementSignToken = lpa.sign_token
+        console.log('Using LPA token from local DB:', agreementSignToken)
+      }
+    }
+
     // Get the actual vendor name from the latest application
     let displayCompanyName = io?.vendor?.company_name ?? ''
     const latestApp = await prisma.vendor_application.findFirst({
@@ -117,7 +129,7 @@ export async function POST(request: NextRequest) {
     `
     await sendNotificationEmail({
       notificationId: process.env.NOTIF_ID_IO_SIGNED_BY_VENDOR ?? '',
-      subject: `IO Signed: ${io?.io_number ?? ''} - The Broken Wood Inc`,
+      subject: `IO Signed: ${io?.io_number ?? ''} - GrovLabs Inc`,
       body: emailTemplate('Insertion Order Signed', vendorContent),
       recipientEmail: io?.vendor?.email ?? '',
     })

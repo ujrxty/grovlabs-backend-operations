@@ -212,7 +212,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid ($30-$120). BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid ($30-$120). GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 21,
   },
   {
@@ -227,7 +227,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid ($20-$80). BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid ($20-$80). GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 22,
   },
   {
@@ -242,7 +242,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid ($30-$100). BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid ($30-$100). GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 23,
   },
   {
@@ -257,7 +257,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid ($30-$100). BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid ($30-$100). GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 24,
   },
   {
@@ -272,7 +272,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid. BSBW takes 15% of payout. 24/7 availability. NEW campaign.',
+    requirements: 'RTB: Payout varies by real-time buyer bid. GrovLabs takes 15% of payout. 24/7 availability. NEW campaign.',
     sort_order: 25,
   },
   {
@@ -287,7 +287,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid ($40-$200). BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid ($40-$200). GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 26,
   },
   {
@@ -302,7 +302,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid. BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid. GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 27,
   },
   {
@@ -317,7 +317,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid. BSBW takes 15% of payout. 24/7 availability. NEW campaign.',
+    requirements: 'RTB: Payout varies by real-time buyer bid. GrovLabs takes 15% of payout. 24/7 availability. NEW campaign.',
     sort_order: 28,
   },
   {
@@ -332,7 +332,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid. BSBW takes 15% of payout. 24/7 availability. NEW campaign.',
+    requirements: 'RTB: Payout varies by real-time buyer bid. GrovLabs takes 15% of payout. 24/7 availability. NEW campaign.',
     sort_order: 29,
   },
   {
@@ -347,7 +347,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid ($5-$30). BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid ($5-$30). GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 30,
   },
   {
@@ -362,7 +362,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid ($40-$150). BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid ($40-$150). GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 31,
   },
   {
@@ -377,7 +377,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid ($20-$70). BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid ($20-$70). GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 32,
   },
   {
@@ -392,7 +392,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid ($30-$200). BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid ($30-$200). GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 33,
   },
   {
@@ -407,7 +407,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid ($30-$175). BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid ($30-$175). GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 34,
   },
   {
@@ -422,7 +422,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid. BSBW takes 15% of payout. 24/7 availability. NEW campaign.',
+    requirements: 'RTB: Payout varies by real-time buyer bid. GrovLabs takes 15% of payout. 24/7 availability. NEW campaign.',
     sort_order: 35,
   },
   {
@@ -437,7 +437,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid ($20-$50). BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid ($20-$50). GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 36,
   },
   {
@@ -452,7 +452,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid. BSBW takes 15% of payout. 24/7 availability. NEW campaign.',
+    requirements: 'RTB: Payout varies by real-time buyer bid. GrovLabs takes 15% of payout. 24/7 availability. NEW campaign.',
     sort_order: 37,
   },
   {
@@ -467,7 +467,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid ($150-$600). BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid ($150-$600). GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 38,
   },
   {
@@ -482,7 +482,7 @@ const campaigns = [
     geographic_focus: 'Nationwide',
     allowed_traffic: 'All compliant traffic sources',
     restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers, Pre-recorded messages, Incentivized traffic',
-    requirements: 'RTB: Payout varies by real-time buyer bid ($30-$80). BSBW takes 15% of payout. 24/7 availability.',
+    requirements: 'RTB: Payout varies by real-time buyer bid ($30-$80). GrovLabs takes 15% of payout. 24/7 availability.',
     sort_order: 39,
   },
 ];

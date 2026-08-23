@@ -19,18 +19,18 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://thebrokenwood.com"),
-  title: "The Broken Wood | Performance Marketing & Lead Generation",
+  metadataBase: new URL("https://grovlabs.com"),
+  title: "GrovLabs | Performance Marketing & Lead Generation",
   description:
-    "The Broken Wood runs paid acquisition and sells qualified leads on CPA and CPL terms across insurance, legal and financial verticals. Real-time delivery for advertisers, open campaigns for publishers.",
+    "GrovLabs runs paid acquisition and sells qualified leads on CPA and CPL terms across insurance, legal and financial verticals. Real-time delivery for advertisers, open campaigns for publishers.",
   icons: {
     icon: "/favicon.svg",
   },
   openGraph: {
     type: "website",
-    url: "https://thebrokenwood.com",
-    siteName: "The Broken Wood",
-    title: "The Broken Wood | Performance Marketing & Lead Generation",
+    url: "https://grovlabs.com",
+    siteName: "GrovLabs",
+    title: "GrovLabs | Performance Marketing & Lead Generation",
     description:
       "Paid acquisition and qualified lead generation on CPA and CPL terms across insurance, legal and financial verticals.",
   },

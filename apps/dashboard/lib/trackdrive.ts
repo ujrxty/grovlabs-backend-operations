@@ -1,6 +1,6 @@
-// TrackDrive API client for bsbwinc.trackdrive.com
+// TrackDrive API client for grovlabs.trackdrive.com
 
-const TD_BASE_URL = `https://${process.env.TD_SUBDOMAIN || 'bsbwinc'}.trackdrive.com/api/v1`
+const TD_BASE_URL = `https://${process.env.TD_SUBDOMAIN || 'grovlabs'}.trackdrive.com/api/v1`
 
 function getAuthHeader(): string {
   const pub = process.env.TD_PUBLIC_KEY || ''

@@ -9,12 +9,12 @@ import { Badge } from '@/components/ui/badge'
 import { FileText, ScrollText, Download, Building2, User, MapPin, Mail, Phone, DollarSign, Calendar, Clock } from 'lucide-react'
 
 const COMPANY_INFO = {
-  name: 'The Broken Wood Inc',
-  address: 'Downtown Santa Monica, CA 90402',
-  signatory: 'Sammy Abdel',
+  name: 'GrovLabs Inc',
+  address: '8301 State Line Rd Ste 220, Kansas City, MO 64114',
+  signatory: 'UJ',
   title: 'Chief Executive Officer',
-  email: 'sammyabdel@thebrokenwood.com',
-  phone: '+1 (862) 366-7366',
+  email: 'uj@grovlabs.com',
+  phone: '+1 (754) 344-0773',
 }
 
 const PAYMENT_VARIABLES = [
@@ -33,7 +33,7 @@ const OTHER_VARIABLES = [
 
 const IO_TEMPLATE = `AFFILIATE INSERTION ORDER
 
-This Insertion Order ("IO") is entered into between The Broken Wood Inc
+This Insertion Order ("IO") is entered into between GrovLabs Inc
 ("Company") and [VENDOR_NAME] ("Affiliate"), and is subject to the terms
 below. This IO is effective as of the date of last signature.
 
@@ -116,11 +116,11 @@ below. This IO is effective as of the date of last signature.
 SIGNATURES
 
 
-THE BROKEN WOOD INC
+GROVLABS INC
 
 Signature: _______________________________
 
-Name:  Sammy Abdel
+Name:  UJ
 Title: Chief Executive Officer
 Date:  [COMPANY_SIGN_DATE]
 
@@ -138,7 +138,7 @@ const MSA_TEMPLATE = `LEAD PURCHASE AGREEMENT
 
 This Lead Purchase Agreement ("Agreement") is entered into by and between:
 
-THE BROKEN WOOD INC ("Company")
+GROVLABS INC ("Company")
 Downtown Santa Monica, CA 90402
 
 and
@@ -217,11 +217,11 @@ Effective Date: [EFFECTIVE_DATE]
 SIGNATURES
 
 
-THE BROKEN WOOD INC
+GROVLABS INC
 
 Signature: _______________________________
 
-Name:  Sammy Abdel
+Name:  UJ
 Title: Chief Executive Officer
 Date:  _______________________________
 

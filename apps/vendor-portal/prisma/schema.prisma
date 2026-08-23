@@ -432,7 +432,7 @@ model non_conversion_review {
 model loss_monitor_settings {
   id                    String   @id @default("singleton")
   alerts_enabled        Boolean  @default(true)
-  recipients            String   @default("Jake@bsbwinc.com")
+  recipients            String   @default("uj@grovlabs.com")
   active_from_hour      Int      @default(8)
   active_to_hour        Int      @default(18)
 

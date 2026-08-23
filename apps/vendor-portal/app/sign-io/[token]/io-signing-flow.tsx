@@ -191,12 +191,12 @@ export function IoSigningFlow({ token }: { token: string }) {
             <div key={label} className="flex items-center gap-2 flex-1">
               <div className={cn(
                 'h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0',
-                i <= stepIndex ? 'bg-[#b87333] text-white' : 'bg-gray-100 text-gray-400'
+                i <= stepIndex ? 'bg-[#a3e635] text-[#050505]' : 'bg-white/10 text-gray-400'
               )}>
                 {i + 1}
               </div>
-              <span className={cn('text-xs font-medium hidden sm:inline', i <= stepIndex ? 'text-[#b87333]' : 'text-gray-400')}>{label}</span>
-              {i < 2 && <div className={cn('flex-1 h-0.5', i < stepIndex ? 'bg-[#b87333]' : 'bg-gray-200')} />}
+              <span className={cn('text-xs font-medium hidden sm:inline', i <= stepIndex ? 'text-[#a3e635]' : 'text-gray-400')}>{label}</span>
+              {i < 2 && <div className={cn('flex-1 h-0.5', i < stepIndex ? 'bg-[#a3e635]' : 'bg-white/20')} />}
             </div>
           )
         })}
@@ -212,25 +212,25 @@ export function IoSigningFlow({ token }: { token: string }) {
       {/* Step: Email */}
       {step === 'email' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-          <div className="rounded-xl bg-[#b87333]/5 border border-[#b87333]/20 p-6">
+          <div className="rounded-xl bg-[#a3e635]/5 border border-[#a3e635]/20 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Mail className="h-6 w-6 text-[#b87333]" />
-              <h2 className="font-display text-xl font-bold text-gray-900">Email Verification Required</h2>
+              <Mail className="h-6 w-6 text-[#a3e635]" />
+              <h2 className="font-display text-xl font-bold text-white">Email Verification Required</h2>
             </div>
-            <p className="text-sm text-gray-600 mb-4">Enter the email address associated with your vendor application to receive a verification code.</p>
+            <p className="text-sm text-white/70 mb-4">Enter the email address associated with your vendor application to receive a verification code.</p>
             <div className="flex gap-2">
               <input
                 type="email"
                 value={email}
                 onChange={(e: any) => { setEmail(e?.target?.value ?? ''); setError('') }}
                 onKeyDown={(e: any) => { if (e?.key === 'Enter') sendCode() }}
-                className="flex-1 rounded-lg border border-[#b87333]/20 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
+                className="flex-1 rounded-lg border border-[#a3e635]/20 bg-[#0a0a0a] text-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50"
                 placeholder="your@email.com"
               />
               <button
                 onClick={sendCode}
                 disabled={loading}
-                className="rounded-lg bg-[#b87333] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors disabled:opacity-50 flex items-center gap-2"
+                className="rounded-lg bg-[#a3e635] px-6 py-2.5 text-sm font-semibold text-[#050505] hover:bg-[#84cc16] transition-colors disabled:opacity-50 flex items-center gap-2"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send Code'}
               </button>
@@ -242,31 +242,31 @@ export function IoSigningFlow({ token }: { token: string }) {
       {/* Step: Verify Code */}
       {step === 'verify' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-          <div className="rounded-xl bg-[#b87333]/5 border border-[#b87333]/20 p-6">
+          <div className="rounded-xl bg-[#a3e635]/5 border border-[#a3e635]/20 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <KeyRound className="h-6 w-6 text-[#b87333]" />
-              <h2 className="font-display text-xl font-bold text-gray-900">Enter Verification Code</h2>
+              <KeyRound className="h-6 w-6 text-[#a3e635]" />
+              <h2 className="font-display text-xl font-bold text-white">Enter Verification Code</h2>
             </div>
-            <p className="text-sm text-gray-600 mb-4">A 6-digit code has been sent to <strong>{email}</strong>. The code expires in 15 minutes.</p>
+            <p className="text-sm text-white/70 mb-4">A 6-digit code has been sent to <strong>{email}</strong>. The code expires in 15 minutes.</p>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={code}
                 onChange={(e: any) => { setCode((e?.target?.value ?? '').replace(/\D/g, '').slice(0, 6)); setError('') }}
                 onKeyDown={(e: any) => { if (e?.key === 'Enter') verifyCodeHandler() }}
-                className="flex-1 rounded-lg border border-[#b87333]/20 px-4 py-2.5 text-sm font-mono text-center text-lg tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
+                className="flex-1 rounded-lg border border-[#a3e635]/20 bg-[#0a0a0a] text-white px-4 py-2.5 text-sm font-mono text-center text-lg tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50"
                 placeholder="000000"
                 maxLength={6}
               />
               <button
                 onClick={verifyCodeHandler}
                 disabled={loading}
-                className="rounded-lg bg-[#b87333] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors disabled:opacity-50 flex items-center gap-2"
+                className="rounded-lg bg-[#a3e635] px-6 py-2.5 text-sm font-semibold text-[#050505] hover:bg-[#84cc16] transition-colors disabled:opacity-50 flex items-center gap-2"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify'}
               </button>
             </div>
-            <button onClick={() => { setStep('email'); setCode(''); setError('') }} className="mt-3 text-xs text-[#b87333] hover:text-[#9a5f28]">
+            <button onClick={() => { setStep('email'); setCode(''); setError('') }} className="mt-3 text-xs text-[#a3e635] hover:text-[#84cc16]">
               Use a different email
             </button>
           </div>
@@ -277,39 +277,39 @@ export function IoSigningFlow({ token }: { token: string }) {
       {step === 'review' && ioData && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
           {/* IO Header */}
-          <div className="rounded-xl bg-gray-50 border border-gray-200 p-6">
+          <div className="rounded-xl bg-[#0a0a0a] border border-white/20 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <FileText className="h-6 w-6 text-[#b87333]" />
-              <h2 className="font-display text-xl font-bold text-gray-900">Insertion Order</h2>
+              <FileText className="h-6 w-6 text-[#a3e635]" />
+              <h2 className="font-display text-xl font-bold text-white">Insertion Order</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 mb-6">
               <div>
                 <p className="text-xs text-gray-500">IO Number</p>
-                <p className="font-mono font-semibold text-gray-900">{ioData?.io_number ?? ''}</p>
+                <p className="font-mono font-semibold text-white">{ioData?.io_number ?? ''}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Vendor</p>
-                <p className="font-semibold text-gray-900">{ioData?.company_name ?? ''}</p>
+                <p className="font-semibold text-white">{ioData?.company_name ?? ''}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Payment Terms</p>
-                <p className="font-semibold text-gray-900">Bi-Weekly Net 15</p>
+                <p className="font-semibold text-white">Bi-Weekly Net 15</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Campaigns</p>
-                <p className="font-semibold text-gray-900">{safeCampaigns.length} campaign{safeCampaigns.length !== 1 ? 's' : ''}</p>
+                <p className="font-semibold text-white">{safeCampaigns.length} campaign{safeCampaigns.length !== 1 ? 's' : ''}</p>
               </div>
             </div>
 
             {/* Individual campaign details */}
             {safeCampaigns.length > 0 && (
-              <div className="space-y-3 pt-4 border-t border-gray-200">
+              <div className="space-y-3 pt-4 border-t border-white/20">
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Campaign Details</p>
                 {safeCampaigns.map((campaign: CampaignInfo, idx: number) => (
-                  <div key={idx} className="rounded-lg bg-white border border-gray-100 p-4">
+                  <div key={idx} className="rounded-lg bg-[#111]border border-white/10 p-4">
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <div>
-                        <p className="font-semibold text-gray-900">{campaign?.name ?? ''}</p>
+                        <p className="font-semibold text-white">{campaign?.name ?? ''}</p>
                         {campaign?.min_duration != null && (campaign?.min_duration ?? 0) > 0 && (
                           <p className="text-xs text-gray-500 mt-0.5">Min call duration: {campaign.min_duration}s</p>
                         )}
@@ -332,9 +332,9 @@ export function IoSigningFlow({ token }: { token: string }) {
           </div>
 
           {/* Terms */}
-          <div className="rounded-xl border border-gray-200 p-6">
-            <h3 className="font-display font-semibold text-gray-900 mb-3">Terms & Conditions</h3>
-            <div className="max-h-64 overflow-y-auto rounded-lg bg-gray-50 p-4 text-sm text-gray-700 whitespace-pre-wrap border border-gray-100">
+          <div className="rounded-xl border border-white/20 p-6">
+            <h3 className="font-display font-semibold text-white mb-3">Terms & Conditions</h3>
+            <div className="max-h-64 overflow-y-auto rounded-lg bg-[#0a0a0a] p-4 text-sm text-white/80 whitespace-pre-wrap border border-white/10">
               {ioData?.terms ?? 'No terms available.'}
             </div>
           </div>
@@ -349,19 +349,19 @@ export function IoSigningFlow({ token }: { token: string }) {
           )}
 
           {/* Signature */}
-          <div className="rounded-xl border border-[#b87333]/20 bg-[#b87333]/5 p-6">
+          <div className="rounded-xl border border-[#a3e635]/20 bg-[#a3e635]/5 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Pen className="h-5 w-5 text-[#b87333]" />
-              <h3 className="font-display font-semibold text-gray-900">Electronic Signature</h3>
+              <Pen className="h-5 w-5 text-[#a3e635]" />
+              <h3 className="font-display font-semibold text-white">Electronic Signature</h3>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Legal Name *</label>
+                <label className="block text-sm font-medium text-white/80 mb-1">Full Legal Name *</label>
                 <input
                   type="text"
                   value={signName}
                   onChange={(e: any) => { setSignName(e?.target?.value ?? ''); setError('') }}
-                  className="w-full rounded-lg border border-[#b87333]/20 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
+                  className="w-full rounded-lg border border-[#a3e635]/20 bg-[#0a0a0a] text-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50"
                   placeholder="Enter your full legal name"
                 />
               </div>
@@ -370,16 +370,16 @@ export function IoSigningFlow({ token }: { token: string }) {
                   type="checkbox"
                   checked={agreeTerms}
                   onChange={(e: any) => { setAgreeTerms(e?.target?.checked ?? false); setError('') }}
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#b87333] focus:ring-[#b87333]/50"
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#a3e635] focus:ring-[#a3e635]/50"
                 />
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-white/80">
                   I have read and agree to the terms and conditions of this Insertion Order. I understand this constitutes a legally binding agreement.
                 </p>
               </div>
               <button
                 onClick={signIO}
                 disabled={loading}
-                className="w-full rounded-lg bg-[#b87333] px-6 py-3 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full rounded-lg bg-[#a3e635] px-6 py-3 text-sm font-semibold text-[#050505] hover:bg-[#84cc16] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Pen className="h-4 w-4" /> Sign Insertion Order</>}
               </button>
@@ -400,8 +400,8 @@ export function IoSigningFlow({ token }: { token: string }) {
               </div>
               <div className="w-8 h-0.5 bg-gray-300" />
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-[#b87333] text-white flex items-center justify-center text-xs font-bold">2</div>
-                <span className="text-sm font-medium text-[#b87333]">Step 2: Sign Agreement</span>
+                <div className="h-8 w-8 rounded-full bg-[#a3e635] text-[#050505] flex items-center justify-center text-xs font-bold">2</div>
+                <span className="text-sm font-medium text-[#a3e635]">Step 2: Sign Agreement</span>
               </div>
             </div>
           )}
@@ -411,19 +411,19 @@ export function IoSigningFlow({ token }: { token: string }) {
             <h2 className="font-display text-2xl font-bold text-green-800">Insertion Order Signed!</h2>
             <p className="mt-3 text-green-700">{agreementUrl ? 'Step 1 complete. One more step to go!' : 'Thank you for signing your IO.'}</p>
             {ioData?.io_number && (
-              <p className="mt-2 text-sm text-gray-600">IO Number: <span className="font-mono font-semibold">{ioData.io_number}</span></p>
+              <p className="mt-2 text-sm text-white/70">IO Number: <span className="font-mono font-semibold">{ioData.io_number}</span></p>
             )}
             <p className="mt-4 text-sm text-gray-500">A confirmation email has been sent to your email.</p>
           </div>
 
           {agreementUrl && (
-            <div className="rounded-xl bg-[#b87333]/5 border border-[#b87333]/20 p-8 text-center">
-              <FileText className="h-12 w-12 text-[#b87333] mx-auto mb-4" />
-              <h3 className="font-display text-xl font-bold text-gray-900 mb-2">Next: Sign Lead Purchase Agreement</h3>
-              <p className="text-sm text-gray-600 mb-6">Please sign the Lead Purchase Agreement to complete your vendor onboarding.</p>
+            <div className="rounded-xl bg-[#a3e635]/5 border border-[#a3e635]/20 p-8 text-center">
+              <FileText className="h-12 w-12 text-[#a3e635] mx-auto mb-4" />
+              <h3 className="font-display text-xl font-bold text-white mb-2">Next: Sign Lead Purchase Agreement</h3>
+              <p className="text-sm text-white/70 mb-6">Please sign the Lead Purchase Agreement to complete your vendor onboarding.</p>
               <button
                 onClick={() => router.push(agreementUrl)}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#b87333] px-8 py-3 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors shadow-md"
+                className="inline-flex items-center gap-2 rounded-lg bg-[#a3e635] px-8 py-3 text-sm font-semibold text-[#050505] hover:bg-[#84cc16] transition-colors shadow-md"
               >
                 Continue to Agreement <ArrowRight className="h-4 w-4" />
               </button>

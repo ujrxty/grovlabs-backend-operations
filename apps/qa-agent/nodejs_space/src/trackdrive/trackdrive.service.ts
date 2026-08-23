@@ -15,7 +15,7 @@ export class TrackDriveService {
       const privateKey = this.configService.get<string>('TRACKDRIVE_PRIVATE_KEY', '');
       const authToken = Buffer.from(`${publicKey}:${privateKey}`).toString('base64');
 
-      const baseUrl = this.configService.get<string>('TRACKDRIVE_BASE_URL', 'https://bsbwinc.trackdrive.com');
+      const baseUrl = this.configService.get<string>('TRACKDRIVE_BASE_URL', 'https://grovlabs.trackdrive.com');
       this.client = axios.create({
         baseURL: `${baseUrl}/api/v1`,
         headers: {

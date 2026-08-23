@@ -8,7 +8,7 @@ export class IOService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Generate next IO number: TBW-IO-2026-0001 */
+  /** Generate next IO number: GL-IO-2026-0001 */
   async nextIONumber(): Promise<string> {
     const year = new Date().getFullYear();
     const counter = await this.prisma.io_counter.upsert({
@@ -26,9 +26,9 @@ export class IOService {
         where: { id: 'singleton' },
         data: { year, count: 1 },
       });
-      return `TBW-IO-${year}-0001`;
+      return `GL-IO-${year}-0001`;
     }
-    return `TBW-IO-${year}-${String(counter.count).padStart(4, '0')}`;
+    return `GL-IO-${year}-${String(counter.count).padStart(4, '0')}`;
   }
 
   /** Generate sign token */
@@ -44,7 +44,7 @@ export class IOService {
     const lines: (string | null)[] = [
       `AFFILIATE INSERTION ORDER`,
       ``,
-      `This Insertion Order ("IO") is entered into between The Broken Wood Inc ("Company") and ${vendorName} ("Affiliate"), and is subject to the terms below. This IO is effective as of the date of last signature and governs the Affiliate's participation in the Campaign(s) described herein.`,
+      `This Insertion Order ("IO") is entered into between GrovLabs Inc ("Company") and ${vendorName} ("Affiliate"), and is subject to the terms below. This IO is effective as of the date of last signature and governs the Affiliate's participation in the Campaign(s) described herein.`,
       ``,
       ``,
       `1. CAMPAIGN SPECIFICATIONS`,
@@ -60,7 +60,7 @@ export class IOService {
       ``,
       `   For RTB (Real Time Bidding) campaigns: payout is variable and determined`,
       `   by real-time buyer bidding. The payout listed above is the minimum floor.`,
-      `   The Broken Wood retains 15% of the winning bid amount on RTB campaigns.`,
+      `   GrovLabs retains 15% of the winning bid amount on RTB campaigns.`,
       ``,
       ``,
       `2. PAYMENT TERMS`,
@@ -262,7 +262,7 @@ export class IOService {
     const lines: (string | null)[] = [
       `AFFILIATE INSERTION ORDER`,
       ``,
-      `This Insertion Order ("IO") is entered into between The Broken Wood Inc ("Company") and ${vendorName} ("Affiliate"), and is subject to the terms below. This IO is effective as of the date of last signature and governs the Affiliate's participation in the Campaign(s) described herein.`,
+      `This Insertion Order ("IO") is entered into between GrovLabs Inc ("Company") and ${vendorName} ("Affiliate"), and is subject to the terms below. This IO is effective as of the date of last signature and governs the Affiliate's participation in the Campaign(s) described herein.`,
       ``,
       `This IO covers ${campaigns.length} campaign(s).`,
       ``,
@@ -273,7 +273,7 @@ export class IOService {
       ``,
       `   For RTB (Real Time Bidding) campaigns: payout is variable and determined`,
       `   by real-time buyer bidding. The payout listed above is the minimum floor.`,
-      `   The Broken Wood retains 15% of the winning bid amount on RTB campaigns.`,
+      `   GrovLabs retains 15% of the winning bid amount on RTB campaigns.`,
       ``,
       ``,
       `2. PAYMENT TERMS`,
@@ -702,18 +702,18 @@ export class IOService {
     }
     return `LEAD PURCHASE AGREEMENT
 
-This Lead Purchase Agreement ("Agreement") is entered into by and between The Broken Wood Inc, a California corporation located at Downtown Santa Monica, CA 90402 ("TBW" or "Buyer") and ${vendorName}, ${entityClause} ("Seller" or "Publisher"). This Agreement will be effective as of the date of the last recorded signature below (the "Effective Date"). TBW and Seller may each be individually referred to herein as a "Party" and collectively as the "Parties."
+This Lead Purchase Agreement ("Agreement") is entered into by and between GrovLabs Inc, a Missouri corporation located at 8301 State Line Rd. Ste 220 #3921, Kansas City, MO 64114 ("GrovLabs" or "Buyer") and ${vendorName}, ${entityClause} ("Seller" or "Publisher"). This Agreement will be effective as of the date of the last recorded signature below (the "Effective Date"). GrovLabs and Seller may each be individually referred to herein as a "Party" and collectively as the "Parties."
 
 WHEREAS, Seller generates Leads through, inter alia, its websites and platforms and posts the Leads to third party buyers;
 
-WHEREAS TBW desires to utilize Seller's lead generation services and purchase Leads from Seller.
+WHEREAS GrovLabs desires to utilize Seller's lead generation services and purchase Leads from Seller.
 
 NOW THEREFORE, in consideration of the mutual promises and conditions set forth in this Agreement, the Parties agree to be bound by the following terms regarding the generation, posting, and purchase of Leads.
 
 
 DEFINITIONS
 
-"TBW" refers to The Broken Wood Inc, as indicated above.
+"GrovLabs" refers to GrovLabs Inc, as indicated above.
 
 "Agreement" means this Lead Purchase Agreement entered into and signed by the Parties.
 
@@ -721,7 +721,7 @@ DEFINITIONS
 
 "Confidential Information" means all data and information, of a confidential nature or otherwise, disclosed during the term of this Agreement by one Party ("Disclosing Party") to the other Party ("Receiving Party"), as well as information that the Receiving Party knows or should know that the Disclosing Party regards as confidential including, but not limited to: (i) a Party's business plans, strategies, know how, marketing plans, suppliers, sources of materials, finances, business relationships, processes, methodologies, customer and vendor lists, personally identifiable customer or Lead information, pricing, technology, employees, trade secrets and other non-public or proprietary information whether written, oral, recorded on tapes or in any other media or format; (ii) the material terms of this Agreement, and any Insertion Orders; and (iii) any information marked or designated by the Disclosing Party as confidential, or that which would be reasonable to treat as confidential due to the nature and circumstances of disclosure. Confidential Information shall not include any information that the Receiving Party can verify with substantial proof: (1) is generally available to or known to the public through no wrongful act of the Receiving Party; (2) already in the possession of the Receiving Party; (3) was independently developed by the Receiving Party without the use of or reference to Confidential Information; or (4) was disclosed to the Receiving Party by a third party legally in possession of such Confidential Information and under no obligation of confidentiality to the Disclosing Party.
 
-"Cost Per Lead" is the cost measured per Lead that is provided by Seller to TBW and will be set forth on the applicable Insertion Order.
+"Cost Per Lead" is the cost measured per Lead that is provided by Seller to GrovLabs and will be set forth on the applicable Insertion Order.
 
 "Effective Date" refers to the date of the last recorded signature below and the date this Agreement commences.
 
@@ -738,33 +738,33 @@ TERMS
 
 1. LEAD GENERATION SERVICES.
 
-Seller will provide its Lead Generation Services to TBW, and TBW will pay Seller for its Lead Generation Services in accordance with this Agreement and any applicable Insertion Order. The specific information required for each Lead, the quantity of Leads, and any characteristics or uniqueness requirements for the Leads shall be set forth in an Insertion Order. Seller will generate Leads through its Websites and will post the Leads to TBW's database, or to TBW via ping/post, at the frequency specified in the applicable Insertion Order. Upon TBW's acceptance of posted Leads, TBW shall have sole and exclusive ownership of the Leads and any associated data, and is permitted to sell the Leads to third party buyers within its lead buyer network within its sole discretion. Seller may not use, rent, license, sell, transfer, assign, or attempt to monetize any Leads posted and accepted by TBW hereunder for Seller's own purposes, including to other buyers and third parties.
+Seller will provide its Lead Generation Services to GrovLabs, and GrovLabs will pay Seller for its Lead Generation Services in accordance with this Agreement and any applicable Insertion Order. The specific information required for each Lead, the quantity of Leads, and any characteristics or uniqueness requirements for the Leads shall be set forth in an Insertion Order. Seller will generate Leads through its Websites and will post the Leads to GrovLabs's database, or to GrovLabs via ping/post, at the frequency specified in the applicable Insertion Order. Upon GrovLabs's acceptance of posted Leads, GrovLabs shall have sole and exclusive ownership of the Leads and any associated data, and is permitted to sell the Leads to third party buyers within its lead buyer network within its sole discretion. Seller may not use, rent, license, sell, transfer, assign, or attempt to monetize any Leads posted and accepted by GrovLabs hereunder for Seller's own purposes, including to other buyers and third parties.
 
 
 2. TRACKING AND PAYMENT.
 
-The applicable Insertion Order will specify the applicable Cost Per Lead amount. Upon Seller's posting of a Lead to TBW that meets all requirements listed in an applicable Insertion Order, TBW is deemed to be in receipt of the Lead and payment is due in accordance with this Agreement and the applicable Insertion Order. Seller agrees not to modify, disable, or re-direct links or in any way impede or impair TBW's ability to track the Leads.
+The applicable Insertion Order will specify the applicable Cost Per Lead amount. Upon Seller's posting of a Lead to GrovLabs that meets all requirements listed in an applicable Insertion Order, GrovLabs is deemed to be in receipt of the Lead and payment is due in accordance with this Agreement and the applicable Insertion Order. Seller agrees not to modify, disable, or re-direct links or in any way impede or impair GrovLabs's ability to track the Leads.
 
 
 3. TERM AND TERMINATION.
 
-This Agreement will begin on the Effective Date and continue until terminated. This Agreement and any Insertion Order may be terminated by either Party at any time and for any reason by providing written notice of its intent to terminate at least three (3) business days prior to the termination. TBW may also immediately terminate this Agreement, if in its sole discretion, it believes that Seller has breached this Agreement. Further, in the instance of termination by either Party, Seller shall refund TBW for any pre-payments made and not used prior to termination.
+This Agreement will begin on the Effective Date and continue until terminated. This Agreement and any Insertion Order may be terminated by either Party at any time and for any reason by providing written notice of its intent to terminate at least three (3) business days prior to the termination. GrovLabs may also immediately terminate this Agreement, if in its sole discretion, it believes that Seller has breached this Agreement. Further, in the instance of termination by either Party, Seller shall refund GrovLabs for any pre-payments made and not used prior to termination.
 
 
-4. TBW REPRESENTATIONS AND WARRANTIES.
+4. GROVLABS REPRESENTATIONS AND WARRANTIES.
 
-TBW hereby represents and warrants that: (a) it is duly organized and validly existing under the laws of the jurisdiction in which it is organized; (b) it has full power and authority to enter into this Agreement and to carry out its obligations hereunder; and (c) it will perform all of its activities, obligations and responsibilities contemplated under this Agreement, including the collection, use, and storage of the Leads provided by Seller in compliance with all Applicable Laws and Regulations as defined herein-below, in compliance with all U.S. laws and regulations, including but not limited to, the California Consumer Privacy Act, Cal. Civ. Code 1798.100 et seq., Cal. Civ. Code 1798.100 et seq ("CCPA"), together with any applicable state privacy regulations, the Telephone Consumer Protection Act, 47 U.S.C. 227 et seq. ("TCPA") and the FCC's implementing rules and regulations, including 47 C.F.R. 64.200, the Telemarketing Sales Rule ("TSR"), Do Not Call ("DNC") rules, the Federal Trade Commission Act ("FTC Act") and all FTC rules, regulations, and guidelines, the Telemarketing and Consumer Fraud and Abuse Prevention Act, 15 U.S.C. 6101 et seq., and the CAN-SPAM Act of 2003, as amended, (collectively, "Applicable Laws and Regulations").
+GrovLabs hereby represents and warrants that: (a) it is duly organized and validly existing under the laws of the jurisdiction in which it is organized; (b) it has full power and authority to enter into this Agreement and to carry out its obligations hereunder; and (c) it will perform all of its activities, obligations and responsibilities contemplated under this Agreement, including the collection, use, and storage of the Leads provided by Seller in compliance with all Applicable Laws and Regulations as defined herein-below, in compliance with all U.S. laws and regulations, including but not limited to, the California Consumer Privacy Act, Cal. Civ. Code 1798.100 et seq., Cal. Civ. Code 1798.100 et seq ("CCPA"), together with any applicable state privacy regulations, the Telephone Consumer Protection Act, 47 U.S.C. 227 et seq. ("TCPA") and the FCC's implementing rules and regulations, including 47 C.F.R. 64.200, the Telemarketing Sales Rule ("TSR"), Do Not Call ("DNC") rules, the Federal Trade Commission Act ("FTC Act") and all FTC rules, regulations, and guidelines, the Telemarketing and Consumer Fraud and Abuse Prevention Act, 15 U.S.C. 6101 et seq., and the CAN-SPAM Act of 2003, as amended, (collectively, "Applicable Laws and Regulations").
 
-TBW will indemnify Seller from and against any and all liabilities, claims, actions, suits, proceedings, judgments, fines, damages, costs, fees, losses, and expenses (including reasonable attorneys' fees, court costs and/or settlement costs) arising from or related to any claim that TBW violates Applicable Laws and Regulations or breaches its representations as contained herein, to the extent not first caused by the acts and/or omissions of Seller in providing such leads in compliance with all Applicable Rules and Regulations. TBW will promptly notify Seller of any claim, complaint, inquiry, or investigation that may give rise to indemnification. TBW will promptly assume such defense with counsel reasonably acceptable to Seller upon written notice of such indemnifiable claim. Seller reserves the right to participate in the defense at its sole expense.
+GrovLabs will indemnify Seller from and against any and all liabilities, claims, actions, suits, proceedings, judgments, fines, damages, costs, fees, losses, and expenses (including reasonable attorneys' fees, court costs and/or settlement costs) arising from or related to any claim that GrovLabs violates Applicable Laws and Regulations or breaches its representations as contained herein, to the extent not first caused by the acts and/or omissions of Seller in providing such leads in compliance with all Applicable Rules and Regulations. GrovLabs will promptly notify Seller of any claim, complaint, inquiry, or investigation that may give rise to indemnification. GrovLabs will promptly assume such defense with counsel reasonably acceptable to Seller upon written notice of such indemnifiable claim. Seller reserves the right to participate in the defense at its sole expense.
 
 
 5. SELLER/PUBLISHER REPRESENTATIONS AND WARRANTIES.
 
-Seller hereby represents and warrants that: (a) it is duly organized and validly existing under the laws of the jurisdiction in which it is organized; (b) it has full power and authority to enter into this Agreement and to carry out its obligations hereunder; (c) it has the authority to provide the Leads to TBW; (d) the Websites and Lead Generation Services comply with all Applicable Laws and Regulations; and (e) all Leads transferred hereunder to TBW consist of individuals that have provided their "prior express written consent" under the TCPA and the FCC's implementing rules, regulations, and orders, including 47 C.F.R. 64.1200(f)(8), to receive commercial telephone calls (including prerecorded calls, artificial voice calls, autodialed calls and SMS text messages) from TBW and/or its third party lead buyers specified in the applicable Insertion Order and their affirmative consent as defined in the CAN-SPAM Act of 2003, as amended, to receive commercial email from TBW and/or its third party lead buyers. Seller shall maintain consent records in the form of capture of screenshots for the Websites and all Lead Generation Services from where such consent was collected, including the consent verbiage, telephone number, IP address for the consenting individual, date and time stamp of the consent, and any other identifying information for all Leads transferred hereunder for a minimum of five (5) years following collection of same. Seller shall also ensure compliance with the FCC "one to one consent" rules whereby Seller is only allowed to utilize the Leads from customers who have agreed in writing to the single business being solicited, unless the customer has explicitly consented to be contacted regarding additional businesses, and Seller shall provide TBW written proof of same. Further, Seller/Publisher further represents and warrants that it shall use and retain verification proof of "prior express written consent" through the use of a third-party lead verification service through Trusted Form and Jornaya, and within one (1) business day of TBW's request, Seller shall forward any requested consent records.
+Seller hereby represents and warrants that: (a) it is duly organized and validly existing under the laws of the jurisdiction in which it is organized; (b) it has full power and authority to enter into this Agreement and to carry out its obligations hereunder; (c) it has the authority to provide the Leads to GrovLabs; (d) the Websites and Lead Generation Services comply with all Applicable Laws and Regulations; and (e) all Leads transferred hereunder to GrovLabs consist of individuals that have provided their "prior express written consent" under the TCPA and the FCC's implementing rules, regulations, and orders, including 47 C.F.R. 64.1200(f)(8), to receive commercial telephone calls (including prerecorded calls, artificial voice calls, autodialed calls and SMS text messages) from GrovLabs and/or its third party lead buyers specified in the applicable Insertion Order and their affirmative consent as defined in the CAN-SPAM Act of 2003, as amended, to receive commercial email from GrovLabs and/or its third party lead buyers. Seller shall maintain consent records in the form of capture of screenshots for the Websites and all Lead Generation Services from where such consent was collected, including the consent verbiage, telephone number, IP address for the consenting individual, date and time stamp of the consent, and any other identifying information for all Leads transferred hereunder for a minimum of five (5) years following collection of same. Seller shall also ensure compliance with the FCC "one to one consent" rules whereby Seller is only allowed to utilize the Leads from customers who have agreed in writing to the single business being solicited, unless the customer has explicitly consented to be contacted regarding additional businesses, and Seller shall provide GrovLabs written proof of same. Further, Seller/Publisher further represents and warrants that it shall use and retain verification proof of "prior express written consent" through the use of a third-party lead verification service through Trusted Form and Jornaya, and within one (1) business day of GrovLabs's request, Seller shall forward any requested consent records.
 
-Seller further represents and warrants that the Websites and Lead Generation Services shall meet the following requirements: a) be written in English; b) be targeted only to United States residents; c) have a top-level domain name; d) not have any false, misleading, or deceptive content; e) not use inappropriate content including, without limitation, content that promotes or contains language referring to the use of alcohol, tobacco or illegal substances, nudity, sexually explicit material, pornography, profanity, adult-oriented content, expletives or inappropriate language; illegal or unethical activity, deceptive acts, racism, hate, material that promotes violence, "spam," mail fraud, gambling, pyramid schemes, investment opportunities or illegal advice; libelous, defamatory, infringing, false or misleading content, or other content that is contrary to public policy or that may expose TBW to negative publicity; piracy (of software, videos, audio/music, books, video games, etc.), hacking/cracking/phreaking, emulators/ROMs, or distribution of copyrighted materials; content that violates the rights of others, such as intellectual property or privacy rights; or content that is otherwise offensive or inappropriate in TBW's sole discretion; f) not utilize incentivized marketing such as through sweepstakes entries, cash, rewards, points, prizes, discounts, contests, etc. to generate the Leads; g) be free of viruses, Trojan horses, trap doors, worms, malware, spyware, etc. that may damage, interfere with, intercept personal information or be used to inflate the number of Leads; h) be fully functional and not under construction; and i) not spawn process pop-ups, exit pop-ups, or pop-unders.
+Seller further represents and warrants that the Websites and Lead Generation Services shall meet the following requirements: a) be written in English; b) be targeted only to United States residents; c) have a top-level domain name; d) not have any false, misleading, or deceptive content; e) not use inappropriate content including, without limitation, content that promotes or contains language referring to the use of alcohol, tobacco or illegal substances, nudity, sexually explicit material, pornography, profanity, adult-oriented content, expletives or inappropriate language; illegal or unethical activity, deceptive acts, racism, hate, material that promotes violence, "spam," mail fraud, gambling, pyramid schemes, investment opportunities or illegal advice; libelous, defamatory, infringing, false or misleading content, or other content that is contrary to public policy or that may expose GrovLabs to negative publicity; piracy (of software, videos, audio/music, books, video games, etc.), hacking/cracking/phreaking, emulators/ROMs, or distribution of copyrighted materials; content that violates the rights of others, such as intellectual property or privacy rights; or content that is otherwise offensive or inappropriate in GrovLabs's sole discretion; f) not utilize incentivized marketing such as through sweepstakes entries, cash, rewards, points, prizes, discounts, contests, etc. to generate the Leads; g) be free of viruses, Trojan horses, trap doors, worms, malware, spyware, etc. that may damage, interfere with, intercept personal information or be used to inflate the number of Leads; h) be fully functional and not under construction; and i) not spawn process pop-ups, exit pop-ups, or pop-unders.
 
-Seller will fully indemnify and hold TBW and its owners, parents, affiliates and/or subsidiaries, and each of their respective owners, officers, directors, partners, members, managers, employees, agents, attorneys, representatives and/or assigns (collectively, the "TBW Entities") harmless from and against any and all liabilities, claims, actions, suits, proceedings, judgments, fines, damages, costs, fees, losses, and expenses (including reasonable attorneys' fees, court costs and/or settlement costs) arising from or related to any claim that Seller's Leads or Lead Generation Services violate Applicable Laws and Regulations, or the right of a third party, and/or for any breach of the terms, covenants and representations contained herein. TBW will promptly notify Seller of any claim, complaint, inquiry, or investigation that may give rise to indemnification. Seller will promptly assume such defense with counsel reasonably acceptable to TBW upon written notice of such indemnifiable claim. TBW reserves the right to participate in the defense at its sole expense. Seller agrees that it will not settle any indemnifiable claim without TBW's prior written approval.
+Seller will fully indemnify and hold GrovLabs and its owners, parents, affiliates and/or subsidiaries, and each of their respective owners, officers, directors, partners, members, managers, employees, agents, attorneys, representatives and/or assigns (collectively, the "GrovLabs Entities") harmless from and against any and all liabilities, claims, actions, suits, proceedings, judgments, fines, damages, costs, fees, losses, and expenses (including reasonable attorneys' fees, court costs and/or settlement costs) arising from or related to any claim that Seller's Leads or Lead Generation Services violate Applicable Laws and Regulations, or the right of a third party, and/or for any breach of the terms, covenants and representations contained herein. GrovLabs will promptly notify Seller of any claim, complaint, inquiry, or investigation that may give rise to indemnification. Seller will promptly assume such defense with counsel reasonably acceptable to GrovLabs upon written notice of such indemnifiable claim. GrovLabs reserves the right to participate in the defense at its sole expense. Seller agrees that it will not settle any indemnifiable claim without GrovLabs's prior written approval.
 
 
 6. MUTUAL CONFIDENTIALITY.
@@ -834,7 +834,7 @@ This Agreement may be executed in two or more counterparts, each of which will b
 
     const statusLabel = {
       pending_vendor: 'Pending Vendor Signature',
-      pending_counter: 'Pending TBW Countersignature',
+      pending_counter: 'Pending GrovLabs Countersignature',
       active: 'Active / Fully Executed',
       terminated: 'Terminated',
       expired: 'Expired',
@@ -846,10 +846,10 @@ This Agreement may be executed in two or more counterparts, each of which will b
          <p><strong>IP:</strong> ${io.vendor_sign_ip || 'N/A'}</p>`
       : `<p style="color:#718096;">Pending vendor signature</p>`;
 
-    const bsbwSigBlock = io.counter_signed_at
-      ? `<p><strong>Signed by:</strong> ${io.counter_sign_by || 'The Broken Wood Inc'}</p>
+    const grovlabsSigBlock = io.counter_signed_at
+      ? `<p><strong>Signed by:</strong> ${io.counter_sign_by || 'GrovLabs Inc'}</p>
          <p><strong>Date:</strong> ${new Date(io.counter_signed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>`
-      : `<p style="color:#718096;">Pending TBW countersignature</p>`;
+      : `<p style="color:#718096;">Pending GrovLabs countersignature</p>`;
 
     const termsHtml = (io.terms || '').replace(/\n/g, '<br/>');
 
@@ -857,7 +857,7 @@ This Agreement may be executed in two or more counterparts, each of which will b
 <html>
 <head>
   <meta charset="utf-8">
-  <title>${io.io_number} - The Broken Wood Inc Insertion Order</title>
+  <title>${io.io_number} - GrovLabs Inc Insertion Order</title>
   <style>
     @media print { body { margin: 0; } .no-print { display: none; } }
     body { font-family: 'Georgia', 'Times New Roman', serif; max-width: 800px; margin: 0 auto; padding: 40px; color: #1a1a1a; line-height: 1.6; font-size: 13px; }
@@ -882,7 +882,7 @@ This Agreement may be executed in two or more counterparts, each of which will b
 <body>
   <button class="print-btn no-print" onclick="window.print()">Print / Save as PDF</button>
   <div class="header">
-    <h1>THE BROKEN WOOD INC</h1>
+    <h1>GROVLABS INC</h1>
     <h2>Insertion Order</h2>
     <p>${io.io_number}</p>
   </div>
@@ -906,13 +906,13 @@ This Agreement may be executed in two or more counterparts, each of which will b
       ${vendorSigBlock}
     </div>
     <div class="sig-box">
-      <h3>The Broken Wood Inc</h3>
-      ${bsbwSigBlock}
+      <h3>GrovLabs Inc</h3>
+      ${grovlabsSigBlock}
     </div>
   </div>
 
   <p style="text-align:center; color:#a0aec0; font-size:11px; margin-top:40px;">
-    Generated on ${today} | The Broken Wood Inc — Performance Marketing
+    Generated on ${today} | GrovLabs Inc — Performance Marketing
   </p>
 </body>
 </html>`;
@@ -1021,7 +1021,7 @@ This Agreement may be executed in two or more counterparts, each of which will b
 
     const statusLabel = {
       pending_vendor: 'Pending Vendor Signature',
-      pending_counter: 'Pending TBW Countersignature',
+      pending_counter: 'Pending GrovLabs Countersignature',
       active: 'Active / Fully Executed',
       terminated: 'Terminated',
     }[agreement.status as string] || agreement.status;
@@ -1032,10 +1032,10 @@ This Agreement may be executed in two or more counterparts, each of which will b
          <p><strong>IP:</strong> ${agreement.vendor_sign_ip || 'N/A'}</p>`
       : `<p style="color:#718096;">Pending vendor signature</p>`;
 
-    const bsbwSigBlock = agreement.counter_signed_at
-      ? `<p><strong>Signed by:</strong> ${agreement.counter_sign_by || 'The Broken Wood Inc'}</p>
+    const grovlabsSigBlock = agreement.counter_signed_at
+      ? `<p><strong>Signed by:</strong> ${agreement.counter_sign_by || 'GrovLabs Inc'}</p>
          <p><strong>Date:</strong> ${new Date(agreement.counter_signed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>`
-      : `<p style="color:#718096;">Pending TBW countersignature</p>`;
+      : `<p style="color:#718096;">Pending GrovLabs countersignature</p>`;
 
     const escapedText = agreement.agreement_text
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -1044,7 +1044,7 @@ This Agreement may be executed in two or more counterparts, each of which will b
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Lead Purchase Agreement - ${vendorName} | The Broken Wood Inc</title>
+  <title>Lead Purchase Agreement - ${vendorName} | GrovLabs Inc</title>
   <style>
     @media print { body { margin: 0; } .no-print { display: none; } }
     body { font-family: 'Georgia', 'Times New Roman', serif; max-width: 800px; margin: 0 auto; padding: 40px; color: #1a1a1a; line-height: 1.6; font-size: 13px; }
@@ -1069,7 +1069,7 @@ This Agreement may be executed in two or more counterparts, each of which will b
 <body>
   <button class="print-btn no-print" onclick="window.print()">Print / Save as PDF</button>
   <div class="header">
-    <h1>THE BROKEN WOOD INC</h1>
+    <h1>GROVLABS INC</h1>
     <h2>Lead Purchase Agreement</h2>
     <p>${vendorName}</p>
   </div>
@@ -1089,13 +1089,13 @@ This Agreement may be executed in two or more counterparts, each of which will b
       ${vendorSigBlock}
     </div>
     <div class="sig-box">
-      <h3>The Broken Wood Inc</h3>
-      ${bsbwSigBlock}
+      <h3>GrovLabs Inc</h3>
+      ${grovlabsSigBlock}
     </div>
   </div>
 
   <p style="text-align:center; color:#a0aec0; font-size:11px; margin-top:40px;">
-    Generated on ${today} | The Broken Wood Inc — Performance Marketing
+    Generated on ${today} | GrovLabs Inc — Performance Marketing
   </p>
 </body>
 </html>`;

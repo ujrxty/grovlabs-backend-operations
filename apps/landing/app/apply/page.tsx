@@ -743,8 +743,8 @@ function ApplyPageContent() {
                   Terms & Conditions *
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  I acknowledge all information is accurate and agree to The
-                  Broken Wood Inc&apos;s vendor terms.
+                  I acknowledge all information is accurate and agree to
+                  GrovLabs Inc&apos;s vendor terms.
                 </p>
               </div>
             </div>

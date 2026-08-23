@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     await sendNotificationEmail({
       notificationId: process.env.NOTIF_ID_APPLICATION_STATUS_CHANGED ?? '',
-      subject: `Application Approved - The Broken Wood Inc`,
+      subject: `Application Approved - GrovLabs Inc`,
       body: emailTemplate('Application Approved! 🎉', content),
       recipientEmail: vendor?.email ?? '',
     })

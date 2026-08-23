@@ -13,16 +13,16 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata() {
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
   return {
-    title: 'The Broken Wood - Vendor Portal',
-    description: 'Apply to become a The Broken Wood vendor partner. Browse campaigns and submit your application.',
+    title: 'GrovLabs - Vendor Portal',
+    description: 'Apply to become a GrovLabs vendor partner. Browse campaigns and submit your application.',
     metadataBase: new URL(baseUrl),
     icons: {
       icon: '/favicon.svg',
       shortcut: '/favicon.svg',
     },
     openGraph: {
-      title: 'The Broken Wood - Vendor Portal',
-      description: 'Apply to become a The Broken Wood vendor partner.',
+      title: 'GrovLabs - Vendor Portal',
+      description: 'Apply to become a GrovLabs vendor partner.',
       images: [{ url: '/og-image.png' }],
     },
   }
@@ -35,9 +35,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <script src="https://apps.abacus.ai/chatllm/appllm-lib.js"></script>
-      </head>
+      <head />
       <body className={`${dmSans.variable} ${jakartaSans.variable} ${jetbrainsMono.variable} font-sans`}>
         <ThemeProvider
           attribute="class"

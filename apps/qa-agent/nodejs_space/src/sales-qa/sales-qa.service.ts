@@ -154,7 +154,7 @@ export class SalesQaService {
       responseType: 'arraybuffer',
       timeout: 120000,
       maxRedirects: 5,
-      headers: { 'User-Agent': 'Mozilla/5.0 (BSBW-QA-Bot)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (GrovLabs-QA-Bot)' },
     });
     return Buffer.from(resp.data);
   }
@@ -309,7 +309,7 @@ export class SalesQaService {
 
   /**
    * Likelihood of an eventual sale, driven by the caller's response to the
-   * dollar quote (per BSBW): agreed => high, thinking about it => medium,
+   * dollar quote (per GrovLabs): agreed => high, thinking about it => medium,
    * declined => low. Calls with no dollar quote are excluded from the monitor
    * and get 'none'. We derive strictly from the outcome bucket so the badge is
    * always consistent with the caller's response, regardless of what the model
@@ -342,9 +342,9 @@ export class SalesQaService {
     callerState: string | null;
   }): string {
     return [
-      'You are a SALES-MONITORING QA analyst for The Broken Wood Inc, a company that sells INBOUND insurance and home-services calls (auto insurance, home insurance, pest control, etc.) to buyers under a REAL-TIME BIDDING model.',
+      'You are a SALES-MONITORING QA analyst for GrovLabs Inc, a company that sells INBOUND insurance and home-services calls (auto insurance, home insurance, pest control, etc.) to buyers under a REAL-TIME BIDDING model.',
       '',
-      "BSBW is paid per LEAD. The BUYER's economics depend on how many billable calls actually turn into a real PRICED QUOTE and eventually a paying customer. Your ONLY job is to listen to this call and determine (1) whether the rep gave the caller an actual DOLLAR-AMOUNT quote, and if so (2) how the caller RESPONDED to that dollar quote.",
+      "GrovLabs is paid per LEAD. The BUYER's economics depend on how many billable calls actually turn into a real PRICED QUOTE and eventually a paying customer. Your ONLY job is to listen to this call and determine (1) whether the rep gave the caller an actual DOLLAR-AMOUNT quote, and if so (2) how the caller RESPONDED to that dollar quote.",
       '',
       'THE SINGLE MOST IMPORTANT RULE - A QUOTE ONLY COUNTS IF A SPECIFIC DOLLAR AMOUNT WAS STATED:',
       'The rep must state an actual price/premium in dollars to the caller - for example "your monthly premium would be $142", "I can do full coverage for $89 a month", "the six-month policy is $540", "it will be $209 a month plus a $99 setup fee".',
@@ -919,7 +919,7 @@ export class SalesQaService {
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <div style="max-width:680px;margin:0 auto;padding:24px 16px;">
     <div style="background:linear-gradient(135deg,#065f46,#047857);border-radius:12px;padding:24px;color:#fff;">
-      <div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.85;">The Broken Wood Inc - Sales QA</div>
+      <div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.85;">GrovLabs Inc - Sales QA</div>
       <div style="font-size:22px;font-weight:700;margin-top:4px;">Daily Sales Monitoring - Billable Calls</div>
       <div style="font-size:14px;opacity:.9;margin-top:2px;">${dateStr}</div>
       ${metaLine}
@@ -942,7 +942,7 @@ export class SalesQaService {
       <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;"><tbody>${buyerRows || '<tr><td style="padding:16px;color:#6b7280;font-size:14px;">No billable calls with recordings for this date.</td></tr>'}</tbody></table>
     </div>
 
-    <p style="font-size:12px;color:#9ca3af;margin-top:28px;text-align:center;">Automated report from the The Broken Wood QA Agent. Reply to this email to reach Sammy.</p>
+    <p style="font-size:12px;color:#9ca3af;margin-top:28px;text-align:center;">Automated report from the GrovLabs QA Agent.</p>
   </div>
 </body>
 </html>`;
@@ -980,9 +980,9 @@ export class SalesQaService {
   private async sendEmail(subject: string, html: string, recipients: string[]): Promise<void> {
     const hostname = (() => {
       try {
-        return new URL(process.env.APP_ORIGIN || 'https://bsbwqa.abacusai.app').hostname;
+        return new URL(process.env.APP_ORIGIN || 'https://grovlabs.com').hostname;
       } catch {
-        return 'bsbwqa.abacusai.app';
+        return 'grovlabs.com';
       }
     })();
 
@@ -1000,8 +1000,8 @@ export class SalesQaService {
             is_html: true,
             recipient_email: recipient,
             sender_email: `noreply@${hostname}`,
-            sender_alias: 'The Broken Wood Inc',
-            reply_to: 'sammyabdel@thebrokenwood.com',
+            sender_alias: 'GrovLabs Inc',
+            reply_to: 'uj@grovlabs.com',
           }),
         });
         const result = (await response.json()) as any;
@@ -1069,7 +1069,7 @@ export class SalesQaService {
         reviewed: reviews.length,
         failures: failures.length,
       });
-      await this.sendEmail(subject, html, ['sammyabdel@thebrokenwood.com']);
+      await this.sendEmail(subject, html, ['uj@grovlabs.com']);
       await this.sendTelegram(this.buildTelegramSummary(reviews, dateStr));
     }
 

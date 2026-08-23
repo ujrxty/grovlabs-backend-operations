@@ -25,7 +25,7 @@ async function bootstrap() {
   });
 
   const config = new DocumentBuilder()
-    .setTitle('BSBW QA Agent')
+    .setTitle('GrovLabs QA Agent')
     .setDescription(
       'Real-time Call Quality Assurance Agent for detecting cold transfer fraud in inbound call campaigns. ' +
       'Monitors TrackDrive call recordings, transcribes audio, analyzes for fraudulent patterns using AI, ' +
@@ -40,7 +40,7 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(swaggerPath, app, document, {
-    customSiteTitle: 'BSBW QA Agent API',
+    customSiteTitle: 'GrovLabs QA Agent API',
     customCss: `
       .swagger-ui .topbar { display: none; }
       .swagger-ui .info { margin: 20px 0; }
@@ -59,7 +59,7 @@ async function bootstrap() {
   await app.listen(port);
 
   const logger = new Logger('Bootstrap');
-  logger.log(`BSBW QA Agent running on port ${port}`);
+  logger.log(`GrovLabs QA Agent running on port ${port}`);
   logger.log(`API docs available at /${swaggerPath}`);
 }
 bootstrap();

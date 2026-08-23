@@ -2,11 +2,11 @@ import { prisma } from '@/lib/db'
 
 // Default email configuration
 export const DEFAULT_EMAIL_CONFIG = {
-  companyName: 'The Broken Wood Inc',
+  companyName: 'GrovLabs Inc',
   companyTagline: 'Performance Marketing',
-  contactEmail: 'sammyabdel@thebrokenwood.com',
-  contactName: 'Sammy Abdel',
-  contactPhone: '+1 (862) 366-7366',
+  contactEmail: 'uj@grovlabs.com',
+  contactName: 'UJ',
+  contactPhone: '+1 (754) 344-0773',
   primaryColor: '#8b5a2b',
   secondaryColor: '#a0714f',
   gradientStart: '#8b5a2b',

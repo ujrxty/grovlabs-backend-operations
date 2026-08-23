@@ -6,6 +6,7 @@ import { TrackDriveModule } from './trackdrive/trackdrive.module.js';
 import { TranscriptionModule } from './transcription/transcription.module.js';
 import { AnalysisModule } from './analysis/analysis.module.js';
 import { TelegramModule } from './telegram/telegram.module.js';
+import { DiscordModule } from './discord/discord.module.js';
 import { CallsModule } from './calls/calls.module.js';
 import { WebhooksModule } from './webhooks/webhooks.module.js';
 import { AffiliatesModule } from './affiliates/affiliates.module.js';
@@ -29,6 +30,7 @@ import { NonConversionQaModule } from './non-conversion-qa/non-conversion-qa.mod
     TranscriptionModule,
     AnalysisModule,
     TelegramModule,
+    DiscordModule,
     CallsModule,
     WebhooksModule,
     AffiliatesModule,

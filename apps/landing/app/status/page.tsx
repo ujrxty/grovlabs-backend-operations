@@ -223,7 +223,7 @@ export default function StatusPage() {
                     )}
                     {data.io.status === "pending_counter" && (
                       <p className="text-sm text-purple-600 bg-purple-50 p-3 rounded-lg">
-                        Your signature has been received. Awaiting counter-signature from The Broken Wood Inc.
+                        Your signature has been received. Awaiting counter-signature from GrovLabs Inc.
                       </p>
                     )}
                   </div>
@@ -256,7 +256,7 @@ export default function StatusPage() {
                     )}
                     {data.agreement.status === "pending_counter" && (
                       <p className="text-sm text-purple-600 bg-purple-50 p-3 rounded-lg">
-                        Your signature has been received. Awaiting counter-signature from The Broken Wood Inc.
+                        Your signature has been received. Awaiting counter-signature from GrovLabs Inc.
                       </p>
                     )}
                   </div>

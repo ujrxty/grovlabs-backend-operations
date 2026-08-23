@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
 import { IOService } from './io.service.js';
 import { OnboardingNotificationService } from './notification.service.js';
+import { DiscordService } from '../discord/discord.service.js';
 import { ApplyDto } from './dto/apply.dto.js';
 import { randomBytes } from 'crypto';
 import { ConfigService } from '@nestjs/config';
@@ -18,6 +19,7 @@ export class OnboardingService {
     private readonly io: IOService,
     private readonly notif: OnboardingNotificationService,
     private readonly config: ConfigService,
+    private readonly discord: DiscordService,
   ) {}
 
   // ==================== CAMPAIGNS ====================
@@ -293,7 +295,7 @@ export class OnboardingService {
     }
 
     // Link to the vendor portal UI for IO signing, NOT this API service
-    const portalOrigin = this.config.get<string>('VENDOR_PORTAL_URL', 'https://bsbwcamapigns.abacusai.app');
+    const portalOrigin = this.config.get<string>('VENDOR_PORTAL_URL', 'http://localhost:3000');
     const ioSignUrl = new URL(
       `/io/sign/${ioRecord.sign_token}`,
       portalOrigin,
@@ -412,7 +414,7 @@ export class OnboardingService {
 
     // Find the linked Lead Purchase Agreement so the vendor can sign it next
     const agreement = await this.io.getAgreementByIOId(ioRecord.id);
-    const portalOrigin = this.config.get<string>('VENDOR_PORTAL_URL', 'https://bsbwcamapigns.abacusai.app');
+    const portalOrigin = this.config.get<string>('VENDOR_PORTAL_URL', 'http://localhost:3000');
     const agreementSignUrl = agreement
       ? new URL(`/agreement/sign/${agreement.sign_token}`, portalOrigin).toString()
       : null;
@@ -479,7 +481,7 @@ export class OnboardingService {
     }
 
     // IO sign URL pointing to vendor portal
-    const portalOrigin = this.config.get<string>('VENDOR_PORTAL_URL', 'https://bsbwcamapigns.abacusai.app');
+    const portalOrigin = this.config.get<string>('VENDOR_PORTAL_URL', 'http://localhost:3000');
     const ioSignUrl = new URL(`/io/sign/${ioRecord.sign_token}`, portalOrigin).toString();
 
     // Notify portal to send approval email
@@ -572,7 +574,7 @@ export class OnboardingService {
     const ioRecord = await this.io.createMultiCampaignIO(vendor.id, ids, specialTerms);
 
     // IO sign URL pointing to the vendor portal
-    const portalOrigin = this.config.get<string>('VENDOR_PORTAL_URL', 'https://bsbwcamapigns.abacusai.app');
+    const portalOrigin = this.config.get<string>('VENDOR_PORTAL_URL', 'http://localhost:3000');
     const ioSignUrl = new URL(`/io/sign/${ioRecord.sign_token}`, portalOrigin).toString();
 
     // Notify portal to email the vendor the IO sign link (reuses approval email path)
@@ -637,17 +639,60 @@ export class OnboardingService {
     }
   }
 
-  async countersignIO(ioId: string, signBy = 'Sammy Abdel, CEO - The Broken Wood Inc') {
+  async countersignIO(ioId: string, signBy = 'UJ, CEO - GrovLabs Inc') {
     const ioRecord = await this.io.counterSign(ioId, signBy);
 
     // Check if the linked agreement is also countersigned — if so, finalize onboarding
     await this.checkAndFinalizeOnboarding(ioRecord.id, ioRecord.vendor_id);
+
+    // Send Discord notification
+    this.discord.sendIOCountersignedNotification({
+      companyName: ioRecord.vendor.company_name,
+      campaignName: ioRecord.campaign.name,
+      ioNumber: ioRecord.io_number,
+    }).catch(e => this.logger.error(`Discord countersign notification failed: ${e.message}`));
 
     return {
       message: 'IO countersigned and activated',
       io_number: ioRecord.io_number,
       vendor: ioRecord.vendor.company_name,
       campaign: ioRecord.campaign.name,
+    };
+  }
+
+  async resendIOEmail(ioId: string) {
+    const io = await this.prisma.insertion_order.findUnique({
+      where: { id: ioId },
+      include: {
+        vendor: { select: { company_name: true, contact_name: true, email: true } },
+        campaign: { select: { name: true } },
+      },
+    });
+
+    if (!io) {
+      throw new NotFoundException('IO not found');
+    }
+
+    if (io.status !== 'pending_vendor') {
+      throw new BadRequestException('IO is not pending vendor signature');
+    }
+
+    const portalUrl = this.config.get<string>('VENDOR_PORTAL_URL', 'http://localhost:3000');
+    const signUrl = `${portalUrl}/sign-io/${io.sign_token}`;
+
+    await this.notif.sendApplicationApproved(
+      io.vendor.email,
+      io.vendor.contact_name,
+      io.campaign.name,
+      signUrl,
+    );
+
+    this.logger.log(`Resent IO email for ${io.io_number} to ${io.vendor.email}`);
+
+    return {
+      message: 'IO email resent successfully',
+      io_number: io.io_number,
+      email: io.vendor.email,
     };
   }
 
@@ -831,7 +876,7 @@ export class OnboardingService {
         const ioRecord = await this.findIOByShortId(shortId);
         if (!ioRecord) return 'IO not found';
         if (ioRecord.status !== 'pending_counter') return `IO status: ${ioRecord.status}`;
-        const result = await this.countersignIO(ioRecord.id, 'The Broken Wood Inc');
+        const result = await this.countersignIO(ioRecord.id, 'GrovLabs Inc');
         return `Countersigned: ${result.io_number}\n${result.vendor} — ${result.campaign}\nWelcome email sent.`;
 
       } else if (data.startsWith('acs_')) {
@@ -840,7 +885,7 @@ export class OnboardingService {
         const agreement = await this.findAgreementByShortId(shortId);
         if (!agreement) return 'Agreement not found';
         if (agreement.status !== 'pending_counter') return `Agreement status: ${agreement.status}`;
-        const result = await this.countersignAgreement(agreement.id, 'The Broken Wood Inc');
+        const result = await this.countersignAgreement(agreement.id, 'GrovLabs Inc');
         return `Agreement Countersigned\n${result.vendor} — IO ${result.io_number}`;
       }
 
@@ -978,57 +1023,30 @@ export class OnboardingService {
     }
 
     const first = apps[0];
+    const campaigns = apps.map(a => (a as any).campaign?.name || 'Unknown');
 
-    // Build Telegram message from DB records
-    const campaignLines = apps.map(a => `  ${(a as any).campaign?.name || 'Unknown'}`).join('\n');
-
-    let msg = `<b>New Vendor Application</b>\n\n`;
-    msg += `<b>${this.esc(first.company_name)}</b>\n`;
-    msg += `${this.esc(first.contact_name)}\n`;
-    msg += `${this.esc(first.email)} | ${this.esc(first.phone)}\n`;
-    if (first.website) msg += `${this.esc(first.website)}\n`;
-    msg += `\nTraffic: ${this.esc(first.traffic_types)}`;
-    if (first.estimated_volume) msg += ` | Vol: ${this.esc(first.estimated_volume)}`;
-    if (first.referred_by) msg += `\nReferred by: ${this.esc(first.referred_by)}`;
-    if (first.experience) msg += `\n\nExperience: ${this.esc(first.experience.substring(0, 200))}`;
-    if (first.comments) msg += `\n\nComments: ${this.esc(first.comments.substring(0, 200))}`;
-    msg += `\n\n<b>Campaigns (${apps.length}):</b>\n${campaignLines}`;
-
-    // Build inline keyboard
-    const botToken = this.config.get<string>('TELEGRAM_BOT_TOKEN', '');
-    const chatId = this.config.get<string>('TELEGRAM_CHAT_ID', '');
-    if (!botToken || !chatId) {
-      this.logger.warn('Telegram credentials not configured, skipping notification');
-      return { notified: false, reason: 'telegram_not_configured' };
-    }
-
-    const keyboard: any[][] = [];
-    for (const app of apps) {
-      const shortId = app.id.substring(0, 8);
-      keyboard.push([
-        { text: `Approve: ${(app as any).campaign?.name || 'Campaign'}`, callback_data: `oa_${shortId}` },
-        { text: `Reject`, callback_data: `or_${shortId}` },
-      ]);
-    }
-    if (apps.length > 1 && first.group_token) {
-      const groupId = first.group_token.substring(0, 8);
-      keyboard.push([
-        { text: 'Approve All', callback_data: `oaa_${groupId}` },
-        { text: 'Reject All', callback_data: `ora_${groupId}` },
-      ]);
-    }
-
-    await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      chat_id: chatId,
-      text: msg,
-      parse_mode: 'HTML',
-      disable_web_page_preview: true,
-      reply_markup: { inline_keyboard: keyboard },
+    // Send Discord notification
+    const sent = await this.discord.sendApplicationNotification({
+      companyName: first.company_name,
+      contactName: first.contact_name,
+      email: first.email,
+      phone: first.phone,
+      website: first.website || undefined,
+      trafficTypes: first.traffic_types,
+      estimatedVolume: first.estimated_volume || undefined,
+      referredBy: first.referred_by || undefined,
+      experience: first.experience || undefined,
+      comments: first.comments || undefined,
+      campaigns,
+      applicationIds,
+      dashboardUrl: this.config.get<string>('DASHBOARD_URL', 'http://localhost:3001'),
     });
 
-    this.logger.log(`Telegram notification sent for ${apps.length} application(s) from ${first.company_name}`);
+    if (sent) {
+      this.logger.log(`Discord notification sent for ${apps.length} application(s) from ${first.company_name}`);
+    }
 
-    return { notified: true, application_count: apps.length };
+    return { notified: sent, application_count: apps.length };
   }
 
   async handleIOSignedWebhook(ioId: string) {
@@ -1052,33 +1070,17 @@ export class OnboardingService {
       this.logger.warn(`IO ${ioId} status is ${io.status}, not pending_counter`);
     }
 
-    const botToken = this.config.get<string>('TELEGRAM_BOT_TOKEN', '');
-    const chatId = this.config.get<string>('TELEGRAM_CHAT_ID', '');
-    if (!botToken || !chatId) {
-      return { notified: false, reason: 'telegram_not_configured' };
-    }
-
-    const shortId = io.id.substring(0, 8);
-    let msg = `<b>IO Signed by Vendor</b>\n\n`;
-    msg += `<b>${this.esc(io.vendor.company_name)}</b>\n`;
-    msg += `Campaign: ${this.esc(io.campaign.name)}\n`;
-    msg += `IO: ${io.io_number}\n`;
-    msg += `Signed by: ${this.esc(io.vendor_sign_name || 'Unknown')} (${io.vendor_sign_ip || 'N/A'})\n`;
-    msg += `\nReady for countersignature.`;
-
-    await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      chat_id: chatId,
-      text: msg,
-      parse_mode: 'HTML',
-      reply_markup: {
-        inline_keyboard: [[
-          { text: 'Countersign', callback_data: `ocs_${shortId}` },
-        ]],
-      },
+    const sent = await this.discord.sendIOSignedNotification({
+      companyName: io.vendor.company_name,
+      campaignName: io.campaign.name,
+      ioNumber: io.io_number,
+      dashboardUrl: this.config.get<string>('DASHBOARD_URL', 'http://localhost:3001'),
     });
 
-    this.logger.log(`Telegram IO signed alert sent for ${io.io_number}`);
-    return { notified: true, io_number: io.io_number };
+    if (sent) {
+      this.logger.log(`Discord IO signed alert sent for ${io.io_number}`);
+    }
+    return { notified: sent, io_number: io.io_number };
   }
 
   async handleAgreementSignedWebhook(agreementId: string) {
@@ -1098,21 +1100,20 @@ export class OnboardingService {
       throw new NotFoundException(`Agreement not found: ${agreementId}`);
     }
 
-    // Send Telegram alert
-    await this.sendTelegramAgreementSignedAlert({
-      ...agreement,
-      insertion_order: {
-        ...agreement.insertion_order,
-        io_number: agreement.insertion_order.io_number,
-      },
+    // Send Discord alert
+    const sent = await this.discord.sendAgreementSignedNotification({
+      companyName: agreement.vendor.company_name,
+      dashboardUrl: this.config.get<string>('DASHBOARD_URL', 'http://localhost:3001'),
     });
 
-    this.logger.log(`Telegram agreement signed alert sent for IO ${agreement.insertion_order.io_number}`);
-    return { notified: true, io_number: agreement.insertion_order.io_number };
+    if (sent) {
+      this.logger.log(`Discord agreement signed alert sent for IO ${agreement.insertion_order.io_number}`);
+    }
+    return { notified: sent, io_number: agreement.insertion_order.io_number };
   }
 
   private async callPortalWebhook(path: string, body: Record<string, any>): Promise<void> {
-    const portalOrigin = this.config.get<string>('VENDOR_PORTAL_URL', 'https://bsbwcamapigns.abacusai.app');
+    const portalOrigin = this.config.get<string>('VENDOR_PORTAL_URL', 'http://localhost:3000');
     const url = new URL(path, portalOrigin).toString();
     try {
       await axios.post(url, body, { timeout: 10000 });
@@ -1142,18 +1143,21 @@ export class OnboardingService {
   async signAgreement(signToken: string, signName: string, ip: string) {
     const agreement = await this.io.vendorSignAgreement(signToken, signName, ip);
 
-    // Notify admin via Telegram
-    this.sendTelegramAgreementSignedAlert(agreement).catch(e =>
-      this.logger.error(`Telegram agreement alert failed: ${e.message}`),
+    // Notify admin via Discord
+    this.discord.sendAgreementSignedNotification({
+      companyName: agreement.vendor.company_name,
+      dashboardUrl: this.config.get<string>('DASHBOARD_URL', 'http://localhost:3001'),
+    }).catch(e =>
+      this.logger.error(`Discord agreement alert failed: ${e.message}`),
     );
 
     return {
-      message: 'Lead Purchase Agreement signed successfully. The Broken Wood will review and countersign.',
+      message: 'Lead Purchase Agreement signed successfully. GrovLabs will review and countersign.',
       io_number: agreement.insertion_order.io_number,
     };
   }
 
-  async countersignAgreement(agreementId: string, signBy = 'Sammy Abdel, CEO - The Broken Wood Inc') {
+  async countersignAgreement(agreementId: string, signBy = 'UJ, CEO - GrovLabs Inc') {
     const agreement = await this.io.counterSignAgreement(agreementId, signBy);
 
     // Check if the linked IO is also countersigned — if so, finalize onboarding
@@ -1251,7 +1255,7 @@ export class OnboardingService {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lead Purchase Agreement - ${vendorName} | The Broken Wood Inc</title>
+  <title>Lead Purchase Agreement - ${vendorName} | GrovLabs Inc</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Georgia', 'Times New Roman', serif; background: #f7fafc; color: #1a202c; }
@@ -1270,7 +1274,7 @@ export class OnboardingService {
   <div class="page">
     <div class="header">
       <h1>LEAD PURCHASE AGREEMENT</h1>
-      <p>The Broken Wood Inc — ${vendorName}</p>
+      <p>GrovLabs Inc — ${vendorName}</p>
     </div>
     <div class="agreement-body">${agreementText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
     <div class="actions">

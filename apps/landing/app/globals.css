@@ -1,11 +1,9 @@
 @import "tailwindcss";
 
 /* ============================================================
-   THE BROKEN WOOD
-   Warm paper base, near-black text, ONE copper accent taken
-   from the logo. Flat colour only — no gradient fills on text,
-   borders or surfaces. Structure is carried by rules and
-   spacing, not by decoration.
+   GROVLABS
+   Modern design system with lime accent (#c4ff00).
+   Clean, professional styling for performance marketing.
    ============================================================ */
 @theme {
   --color-paper: #f6f3ee;

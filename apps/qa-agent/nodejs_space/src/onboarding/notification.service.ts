@@ -1,34 +1,34 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EMAIL_CONFIG } from '../config/email.config';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class OnboardingNotificationService {
   private readonly logger = new Logger(OnboardingNotificationService.name);
+  private transporter: nodemailer.Transporter;
 
-  private async send(subject: string, html: string, notifEnvVar: string, recipientEmail: string, replyTo?: string): Promise<boolean> {
+  constructor() {
+    this.transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+  }
+
+  private async send(subject: string, html: string, _notifEnvVar: string, recipientEmail: string, replyTo?: string): Promise<boolean> {
     try {
-      const response = await fetch('https://apps.abacus.ai/api/sendNotificationEmail', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          deployment_token: process.env.ABACUSAI_API_KEY,
-          app_id: process.env.WEB_APP_ID,
-          notification_id: process.env[notifEnvVar],
-          subject,
-          body: html,
-          is_html: true,
-          recipient_email: recipientEmail,
-          reply_to: replyTo || EMAIL_CONFIG.contactEmail,
-          sender_email: `noreply@${EMAIL_CONFIG.getSenderDomain()}`,
-          sender_alias: EMAIL_CONFIG.companyName,
-        }),
+      const result = await this.transporter.sendMail({
+        from: `"${EMAIL_CONFIG.companyName}" <${process.env.SMTP_FROM_EMAIL || EMAIL_CONFIG.contactEmail}>`,
+        to: recipientEmail,
+        replyTo: replyTo || EMAIL_CONFIG.contactEmail,
+        subject,
+        html,
       });
-      const result = await response.json() as any;
-      if (!result.success && !result.notification_disabled) {
-        this.logger.error(`Email failed: ${result.message}`);
-        return false;
-      }
-      this.logger.log(`Email sent: ${subject} → ${recipientEmail}`);
+      this.logger.log(`Email sent: ${subject} → ${recipientEmail} (${result.messageId})`);
       return true;
     } catch (error: any) {
       this.logger.error(`Email error: ${error.message}`);
@@ -45,7 +45,7 @@ export class OnboardingNotificationService {
     campaignNames: string[],
     statusToken: string,
   ): Promise<boolean> {
-    const statusUrl = new URL(`/onboarding/status/${statusToken}`, process.env.APP_ORIGIN || 'https://bsbw-qa-agent.abacusai.app').toString();
+    const statusUrl = new URL(`/onboarding/status/${statusToken}`, process.env.APP_ORIGIN || 'https://grovlabs.com').toString();
     const campaignList = campaignNames.map(c => `<li style="padding:4px 0;">${c}</li>`).join('');
     const html = `
 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a;">

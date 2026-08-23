@@ -18,7 +18,7 @@ export class BotCommandsService {
   ) {}
 
   async handleHelp(chatId: string): Promise<void> {
-    const msg = `<b>BSBW TrackDrive Assistant</b>\n\n` +
+    const msg = `<b>GrovLabs TrackDrive Assistant</b>\n\n` +
       `<b>Analytics</b>\n` +
       `/overview — System dashboard\n` +
       `/stats [today|week|month] — Call volume and conversions\n` +
@@ -92,7 +92,7 @@ export class BotCommandsService {
       ? `\n🎯 Goal: $${goalAmt.toFixed(0)} | Progress: <b>$${totalRev.toFixed(0)}</b> (${((totalRev / goalAmt) * 100).toFixed(0)}%)\n`
       : '';
 
-    const msg = `🤖 <b>BSBW SYSTEM OVERVIEW</b>\n` +
+    const msg = `🤖 <b>GROVLABS SYSTEM OVERVIEW</b>\n` +
       `📅 ${today}\n${goalLine}\n` +
       `<b>📊 Today's Numbers</b>\n` +
       `━━━━━━━━━━━━━━━━━━\n` +

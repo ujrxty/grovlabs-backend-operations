@@ -39,7 +39,7 @@ const statusConfig: Record<string, { label: string; color: string; bgColor: stri
   under_review: { label: 'Under Review', color: 'text-blue-700', bgColor: 'bg-blue-50 border-blue-200', icon: Eye, description: 'Your application is currently being reviewed by our team.' },
   approved: { label: 'Approved', color: 'text-green-700', bgColor: 'bg-green-50 border-green-200', icon: CheckCircle2, description: 'Congratulations! Your application has been approved.' },
   rejected: { label: 'Rejected', color: 'text-red-700', bgColor: 'bg-red-50 border-red-200', icon: XCircle, description: 'Unfortunately, your application was not approved at this time.' },
-  withdrawn: { label: 'Withdrawn', color: 'text-gray-700', bgColor: 'bg-gray-50 border-gray-200', icon: AlertCircle, description: 'This application has been withdrawn.' },
+  withdrawn: { label: 'Withdrawn', color: 'text-white/70', bgColor: 'bg-white/[0.03] border-white/10', icon: AlertCircle, description: 'This application has been withdrawn.' },
 }
 
 export function StatusChecker() {
@@ -95,27 +95,27 @@ export function StatusChecker() {
     <div className="mt-8 space-y-6">
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
           <input
             type="text"
             value={token}
             onChange={(e: any) => { setToken(e?.target?.value ?? ''); setError('') }}
             onKeyDown={(e: any) => { if (e?.key === 'Enter') lookupStatus() }}
-            className="w-full rounded-lg border border-gray-200 pl-10 pr-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
+            className="w-full rounded-lg border border-white/10 bg-[#0a0a0a] text-white pl-10 pr-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50 placeholder:text-white/30"
             placeholder="Enter your status token..."
           />
         </div>
         <button
           onClick={() => lookupStatus()}
           disabled={loading}
-          className="rounded-lg bg-[#b87333] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors disabled:opacity-50 flex items-center gap-2"
+          className="rounded-lg bg-[#a3e635] px-6 py-2.5 text-sm font-semibold text-[#050505] hover:bg-[#bef264] transition-colors disabled:opacity-50 flex items-center gap-2"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Look Up'}
         </button>
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700 flex items-center gap-2">
+        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-400 flex items-center gap-2">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {error}
         </div>
@@ -124,11 +124,11 @@ export function StatusChecker() {
       {safeApps.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
           {/* Applicant info header */}
-          <div className="rounded-xl bg-gray-50 border border-gray-200 p-5">
-            <p className="text-sm text-gray-500">Applicant</p>
-            <p className="font-semibold text-gray-900">{safeApps[0]?.company_name ?? ''}</p>
-            <p className="text-sm text-gray-600">{safeApps[0]?.contact_name ?? ''} &bull; {safeApps[0]?.email ?? ''}</p>
-            <p className="text-xs text-gray-400 mt-1">Submitted {safeApps[0]?.created_at ? new Date(safeApps[0].created_at).toLocaleDateString() : ''}</p>
+          <div className="rounded-xl bg-white/[0.03] border border-white/10 p-5">
+            <p className="text-sm text-white/50">Applicant</p>
+            <p className="font-semibold text-white">{safeApps[0]?.company_name ?? ''}</p>
+            <p className="text-sm text-white/60">{safeApps[0]?.contact_name ?? ''} &bull; {safeApps[0]?.email ?? ''}</p>
+            <p className="text-xs text-white/40 mt-1">Submitted {safeApps[0]?.created_at ? new Date(safeApps[0].created_at).toLocaleDateString() : ''}</p>
           </div>
 
           {/* IO Section — ONE per vendor, shown at the top when any approved app exists */}
@@ -136,12 +136,12 @@ export function StatusChecker() {
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-xl border-2 border-[#b87333]/20 bg-[#b87333]/5/50 p-5"
+              className="rounded-xl border-2 border-[#c4ff00]/20 bg-[#a3e635]/5/50 p-5"
             >
               <div className="flex items-center gap-2 mb-3">
-                <FileText className="h-5 w-5 text-[#b87333]" />
-                <span className="font-semibold text-[#9a5f28]">Insertion Order</span>
-                <span className="text-xs text-[#b87333]/50 font-mono bg-[#b87333]/10 rounded-full px-2 py-0.5">{ioData.io_number}</span>
+                <FileText className="h-5 w-5 text-[#c4ff00]" />
+                <span className="font-semibold text-[#d4ff40]">Insertion Order</span>
+                <span className="text-xs text-[#c4ff00]/50 font-mono bg-[#a3e635]/10 rounded-full px-2 py-0.5">{ioData.io_number}</span>
               </div>
 
               {ioData.status === 'active' ? (
@@ -157,12 +157,12 @@ export function StatusChecker() {
                   <Clock className="h-5 w-5 shrink-0" />
                   <div>
                     <p className="font-semibold">IO Signed — Pending Counter-Signature</p>
-                    <p className="text-blue-700 text-xs mt-0.5">You have signed the IO. Waiting for The Broken Wood Inc admin to counter-sign.</p>
+                    <p className="text-blue-700 text-xs mt-0.5">You have signed the IO. Waiting for GrovLabs Inc admin to counter-sign.</p>
                   </div>
                 </div>
               ) : ioData.status === 'pending_vendor' ? (
                 <div className="space-y-3">
-                  <p className="text-sm text-[#b87333]">Your Insertion Order is ready for signing. Please review and sign below.</p>
+                  <p className="text-sm text-[#c4ff00]">Your Insertion Order is ready for signing. Please review and sign below.</p>
                   <Link
                     href={`/sign-io/${ioData.sign_token}`}
                     className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700 transition-colors shadow-sm"
@@ -171,7 +171,7 @@ export function StatusChecker() {
                   </Link>
                 </div>
               ) : (
-                <p className="text-sm text-gray-500 italic">IO status: {ioData.status}</p>
+                <p className="text-sm text-white/50 italic">IO status: {ioData.status}</p>
               )}
             </motion.div>
           )}
@@ -204,7 +204,7 @@ export function StatusChecker() {
                   <Clock className="h-5 w-5 shrink-0" />
                   <div>
                     <p className="font-semibold">Agreement Signed — Pending Counter-Signature</p>
-                    <p className="text-blue-700 text-xs mt-0.5">You have signed the agreement. Waiting for The Broken Wood Inc admin to counter-sign.</p>
+                    <p className="text-blue-700 text-xs mt-0.5">You have signed the agreement. Waiting for GrovLabs Inc admin to counter-sign.</p>
                   </div>
                 </div>
               ) : agreementData.status === 'pending_vendor' ? (
@@ -218,7 +218,7 @@ export function StatusChecker() {
                   </Link>
                 </div>
               ) : (
-                <p className="text-sm text-gray-500 italic">Agreement status: {agreementData.status}</p>
+                <p className="text-sm text-white/50 italic">Agreement status: {agreementData.status}</p>
               )}
             </motion.div>
           )}
@@ -240,18 +240,18 @@ export function StatusChecker() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <Icon className={cn('h-5 w-5', config?.color ?? '')} />
                       <span className={cn('font-semibold text-sm', config?.color ?? '')}>{config?.label ?? ''}</span>
-                      <span className="text-xs text-gray-400 bg-white/60 rounded-full px-2 py-0.5">{app?.campaign_industry ?? ''}</span>
+                      <span className="text-xs text-white/40 bg-[#0a0a0a]/60 rounded-full px-2 py-0.5">{app?.campaign_industry ?? ''}</span>
                     </div>
-                    <h3 className="mt-1 font-medium text-gray-900">{app?.campaign_name ?? 'Campaign'}</h3>
-                    <p className="mt-1 text-sm text-gray-600">{config?.description ?? ''}</p>
+                    <h3 className="mt-1 font-medium text-white">{app?.campaign_name ?? 'Campaign'}</h3>
+                    <p className="mt-1 text-sm text-white/60">{config?.description ?? ''}</p>
                     {app?.status_reason && (
-                      <div className="mt-3 rounded-lg bg-white/80 border border-gray-200 p-3">
-                        <p className="text-xs font-medium text-gray-500 mb-1">Review Notes</p>
-                        <p className="text-sm text-gray-700">{app.status_reason}</p>
+                      <div className="mt-3 rounded-lg bg-[#0a0a0a]/80 border border-white/10 p-3">
+                        <p className="text-xs font-medium text-white/50 mb-1">Review Notes</p>
+                        <p className="text-sm text-white/70">{app.status_reason}</p>
                       </div>
                     )}
                     {app?.reviewed_at && (
-                      <p className="mt-2 text-xs text-gray-400">
+                      <p className="mt-2 text-xs text-white/40">
                         Reviewed on {new Date(app.reviewed_at).toLocaleDateString()}
                       </p>
                     )}

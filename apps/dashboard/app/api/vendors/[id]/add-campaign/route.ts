@@ -24,7 +24,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     const res = await fetch(
-      `https://bsbwqa.abacusai.app/onboarding/admin/vendors/${params.id}/add-campaign`,
+      `${process.env.QA_AGENT_URL || 'http://localhost:3003'}/onboarding/admin/vendors/${params.id}/add-campaign`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

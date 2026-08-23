@@ -75,7 +75,7 @@ export class NonConversionQaService {
       responseType: 'arraybuffer',
       timeout: 120000,
       maxRedirects: 5,
-      headers: { 'User-Agent': 'Mozilla/5.0 (BSBW-QA-Bot)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (GrovLabs-QA-Bot)' },
     });
     return Buffer.from(resp.data);
   }
@@ -95,7 +95,7 @@ export class NonConversionQaService {
     const status = call.status || null;
     const disposition = call.disposition_name || null;
 
-    const apiKey = this.config.get<string>('ABACUSAI_API_KEY', '');
+    const apiKey = this.config.get<string>('OPENAI_API_KEY', '');
     const recordingUrl = call.recording_url as string;
 
     const audio = await this.downloadRecording(recordingUrl);
@@ -113,14 +113,14 @@ export class NonConversionQaService {
       callerState,
     });
 
-    const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gemini-2.5-flash',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'user',
@@ -196,11 +196,11 @@ export class NonConversionQaService {
     disposition: string | null;
     callerState: string | null;
   }): string {
-    return `You are a QA analyst for The Broken Wood Inc, a company that brokers INBOUND phone calls using a REAL-TIME BIDDING (RTB) model.
+    return `You are a QA analyst for GrovLabs Inc, a company that brokers INBOUND phone calls using a REAL-TIME BIDDING (RTB) model.
 
 HOW THE RTB MODEL WORKS (critical for fault attribution):
-1. A traffic VENDOR generates the inbound call and pings BSBW with the caller/lead info (including the caller's geography/state).
-2. BSBW relays the ping to the BUYER network. Buyers who WANT the call BID on it. Buyers see the ping data (including caller state) BEFORE bidding.
+1. A traffic VENDOR generates the inbound call and pings GrovLabs with the caller/lead info (including the caller's geography/state).
+2. GrovLabs relays the ping to the BUYER network. Buyers who WANT the call BID on it. Buyers see the ping data (including caller state) BEFORE bidding.
 3. The vendor then sends the live call to the winning buyer.
 4. The call "converts" only if it stays connected past a billable time threshold with the buyer.
 
@@ -474,7 +474,7 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <div style="max-width:680px;margin:0 auto;padding:24px 16px;">
     <div style="background:linear-gradient(135deg,#1e293b,#334155);border-radius:12px;padding:24px;color:#fff;">
-      <div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;">The Broken Wood Inc · Non-Conversion QA</div>
+      <div style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;">GrovLabs Inc · Non-Conversion QA</div>
       <div style="font-size:22px;font-weight:700;margin-top:4px;">Daily Non-Conversion Review</div>
       <div style="font-size:14px;opacity:.85;margin-top:2px;">${dateStr}</div>
       ${metaLine.replace('#9ca3af', '#cbd5e1')}
@@ -502,7 +502,7 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
     )}
 
     <p style="font-size:12px;color:#9ca3af;margin-top:28px;text-align:center;">
-      Automated report from the The Broken Wood QA Agent. Reply to this email to reach Sammy.
+      Automated report from the GrovLabs QA Agent. Reply to this email to reach UJ.
     </p>
   </div>
 </body>
@@ -548,40 +548,29 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
     return lines.join('\n');
   }
 
-  /** Send the HTML report via the notification email API. */
+  /** Send the HTML report via SMTP. */
   private async sendEmail(subject: string, html: string, recipients: string[]): Promise<void> {
-    const hostname = (() => {
-      try {
-        return new URL(process.env.APP_ORIGIN || 'https://bsbw-qa-agent.abacusai.app').hostname;
-      } catch {
-        return 'bsbw-qa-agent.abacusai.app';
-      }
-    })();
+    const nodemailer = await import('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
 
     for (const recipient of recipients) {
       try {
-        const response = await fetch('https://apps.abacus.ai/api/sendNotificationEmail', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            deployment_token: process.env.ABACUSAI_API_KEY,
-            app_id: process.env.WEB_APP_ID,
-            notification_id: process.env.NOTIF_ID_NONCONVERSION_QA_REPORT,
-            subject,
-            body: html,
-            is_html: true,
-            recipient_email: recipient,
-            sender_email: `noreply@${hostname}`,
-            sender_alias: 'The Broken Wood Inc',
-            reply_to: 'sammyabdel@thebrokenwood.com',
-          }),
+        const result = await transporter.sendMail({
+          from: `"GrovLabs Inc" <${process.env.SMTP_FROM_EMAIL || 'noreply@grovlabs.com'}>`,
+          to: recipient,
+          replyTo: 'uj@grovlabs.com',
+          subject,
+          html,
         });
-        const result = (await response.json()) as any;
-        if (!result.success && !result.notification_disabled) {
-          this.logger.error(`Non-conversion report email failed for ${recipient}: ${result.message}`);
-        } else {
-          this.logger.log(`Non-conversion report email sent to ${recipient}`);
-        }
+        this.logger.log(`Non-conversion report email sent to ${recipient} (${result.messageId})`);
       } catch (err: any) {
         this.logger.error(`Email error for ${recipient}: ${err.message}`);
       }
@@ -646,7 +635,7 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
         reviewed: reviews.length,
         failures: failures.length,
       });
-      await this.sendEmail(subject, html, ['sammyabdel@thebrokenwood.com']);
+      await this.sendEmail(subject, html, ['uj@grovlabs.com']);
       await this.sendTelegram(this.buildTelegramSummary(reviews, dateStr));
     }
 

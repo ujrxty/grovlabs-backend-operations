@@ -35,11 +35,11 @@ export async function POST(request: NextRequest) {
 
     // Generate 6-digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString()
-    setVerificationCode(token?.trim?.(), code, email?.trim?.()?.toLowerCase?.())
+    await setVerificationCode(token?.trim?.(), code, email?.trim?.()?.toLowerCase?.())
 
     // Send code via email
     const codeContent = `
-      <p style="color: #374151;">Your verification code for The Broken Wood Inc IO signing is:</p>
+      <p style="color: #374151;">Your verification code for GrovLabs Inc IO signing is:</p>
       <div style="text-align: center; margin: 24px 0;">
         <span style="font-family: monospace; font-size: 32px; letter-spacing: 8px; background: #f3f4f6; padding: 12px 24px; border-radius: 8px; font-weight: bold; color: #7c3aed;">${code}</span>
       </div>
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     console.log('Sending verification email to:', email?.trim?.()?.toLowerCase?.(), 'notifId:', notifId)
     const emailResult = await sendNotificationEmail({
       notificationId: notifId,
-      subject: 'The Broken Wood Inc - IO Verification Code',
+      subject: 'GrovLabs Inc - IO Verification Code',
       body: emailTemplate('Verification Code', codeContent),
       recipientEmail: email?.trim?.()?.toLowerCase?.() ?? '',
     })

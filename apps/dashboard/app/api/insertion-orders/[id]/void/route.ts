@@ -18,7 +18,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const reason = typeof body?.reason === 'string' ? body.reason.trim() : ''
 
     const res = await fetch(
-      `https://bsbwqa.abacusai.app/onboarding/admin/insertion-orders/${params.id}/void`,
+      `${process.env.QA_AGENT_URL || 'http://localhost:3003'}/onboarding/admin/insertion-orders/${params.id}/void`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },

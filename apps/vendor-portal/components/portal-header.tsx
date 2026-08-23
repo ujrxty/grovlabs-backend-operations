@@ -14,14 +14,13 @@ export function PortalHeader() {
   const pathname = usePathname() ?? '/'
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#faf8f5]/90 backdrop-blur-md border-b border-[#b87333]/10">
+    <header className="sticky top-0 z-50 w-full bg-[#050505]/90 backdrop-blur-md border-b border-white/[0.08]">
       <div className="max-w-[1200px] mx-auto flex items-center justify-between px-4 sm:px-6 h-16">
         <Link href="/" className="flex items-center gap-3">
-          <span className="grid h-8 w-8 place-items-center rounded-[3px] bg-[#1a1a1a] font-mono text-[11px] font-medium text-[#faf8f5]">
-            TBW
+          <span className="font-bold text-[20px] text-white">
+            GrovLabs<span className="text-[#c4ff00]">.</span>
           </span>
-          <span className="text-[15px] font-semibold tracking-[-0.01em] text-[#1a1a1a]">The Broken Wood</span>
-          <span className="hidden sm:inline-block text-sm font-medium text-[#b87333] border-l border-[#b87333]/20 pl-3">Vendor Portal</span>
+          <span className="hidden sm:inline-block text-sm font-medium text-[#c4ff00]/70 border-l border-white/10 pl-3">Vendor Portal</span>
         </Link>
         <nav className="flex items-center gap-1">
           {navItems?.map((item: any) => {
@@ -34,8 +33,8 @@ export function PortalHeader() {
                 className={cn(
                   'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-[#b87333]/10 text-[#b87333]'
-                    : 'text-[#1a1a1a]/70 hover:bg-[#b87333]/5 hover:text-[#b87333]'
+                    ? 'bg-[#c4ff00]/10 text-[#c4ff00]'
+                    : 'text-white/60 hover:bg-white/5 hover:text-white'
                 )}
               >
                 {Icon && <Icon className="h-4 w-4" />}

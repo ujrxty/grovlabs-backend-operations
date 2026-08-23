@@ -31,7 +31,7 @@ export interface LossSettings {
 
 export const DEFAULT_LOSS_SETTINGS: LossSettings = {
   alerts_enabled: true,
-  recipients: 'sammyabdel@thebrokenwood.com',
+  recipients: 'uj@grovlabs.com',
   active_from_hour: 8,
   active_to_hour: 18,
   low_conv_enabled: true,

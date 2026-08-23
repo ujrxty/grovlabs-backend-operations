@@ -114,7 +114,7 @@ export function AgreementSigningFlow({ token }: { token: string }) {
   return (
     <div>
       {error && step !== 'error' && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700 flex items-center gap-2 mb-6">
+        <div className="rounded-lg bg-red-900/20 border border-red-500/30 p-4 text-sm text-red-400 flex items-center gap-2 mb-6">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {error}
         </div>
@@ -123,20 +123,20 @@ export function AgreementSigningFlow({ token }: { token: string }) {
       {/* Loading */}
       {step === 'loading' && (
         <div className="flex flex-col items-center justify-center py-16">
-          <Loader2 className="h-10 w-10 text-[#b87333] animate-spin mb-4" />
-          <p className="text-gray-500">Loading agreement...</p>
+          <Loader2 className="h-10 w-10 text-[#a3e635] animate-spin mb-4" />
+          <p className="text-white/60">Loading agreement...</p>
         </div>
       )}
 
       {/* Error */}
       {step === 'error' && (
-        <div className="rounded-xl bg-red-50 border border-red-200 p-8 text-center">
+        <div className="rounded-xl bg-red-900/20 border border-red-500/30 p-8 text-center">
           <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-          <h2 className="font-display text-xl font-bold text-red-800 mb-2">Unable to Load Agreement</h2>
-          <p className="text-red-600">{error}</p>
+          <h2 className="font-display text-xl font-bold text-red-400 mb-2">Unable to Load Agreement</h2>
+          <p className="text-red-300">{error}</p>
           <button
             onClick={() => { setStep('loading'); setError(''); fetchAgreement() }}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-red-100 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-200 transition-colors"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-red-500/20 px-4 py-2 text-sm font-medium text-red-300 hover:bg-red-500/30 transition-colors"
           >
             Try Again
           </button>
@@ -147,51 +147,51 @@ export function AgreementSigningFlow({ token }: { token: string }) {
       {step === 'review' && agreementData && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
           {/* Agreement Header */}
-          <div className="rounded-xl bg-gray-50 border border-gray-200 p-6">
+          <div className="rounded-xl bg-[#0a0a0a] border border-white/10 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <FileText className="h-6 w-6 text-[#b87333]" />
-              <h2 className="font-display text-xl font-bold text-gray-900">Lead Purchase Agreement</h2>
+              <FileText className="h-6 w-6 text-[#a3e635]" />
+              <h2 className="font-display text-xl font-bold text-white">Lead Purchase Agreement</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-xs text-gray-500">IO Number</p>
-                <p className="font-mono font-semibold text-gray-900">{agreementData?.io_number ?? ''}</p>
+                <p className="text-xs text-white/50">IO Number</p>
+                <p className="font-mono font-semibold text-white">{agreementData?.io_number ?? ''}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">Vendor</p>
-                <p className="font-semibold text-gray-900">{agreementData?.vendor_name ?? ''}</p>
+                <p className="text-xs text-white/50">Vendor</p>
+                <p className="font-semibold text-white">{agreementData?.vendor_name ?? ''}</p>
               </div>
               {agreementData?.campaign && (
                 <div className="sm:col-span-2">
-                  <p className="text-xs text-gray-500">Campaign</p>
-                  <p className="font-semibold text-gray-900">{agreementData.campaign}</p>
+                  <p className="text-xs text-white/50">Campaign</p>
+                  <p className="font-semibold text-white">{agreementData.campaign}</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Agreement Text */}
-          <div className="rounded-xl border border-gray-200 p-6">
-            <h3 className="font-display font-semibold text-gray-900 mb-3">Agreement Terms</h3>
-            <div className="max-h-96 overflow-y-auto rounded-lg bg-gray-50 p-4 text-sm text-gray-700 whitespace-pre-wrap border border-gray-100 leading-relaxed">
+          <div className="rounded-xl border border-white/10 p-6 bg-[#0a0a0a]">
+            <h3 className="font-display font-semibold text-[#a3e635] mb-3">Agreement Terms</h3>
+            <div className="max-h-96 overflow-y-auto rounded-lg bg-[#111] p-4 text-sm text-white/80 whitespace-pre-wrap border border-white/5 leading-relaxed">
               {agreementData?.agreement_text ?? 'No agreement text available.'}
             </div>
           </div>
 
           {/* Signature */}
-          <div className="rounded-xl border border-[#b87333]/20 bg-[#b87333]/5 p-6">
+          <div className="rounded-xl border border-[#a3e635]/20 bg-[#a3e635]/5 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Pen className="h-5 w-5 text-[#b87333]" />
-              <h3 className="font-display font-semibold text-gray-900">Electronic Signature</h3>
+              <Pen className="h-5 w-5 text-[#a3e635]" />
+              <h3 className="font-display font-semibold text-white">Electronic Signature</h3>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Legal Name *</label>
+                <label className="block text-sm font-medium text-white/70 mb-1">Full Legal Name *</label>
                 <input
                   type="text"
                   value={signName}
                   onChange={(e: any) => { setSignName(e?.target?.value ?? ''); setError('') }}
-                  className="w-full rounded-lg border border-[#b87333]/20 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
+                  className="w-full rounded-lg border border-white/10 bg-[#0a0a0a] px-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50 focus:border-[#a3e635]/50"
                   placeholder="Enter your full legal name"
                 />
               </div>
@@ -200,16 +200,16 @@ export function AgreementSigningFlow({ token }: { token: string }) {
                   type="checkbox"
                   checked={agreeTerms}
                   onChange={(e: any) => { setAgreeTerms(e?.target?.checked ?? false); setError('') }}
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#b87333] focus:ring-[#b87333]/50"
+                  className="mt-0.5 h-4 w-4 rounded border-white/20 bg-[#0a0a0a] text-[#a3e635] focus:ring-[#a3e635]/50"
                 />
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-white/70">
                   I have read and agree to the terms of this Lead Purchase Agreement. I understand this constitutes a legally binding agreement.
                 </p>
               </div>
               <button
                 onClick={signAgreement}
                 disabled={loading}
-                className="w-full rounded-lg bg-[#b87333] px-6 py-3 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full rounded-lg bg-[#a3e635] px-6 py-3 text-sm font-semibold text-[#050505] hover:bg-[#84cc16] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Pen className="h-4 w-4" /> Sign Lead Purchase Agreement</>}
               </button>
@@ -221,24 +221,24 @@ export function AgreementSigningFlow({ token }: { token: string }) {
       {/* Signed */}
       {step === 'signed' && agreementData && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
-          <div className="rounded-xl bg-green-50 border border-green-200 p-8 text-center">
+          <div className="rounded-xl bg-green-900/20 border border-green-500/30 p-8 text-center">
             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h2 className="font-display text-2xl font-bold text-green-800">Lead Purchase Agreement Signed!</h2>
+            <h2 className="font-display text-2xl font-bold text-green-400">Lead Purchase Agreement Signed!</h2>
             {agreementData?.status === 'active' ? (
               <>
-                <p className="mt-3 text-green-700">Your agreement has been fully executed. Both parties have signed.</p>
-                <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-2 text-sm font-semibold text-green-700">
+                <p className="mt-3 text-green-300">Your agreement has been fully executed. Both parties have signed.</p>
+                <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-500/20 px-4 py-2 text-sm font-semibold text-green-400">
                   <Shield className="h-4 w-4" /> Fully Executed
                 </div>
               </>
             ) : (
               <>
-                <p className="mt-3 text-green-700">Thank you for signing! An admin will countersign the agreement shortly.</p>
-                <p className="mt-2 text-sm text-gray-600">You will receive a confirmation email once the agreement is fully executed.</p>
+                <p className="mt-3 text-green-300">Thank you for signing! An admin will countersign the agreement shortly.</p>
+                <p className="mt-2 text-sm text-white/60">You will receive a confirmation email once the agreement is fully executed.</p>
               </>
             )}
             {agreementData?.io_number && (
-              <p className="mt-4 text-sm text-gray-600">IO Number: <span className="font-mono font-semibold">{agreementData.io_number}</span></p>
+              <p className="mt-4 text-sm text-white/60">IO Number: <span className="font-mono font-semibold">{agreementData.io_number}</span></p>
             )}
           </div>
         </motion.div>

@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     ` : ''
 
     const content = `
-      <p style="color: #374151;">We appreciate your interest in partnering with The Broken Wood Inc. After careful review, we were unable to approve your application at this time.</p>
+      <p style="color: #374151;">We appreciate your interest in partnering with GrovLabs Inc. After careful review, we were unable to approve your application at this time.</p>
       <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
         <p style="margin: 6px 0; color: #374151;"><strong>Campaign(s):</strong> ${campaignNames || 'N/A'}</p>
         <p style="margin: 6px 0; color: #374151;"><strong>Company:</strong> ${displayCompanyName}</p>
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     await sendNotificationEmail({
       notificationId: process.env.NOTIF_ID_APPLICATION_STATUS_CHANGED ?? '',
-      subject: `Application Update - The Broken Wood Inc`,
+      subject: `Application Update - GrovLabs Inc`,
       body: emailTemplate('Application Update', content),
       recipientEmail: vendor?.email ?? '',
     })

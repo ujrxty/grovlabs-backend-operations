@@ -10,7 +10,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
   try {
     const res = await fetch(
-      `https://bsbwqa.abacusai.app/onboarding/admin/agreement/${params.id}/download`,
+      `${process.env.QA_AGENT_URL || 'http://localhost:3003'}/onboarding/admin/agreement/${params.id}/download`,
       { headers: { 'Accept': 'text/html' } }
     )
     if (!res.ok) {

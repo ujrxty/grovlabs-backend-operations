@@ -123,6 +123,14 @@ export class OnboardingController {
     return this.svc.countersignIO(id);
   }
 
+  @Post('admin/io/:id/resend-email')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Resend IO email', description: 'Resends the IO signing email to the vendor.' })
+  @ApiParam({ name: 'id', description: 'IO ID' })
+  async resendIOEmail(@Param('id') id: string) {
+    return this.svc.resendIOEmail(id);
+  }
+
   @Get('admin/vendors')
   @ApiOperation({ summary: 'List vendor profiles', description: 'List all vendor profiles with IO and application counts.' })
   @ApiQuery({ name: 'status', required: false, enum: ['active', 'paused', 'terminated'] })

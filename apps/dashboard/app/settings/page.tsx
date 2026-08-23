@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Globe, Clock, Building2, Save, Check, Mail, Phone, User, MapPin, Palette, Server, Send, Eye, EyeOff } from 'lucide-react'
+import { Globe, Clock, Building2, Save, Check, Mail, Phone, User, MapPin, Palette, Server, Send, Eye, EyeOff, Brain, Radio, Key } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -61,16 +61,22 @@ interface Settings {
   smtpFromEmail: string
   smtpFromName: string
   smtpSecure: boolean
+  // AI Settings
+  openaiApiKey: string
+  // TrackDrive Settings
+  trackdriveSubdomain: string
+  trackdrivePublicKey: string
+  trackdrivePrivateKey: string
 }
 
 const DEFAULT_SETTINGS: Settings = {
   timezone: 'America/New_York',
-  companyName: 'The Broken Wood Inc',
-  companyAddress: 'Downtown Santa Monica, CA 90402',
-  signatoryName: 'Sammy Abdel',
+  companyName: 'GrovLabs Inc',
+  companyAddress: '8301 State Line Rd Ste 220, Kansas City, MO 64114',
+  signatoryName: 'UJ',
   signatoryTitle: 'Chief Executive Officer',
-  contactEmail: 'sammyabdel@thebrokenwood.com',
-  contactPhone: '+1 (862) 366-7366',
+  contactEmail: 'uj@grovlabs.com',
+  contactPhone: '+1 (754) 344-0773',
   brandColor: '#8b5a2b',
   // SMTP defaults
   smtpEnabled: false,
@@ -80,8 +86,14 @@ const DEFAULT_SETTINGS: Settings = {
   smtpUser: '',
   smtpPass: '',
   smtpFromEmail: '',
-  smtpFromName: 'The Broken Wood Inc',
+  smtpFromName: 'GrovLabs Inc',
   smtpSecure: true,
+  // AI Settings
+  openaiApiKey: '',
+  // TrackDrive Settings
+  trackdriveSubdomain: 'grovlabs',
+  trackdrivePublicKey: '',
+  trackdrivePrivateKey: '',
 }
 
 export default function SettingsPage() {
@@ -533,6 +545,110 @@ export default function SettingsPage() {
                   }).format(new Date())}
                 </span>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* AI Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Brain className="h-5 w-5 text-primary" />
+                AI Settings
+              </CardTitle>
+              <CardDescription>
+                Configure AI services for call analysis and QA automation
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="openaiApiKey">OpenAI API Key</Label>
+                <div className="relative">
+                  <Input
+                    id="openaiApiKey"
+                    type={showPassword ? 'text' : 'password'}
+                    value={settings.openaiApiKey}
+                    onChange={(e) => updateField('openaiApiKey', e.target.value)}
+                    placeholder="sk-..."
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Used for call transcript analysis and QA automation. Get your key from{' '}
+                  <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                    OpenAI Dashboard
+                  </a>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* TrackDrive Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Radio className="h-5 w-5 text-primary" />
+                TrackDrive Integration
+              </CardTitle>
+              <CardDescription>
+                Configure TrackDrive API connection for call tracking
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="trackdriveSubdomain">TrackDrive Subdomain</Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">https://</span>
+                  <Input
+                    id="trackdriveSubdomain"
+                    value={settings.trackdriveSubdomain}
+                    onChange={(e) => updateField('trackdriveSubdomain', e.target.value)}
+                    placeholder="grovlabs"
+                    className="max-w-[200px]"
+                  />
+                  <span className="text-sm text-muted-foreground">.trackdrive.com</span>
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="trackdrivePublicKey">Public Key</Label>
+                  <Input
+                    id="trackdrivePublicKey"
+                    value={settings.trackdrivePublicKey}
+                    onChange={(e) => updateField('trackdrivePublicKey', e.target.value)}
+                    placeholder="Your TrackDrive public key"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="trackdrivePrivateKey">Private Key</Label>
+                  <div className="relative">
+                    <Input
+                      id="trackdrivePrivateKey"
+                      type={showPassword ? 'text' : 'password'}
+                      value={settings.trackdrivePrivateKey}
+                      onChange={(e) => updateField('trackdrivePrivateKey', e.target.value)}
+                      placeholder="Your TrackDrive private key"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Find your API keys in TrackDrive under Settings → API Keys
+              </p>
             </CardContent>
           </Card>
 

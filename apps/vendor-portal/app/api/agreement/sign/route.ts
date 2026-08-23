@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { sendNotificationEmail, emailTemplate } from '@/lib/email'
 
-const BACKEND_URL = 'https://bsbwqa.abacusai.app'
+const BACKEND_URL = process.env.QA_AGENT_URL || 'http://localhost:3003'
 
 export async function POST(request: NextRequest) {
   try {
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     `
     await sendNotificationEmail({
       notificationId: process.env.NOTIF_ID_IO_SIGNED_BY_VENDOR ?? '',
-      subject: `Lead Purchase Agreement Signed: ${agreement?.insertion_order?.io_number ?? ''} - The Broken Wood Inc`,
+      subject: `Lead Purchase Agreement Signed: ${agreement?.insertion_order?.io_number ?? ''} - GrovLabs Inc`,
       body: emailTemplate('Lead Purchase Agreement Signed', vendorContent),
       recipientEmail: agreement?.vendor?.email ?? '',
     })

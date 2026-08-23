@@ -41,14 +41,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-purple-50 to-slate-100 p-4">
-      <Card className="w-full max-w-md shadow-lg border-0">
+    <div className="min-h-screen flex items-center justify-center bg-[#050505] p-4">
+      <Card className="w-full max-w-md shadow-lg border border-white/10 bg-[#0a0a0a]">
         <CardHeader className="text-center pb-2">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
-            <Lock className="h-7 w-7 text-primary" />
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-[#a3e635]/10">
+            <Lock className="h-7 w-7 text-[#a3e635]" />
           </div>
-          <CardTitle className="font-display text-2xl tracking-tight">The Broken Wood Admin</CardTitle>
-          <CardDescription className="text-muted-foreground">
+          <CardTitle className="font-display text-2xl tracking-tight text-white">GrovLabs Admin</CardTitle>
+          <CardDescription className="text-white/50">
             Sign in to access the dashboard
           </CardDescription>
         </CardHeader>
@@ -67,7 +67,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@thebrokenwood.com"
+                  placeholder="admin@grovlabs.com"
                   value={email}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   className="pl-10"

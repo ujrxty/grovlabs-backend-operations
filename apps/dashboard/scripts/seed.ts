@@ -17,30 +17,30 @@ async function main() {
     },
   })
 
-  // TBW admin account
-  const sammyHash = await bcrypt.hash('Admin123!', 12)
+  // GrovLabs admin account (Rayan)
+  const rayanHash = await bcrypt.hash('Admin123!', 12)
   await prisma.admin_user.upsert({
-    where: { email: 'sammyabdel@thebrokenwood.com' },
+    where: { email: 'rayan@grovlabs.com' },
     update: {
-      password_hash: sammyHash,
-      name: 'Sammy',
+      password_hash: rayanHash,
+      name: 'Rayan',
     },
     create: {
-      email: 'sammyabdel@thebrokenwood.com',
-      password_hash: sammyHash,
-      name: 'Sammy',
+      email: 'rayan@grovlabs.com',
+      password_hash: rayanHash,
+      name: 'Rayan',
       role: 'admin',
     },
   })
-  // BSBW team member account (Usman)
-  const usmanHash = await bcrypt.hash('BSBW26!', 12)
+  // GrovLabs team member account (Usman)
+  const usmanHash = await bcrypt.hash('GrovLabs26!', 12)
   await prisma.admin_user.upsert({
-    where: { email: 'uj@thebrokenwood.com' },
+    where: { email: 'uj@grovlabs.com' },
     update: {
       name: 'Usman',
     },
     create: {
-      email: 'uj@thebrokenwood.com',
+      email: 'uj@grovlabs.com',
       password_hash: usmanHash,
       name: 'Usman',
       role: 'admin',

@@ -118,7 +118,7 @@ ${this.escapeHtml(payload.aiSummary)}
     const chatId = this.configService.get<string>('TELEGRAM_CHAT_ID', '');
     if (!botToken || !chatId) return;
 
-    const message = `✅ <b>BSBW QA Agent Online</b>\n\n🕐 ${new Date().toISOString()}\n🔍 Monitoring TrackDrive calls for cold transfers`;
+    const message = `✅ <b>GrovLabs QA Agent Online</b>\n\n🕐 ${new Date().toISOString()}\n🔍 Monitoring TrackDrive calls for cold transfers`;
 
     try {
       await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {

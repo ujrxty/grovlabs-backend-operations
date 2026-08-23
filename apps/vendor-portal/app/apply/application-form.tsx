@@ -164,29 +164,29 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="mt-8 rounded-xl bg-green-50 border border-green-200 p-8 text-center"
+        className="mt-8 rounded-xl bg-[#a3e635]/10 border border-[#c4ff00]/30 p-8 text-center"
       >
-        <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-        <h2 className="font-display text-2xl font-bold text-green-800">Application Submitted!</h2>
-        <p className="mt-3 text-green-700">Your application has been received and is being reviewed.</p>
-        <div className="mt-6 rounded-lg bg-white border border-green-200 p-4 inline-block">
-          <p className="text-sm text-gray-500">Your Status Token</p>
-          <p className="font-mono text-lg font-bold text-[#b87333] mt-1">{statusToken}</p>
+        <CheckCircle2 className="h-16 w-16 text-[#c4ff00] mx-auto mb-4" />
+        <h2 className="font-display text-2xl font-bold text-white">Application Submitted!</h2>
+        <p className="mt-3 text-white/70">Your application has been received and is being reviewed.</p>
+        <div className="mt-6 rounded-lg bg-[#0a0a0a] border border-white/10 p-4 inline-block">
+          <p className="text-sm text-white/50">Your Status Token</p>
+          <p className="font-mono text-lg font-bold text-[#c4ff00] mt-1">{statusToken}</p>
         </div>
-        <p className="mt-4 text-sm text-gray-600">
+        <p className="mt-4 text-sm text-white/60">
           Save this token to check your application status anytime.
           A confirmation email has been sent to your email address.
         </p>
         <div className="mt-6 flex gap-3 justify-center">
           <button
             onClick={() => router.push(`/status?token=${statusToken}`)}
-            className="rounded-lg bg-[#b87333] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors"
+            className="rounded-lg bg-[#a3e635] px-6 py-2.5 text-sm font-semibold text-[#050505] hover:bg-[#bef264] transition-colors"
           >
             Check Status
           </button>
           <button
             onClick={() => router.push('/')}
-            className="rounded-lg border border-gray-300 px-6 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+            className="rounded-lg border border-white/20 px-6 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/5 transition-colors"
           >
             Back to Campaigns
           </button>
@@ -201,7 +201,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
     <form onSubmit={handleSubmit} className="mt-8 space-y-8">
       {/* Campaign Selection */}
       <div>
-        <h3 className="font-display font-semibold text-gray-900 mb-3">Selected Campaigns *</h3>
+        <h3 className="font-display font-semibold text-white mb-3">Selected Campaigns *</h3>
         {errors?.campaigns && <p className="text-sm text-red-600 mb-2 flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5" />{errors.campaigns}</p>}
         <div className="grid gap-2 sm:grid-cols-2">
           {safeCampaigns.map((c: Campaign) => {
@@ -213,19 +213,19 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
                 className={cn(
                   'cursor-pointer rounded-lg border-2 p-3 transition-all text-sm',
                   isSelected
-                    ? 'border-[#b87333]/50 bg-[#b87333]/5'
-                    : 'border-gray-100 hover:border-[#b87333]/20'
+                    ? 'border-[#c4ff00]/50 bg-[#a3e635]/5'
+                    : 'border-white/[0.08] hover:border-[#c4ff00]/20'
                 )}
               >
                 <div className="flex items-center gap-2">
                   <div className={cn(
                     'h-4 w-4 rounded border-2 flex items-center justify-center shrink-0',
-                    isSelected ? 'border-[#b87333] bg-[#b87333]' : 'border-gray-300'
+                    isSelected ? 'border-[#c4ff00] bg-[#a3e635]' : 'border-white/20'
                   )}>
                     {isSelected && <CheckCircle2 className="h-3 w-3 text-white" />}
                   </div>
-                  <span className="font-medium text-gray-900">{c?.name ?? ''}</span>
-                  <span className="text-xs text-[#b87333] ml-auto">{(c?.name ?? '').toLowerCase().includes('rtb') ? 'Variable' : (c?.payout_display ?? `$${c?.payout ?? '0'}`)}</span>
+                  <span className="font-medium text-white">{c?.name ?? ''}</span>
+                  <span className="text-xs text-[#c4ff00] ml-auto">{(c?.name ?? '').toLowerCase().includes('rtb') ? 'Variable' : (c?.payout_display ?? `$${c?.payout ?? '0'}`)}</span>
                 </div>
               </div>
             )
@@ -235,85 +235,85 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
 
       {/* Company Information */}
       <div className="space-y-4">
-        <h3 className="font-display font-semibold text-gray-900">Company Information</h3>
+        <h3 className="font-display font-semibold text-white">Company Information</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
+            <label className="block text-sm font-medium text-white/70 mb-1">Company Name *</label>
             <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
               <input
                 type="text"
                 value={form?.company_name ?? ''}
                 onChange={(e: any) => updateField('company_name', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.company_name ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.company_name ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
                 placeholder="Your company name"
               />
             </div>
             {errors?.company_name && <p className="text-xs text-red-600 mt-1">{errors.company_name}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
+            <label className="block text-sm font-medium text-white/70 mb-1">Contact Name *</label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
               <input
                 type="text"
                 value={form?.contact_name ?? ''}
                 onChange={(e: any) => updateField('contact_name', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.contact_name ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.contact_name ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
                 placeholder="Primary contact name"
               />
             </div>
             {errors?.contact_name && <p className="text-xs text-red-600 mt-1">{errors.contact_name}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+            <label className="block text-sm font-medium text-white/70 mb-1">Email *</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
               <input
                 type="email"
                 value={form?.email ?? ''}
                 onChange={(e: any) => updateField('email', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.email ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.email ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
                 placeholder="contact@company.com"
               />
             </div>
             {errors?.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+            <label className="block text-sm font-medium text-white/70 mb-1">Phone *</label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
               <input
                 type="tel"
                 value={form?.phone ?? ''}
                 onChange={(e: any) => updateField('phone', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.phone ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.phone ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
                 placeholder="(555) 123-4567"
               />
             </div>
             {errors?.phone && <p className="text-xs text-red-600 mt-1">{errors.phone}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+            <label className="block text-sm font-medium text-white/70 mb-1">Website</label>
             <div className="relative">
-              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
               <input
                 type="url"
                 value={form?.website ?? ''}
                 onChange={(e: any) => updateField('website', e?.target?.value ?? '')}
-                className="w-full rounded-lg border border-gray-200 pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
+                className="w-full rounded-lg border border-white/10 bg-[#0a0a0a] text-white pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50"
                 placeholder="https://yourcompany.com"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Call Volume/Day *</label>
+            <label className="block text-sm font-medium text-white/70 mb-1">Estimated Call Volume/Day *</label>
             <div className="relative">
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none" />
               <select
                 value={form?.estimated_volume ?? ''}
                 onChange={(e: any) => updateField('estimated_volume', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border px-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 bg-white', errors?.estimated_volume ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border px-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.estimated_volume ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
               >
                 <option value="">Select volume...</option>
                 <option value="5-10">5-10 calls/day</option>
@@ -326,14 +326,14 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Company Address *</label>
+          <label className="block text-sm font-medium text-white/70 mb-1">Company Address *</label>
           <div className="relative">
-            <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <MapPin className="absolute left-3 top-3 h-4 w-4 text-white/40" />
             <input
               type="text"
               value={form?.company_address ?? ''}
               onChange={(e: any) => updateField('company_address', e?.target?.value ?? '')}
-              className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.company_address ? 'border-red-300' : 'border-gray-200')}
+              className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.company_address ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
               placeholder={isUS ? '123 Main St, Suite 200, Phoenix, AZ 85001' : 'Street, city, postal code'}
             />
           </div>
@@ -341,14 +341,14 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Country *</label>
+            <label className="block text-sm font-medium text-white/70 mb-1">Country *</label>
             <div className="relative">
-              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none" />
               <select
                 value={form?.company_country ?? ''}
                 onChange={(e: any) => handleCountryChange(e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 bg-white', errors?.company_country ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.company_country ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
               >
                 <option value="">Select country...</option>
                 {COUNTRIES.map((country) => (
@@ -359,14 +359,14 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
             {errors?.company_country && <p className="text-xs text-red-600 mt-1">{errors.company_country}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{isUS ? 'Company State *' : 'State / Province / Region *'}</label>
+            <label className="block text-sm font-medium text-white/70 mb-1">{isUS ? 'Company State *' : 'State / Province / Region *'}</label>
             {isUS ? (
               <div className="relative">
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none" />
                 <select
                   value={form?.company_state ?? ''}
                   onChange={(e: any) => updateField('company_state', e?.target?.value ?? '')}
-                  className={cn('w-full rounded-lg border px-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 bg-white', errors?.company_state ? 'border-red-300' : 'border-gray-200')}
+                  className={cn('w-full rounded-lg border px-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.company_state ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
                 >
                   <option value="">Select state...</option>
                   {US_STATES.map((state) => (
@@ -379,7 +379,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
                 type="text"
                 value={form?.company_state ?? ''}
                 onChange={(e: any) => updateField('company_state', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.company_state ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.company_state ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
                 placeholder="Province / region (e.g. North Holland)"
               />
             )}
@@ -387,15 +387,15 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Entity Type *</label>
+          <label className="block text-sm font-medium text-white/70 mb-1">Entity Type *</label>
           {isUS ? (
             <div className="relative">
-              <Landmark className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <Landmark className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none" />
               <select
                 value={form?.entity_type ?? ''}
                 onChange={(e: any) => updateField('entity_type', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#b87333]/50 bg-white', errors?.entity_type ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.entity_type ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
               >
                 <option value="">Select entity type...</option>
                 <option value="LLC">LLC</option>
@@ -407,47 +407,47 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
             </div>
           ) : (
             <div className="relative">
-              <Landmark className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Landmark className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
               <input
                 type="text"
                 value={form?.entity_type ?? ''}
                 onChange={(e: any) => updateField('entity_type', e?.target?.value ?? '')}
-                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50', errors?.entity_type ? 'border-red-300' : 'border-gray-200')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.entity_type ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
                 placeholder="Legal entity type (e.g. B.V., GmbH, Ltd, S.A., Pty Ltd)"
               />
             </div>
           )}
-          <p className="text-xs text-gray-400 mt-1">{isUS ? 'The legal structure of your company.' : 'Enter your local legal entity type as registered (e.g. B.V. in the Netherlands, GmbH in Germany, Ltd in the UK).'}</p>
+          <p className="text-xs text-white/40 mt-1">{isUS ? 'The legal structure of your company.' : 'Enter your local legal entity type as registered (e.g. B.V. in the Netherlands, GmbH in Germany, Ltd in the UK).'}</p>
           {errors?.entity_type && <p className="text-xs text-red-600 mt-1">{errors.entity_type}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Experience / Background</label>
+          <label className="block text-sm font-medium text-white/70 mb-1">Experience / Background</label>
           <textarea
             value={form?.experience ?? ''}
             onChange={(e: any) => updateField('experience', e?.target?.value ?? '')}
             rows={3}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
+            className="w-full rounded-lg border border-white/10 bg-[#0a0a0a] text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50"
             placeholder="Brief description of your experience in lead generation or call center operations..."
           />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Referred By</label>
+            <label className="block text-sm font-medium text-white/70 mb-1">Referred By</label>
             <input
               type="text"
               value={form?.referred_by ?? ''}
               onChange={(e: any) => updateField('referred_by', e?.target?.value ?? '')}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
+              className="w-full rounded-lg border border-white/10 bg-[#0a0a0a] text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50"
               placeholder="Who referred you?"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Additional Comments</label>
+            <label className="block text-sm font-medium text-white/70 mb-1">Additional Comments</label>
             <input
               type="text"
               value={form?.comments ?? ''}
               onChange={(e: any) => updateField('comments', e?.target?.value ?? '')}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
+              className="w-full rounded-lg border border-white/10 bg-[#0a0a0a] text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50"
               placeholder="Anything else we should know?"
             />
           </div>
@@ -456,30 +456,30 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
 
       {/* Compliance */}
       <div className="space-y-3">
-        <h3 className="font-display font-semibold text-gray-900">Compliance Agreements</h3>
-        <div className={cn('flex items-start gap-3 rounded-lg border p-4', errors?.tcpa_agreed ? 'border-red-300 bg-red-50' : 'border-gray-200')}>
+        <h3 className="font-display font-semibold text-white">Compliance Agreements</h3>
+        <div className={cn('flex items-start gap-3 rounded-lg border p-4', errors?.tcpa_agreed ? 'border-red-300 bg-red-50' : 'border-white/10 bg-[#0a0a0a] text-white')}>
           <input
             type="checkbox"
             checked={form?.tcpa_agreed ?? false}
             onChange={(e: any) => updateField('tcpa_agreed', e?.target?.checked ?? false)}
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#b87333] focus:ring-[#b87333]/50"
+            className="mt-0.5 h-4 w-4 rounded border-white/20 text-[#c4ff00] focus:ring-[#a3e635]/50"
           />
           <div>
-            <p className="text-sm font-medium text-gray-900">TCPA Compliance *</p>
-            <p className="text-xs text-gray-500 mt-0.5">I agree to comply with all TCPA regulations, FCC guidelines, and applicable state/federal laws regarding telemarketing and lead generation.</p>
+            <p className="text-sm font-medium text-white">TCPA Compliance *</p>
+            <p className="text-xs text-white/50 mt-0.5">I agree to comply with all TCPA regulations, FCC guidelines, and applicable state/federal laws regarding telemarketing and lead generation.</p>
           </div>
         </div>
         {errors?.tcpa_agreed && <p className="text-xs text-red-600">{errors.tcpa_agreed}</p>}
-        <div className={cn('flex items-start gap-3 rounded-lg border p-4', errors?.terms_agreed ? 'border-red-300 bg-red-50' : 'border-gray-200')}>
+        <div className={cn('flex items-start gap-3 rounded-lg border p-4', errors?.terms_agreed ? 'border-red-300 bg-red-50' : 'border-white/10 bg-[#0a0a0a] text-white')}>
           <input
             type="checkbox"
             checked={form?.terms_agreed ?? false}
             onChange={(e: any) => updateField('terms_agreed', e?.target?.checked ?? false)}
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#b87333] focus:ring-[#b87333]/50"
+            className="mt-0.5 h-4 w-4 rounded border-white/20 text-[#c4ff00] focus:ring-[#a3e635]/50"
           />
           <div>
-            <p className="text-sm font-medium text-gray-900">Terms & Conditions *</p>
-            <p className="text-xs text-gray-500 mt-0.5">I acknowledge that all information provided is accurate and agree to The Broken Wood Inc&apos;s vendor terms and conditions.</p>
+            <p className="text-sm font-medium text-white">Terms & Conditions *</p>
+            <p className="text-xs text-white/50 mt-0.5">I acknowledge that all information provided is accurate and agree to GrovLabs Inc&apos;s vendor terms and conditions.</p>
           </div>
         </div>
         {errors?.terms_agreed && <p className="text-xs text-red-600">{errors.terms_agreed}</p>}
@@ -488,7 +488,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-lg bg-[#b87333] px-6 py-3 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full rounded-lg bg-[#a3e635] px-6 py-3 text-sm font-semibold text-white hover:bg-[#bef264] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {submitting ? (
           <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>
