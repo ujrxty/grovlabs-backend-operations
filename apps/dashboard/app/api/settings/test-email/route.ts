@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import nodemailer from 'nodemailer'
+import dns from 'dns'
+
+// Force IPv4 DNS resolution globally to avoid ENETUNREACH on IPv6
+dns.setDefaultResultOrder('ipv4first')
 
 export const dynamic = 'force-dynamic'
 
@@ -24,11 +28,10 @@ export async function POST(request: NextRequest) {
         user: settings.smtpUser,
         pass: settings.smtpPass,
       },
-      // Force IPv4 to avoid ENETUNREACH on IPv6
-      dnsOptions: { family: 4 },
-      connectionTimeout: 30000,
-      greetingTimeout: 15000,
-    } as any)
+      tls: {
+        rejectUnauthorized: false,
+      },
+    })
 
     // Verify connection
     await transporter.verify()

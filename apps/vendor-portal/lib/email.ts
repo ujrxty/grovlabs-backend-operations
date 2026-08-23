@@ -1,4 +1,8 @@
 import nodemailer from 'nodemailer';
+import dns from 'dns';
+
+// Force IPv4 DNS resolution globally to avoid ENETUNREACH on IPv6
+dns.setDefaultResultOrder('ipv4first');
 
 // Email configuration for GrovLabs
 export const EMAIL_CONFIG = {
@@ -21,11 +25,10 @@ function getTransporter() {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
-    // Force IPv4 to avoid ENETUNREACH on IPv6
-    dnsOptions: { family: 4 },
-    connectionTimeout: 30000,
-    greetingTimeout: 15000,
-  } as any);
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
 }
 
 export async function sendNotificationEmail(params: {
