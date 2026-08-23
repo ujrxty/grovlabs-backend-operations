@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Globe, Clock, Building2, Save, Check, Mail, Phone, User, MapPin, Palette, Server, Send, Eye, EyeOff, Brain, Radio, Key } from 'lucide-react'
+import { Globe, Clock, Building2, Save, Check, Mail, Phone, User, MapPin, Palette, Server, Send, Eye, EyeOff, Brain, Radio, Key, MessageSquare, Link2 } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -67,6 +67,12 @@ interface Settings {
   trackdriveSubdomain: string
   trackdrivePublicKey: string
   trackdrivePrivateKey: string
+  // Discord Settings
+  discordWebhookUrl: string
+  // Service URLs
+  vendorPortalUrl: string
+  dashboardUrl: string
+  qaAgentUrl: string
 }
 
 const DEFAULT_SETTINGS: Settings = {
@@ -94,6 +100,12 @@ const DEFAULT_SETTINGS: Settings = {
   trackdriveSubdomain: 'grovlabs',
   trackdrivePublicKey: '',
   trackdrivePrivateKey: '',
+  // Discord Settings
+  discordWebhookUrl: '',
+  // Service URLs
+  vendorPortalUrl: '',
+  dashboardUrl: '',
+  qaAgentUrl: '',
 }
 
 export default function SettingsPage() {
@@ -648,6 +660,78 @@ export default function SettingsPage() {
               </div>
               <p className="text-xs text-muted-foreground">
                 Find your API keys in TrackDrive under Settings → API Keys
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Discord Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-primary" />
+                Discord Notifications
+              </CardTitle>
+              <CardDescription>
+                Get notified in Discord for new applications, signed IOs, and other events
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="discordWebhookUrl">Webhook URL</Label>
+                <Input
+                  id="discordWebhookUrl"
+                  value={settings.discordWebhookUrl}
+                  onChange={(e) => updateField('discordWebhookUrl', e.target.value)}
+                  placeholder="https://discord.com/api/webhooks/..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Create a webhook in your Discord server: Server Settings → Integrations → Webhooks
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Service URLs */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Link2 className="h-5 w-5 text-primary" />
+                Service URLs
+              </CardTitle>
+              <CardDescription>
+                Configure the URLs for your deployed services (auto-detected in production)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="dashboardUrl">Dashboard URL</Label>
+                <Input
+                  id="dashboardUrl"
+                  value={settings.dashboardUrl}
+                  onChange={(e) => updateField('dashboardUrl', e.target.value)}
+                  placeholder="https://grovlabs-dashboard.onrender.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="vendorPortalUrl">Vendor Portal URL</Label>
+                <Input
+                  id="vendorPortalUrl"
+                  value={settings.vendorPortalUrl}
+                  onChange={(e) => updateField('vendorPortalUrl', e.target.value)}
+                  placeholder="https://grovlabs-vendor-portal.onrender.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="qaAgentUrl">QA Agent (Backend) URL</Label>
+                <Input
+                  id="qaAgentUrl"
+                  value={settings.qaAgentUrl}
+                  onChange={(e) => updateField('qaAgentUrl', e.target.value)}
+                  placeholder="https://grovlabs-qa-agent.onrender.com"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                These URLs are used for internal API calls and email links. Leave blank to use defaults.
               </p>
             </CardContent>
           </Card>

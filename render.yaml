@@ -1,6 +1,7 @@
 # GrovLabs - Full Stack Blueprint
 # Admin Dashboard + Vendor Portal + QA Agent
 # Landing page deployed separately on Vercel
+# Most settings configurable via Dashboard Settings page
 
 databases:
   - name: grovlabs-database
@@ -28,8 +29,6 @@ services:
         generateValue: true
       - key: NEXTAUTH_URL
         sync: false
-      - key: QA_AGENT_URL
-        sync: false
 
   # Vendor Portal
   - type: web
@@ -46,10 +45,6 @@ services:
         fromDatabase:
           name: grovlabs-database
           property: connectionString
-      - key: QA_AGENT_URL
-        sync: false
-      - key: NOTIF_ID_IO_EMAIL_VERIFICATION_CODE
-        sync: false
 
   # QA Agent (NestJS Backend)
   - type: web
@@ -66,21 +61,3 @@ services:
         fromDatabase:
           name: grovlabs-database
           property: connectionString
-      - key: DISCORD_WEBHOOK_URL
-        sync: false
-      - key: TRACKDRIVE_PUBLIC_KEY
-        sync: false
-      - key: TRACKDRIVE_PRIVATE_KEY
-        sync: false
-      - key: TRACKDRIVE_BASE_URL
-        sync: false
-      - key: VENDOR_PORTAL_URL
-        sync: false
-      - key: DASHBOARD_URL
-        sync: false
-      - key: NOTIF_ID_IO_READY_TO_SIGN
-        sync: false
-      - key: NOTIF_ID_LPA_READY_TO_SIGN
-        sync: false
-      - key: NOTIF_ID_VENDOR_WELCOME
-        sync: false

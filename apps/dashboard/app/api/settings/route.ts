@@ -33,6 +33,12 @@ const DEFAULT_SETTINGS = {
   trackdriveSubdomain: 'grovlabs',
   trackdrivePublicKey: '',
   trackdrivePrivateKey: '',
+  // Discord Settings
+  discordWebhookUrl: '',
+  // Service URLs
+  vendorPortalUrl: '',
+  dashboardUrl: '',
+  qaAgentUrl: '',
 }
 
 export async function GET() {

@@ -1,25 +1,31 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { SettingsService } from '../config/settings.service';
 import axios from 'axios';
 
 @Injectable()
 export class DiscordService {
   private readonly logger = new Logger(DiscordService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly settingsService: SettingsService) {}
 
-  private get webhookUrl(): string {
-    return this.configService.get<string>('DISCORD_WEBHOOK_URL', '');
+  private async getWebhookUrl(): Promise<string> {
+    return this.settingsService.get('discordWebhookUrl');
+  }
+
+  private async getDashboardUrl(): Promise<string> {
+    const url = await this.settingsService.get('dashboardUrl');
+    return url || process.env.DASHBOARD_URL || 'http://localhost:3001';
   }
 
   async sendMessage(content: string): Promise<boolean> {
-    if (!this.webhookUrl) {
+    const webhookUrl = await this.getWebhookUrl();
+    if (!webhookUrl) {
       this.logger.warn('Discord webhook URL not configured');
       return false;
     }
 
     try {
-      await axios.post(this.webhookUrl, { content });
+      await axios.post(webhookUrl, { content });
       return true;
     } catch (error: any) {
       this.logger.error(`Failed to send Discord message: ${error.message}`);
@@ -28,13 +34,14 @@ export class DiscordService {
   }
 
   async sendEmbed(embed: DiscordEmbed): Promise<boolean> {
-    if (!this.webhookUrl) {
+    const webhookUrl = await this.getWebhookUrl();
+    if (!webhookUrl) {
       this.logger.warn('Discord webhook URL not configured');
       return false;
     }
 
     try {
-      await axios.post(this.webhookUrl, { embeds: [embed] });
+      await axios.post(webhookUrl, { embeds: [embed] });
       return true;
     } catch (error: any) {
       this.logger.error(`Failed to send Discord embed: ${error.message}`);
@@ -57,17 +64,18 @@ export class DiscordService {
     applicationIds: string[];
     dashboardUrl?: string;
   }): Promise<boolean> {
-    if (!this.webhookUrl) {
+    const webhookUrl = await this.getWebhookUrl();
+    if (!webhookUrl) {
       this.logger.warn('Discord webhook URL not configured');
       return false;
     }
 
+    const dashboardUrl = data.dashboardUrl || await this.getDashboardUrl();
     const campaignList = data.campaigns.map(c => `• ${c}`).join('\n');
-    const dashboardUrl = data.dashboardUrl || process.env.DASHBOARD_URL || 'http://localhost:3001';
 
     const embed: DiscordEmbed = {
       title: '📋 New Vendor Application',
-      color: 0xa3e635, // lime green
+      color: 0xa3e635,
       fields: [
         { name: 'Company', value: data.companyName, inline: true },
         { name: 'Contact', value: data.contactName, inline: true },
@@ -101,7 +109,7 @@ export class DiscordService {
     });
 
     try {
-      await axios.post(this.webhookUrl, { embeds: [embed] });
+      await axios.post(webhookUrl, { embeds: [embed] });
       this.logger.log(`Discord notification sent for application from ${data.companyName}`);
       return true;
     } catch (error: any) {
@@ -116,13 +124,14 @@ export class DiscordService {
     ioNumber: string;
     dashboardUrl?: string;
   }): Promise<boolean> {
-    if (!this.webhookUrl) return false;
+    const webhookUrl = await this.getWebhookUrl();
+    if (!webhookUrl) return false;
 
-    const dashboardUrl = data.dashboardUrl || process.env.DASHBOARD_URL || 'http://localhost:3001';
+    const dashboardUrl = data.dashboardUrl || await this.getDashboardUrl();
 
     const embed: DiscordEmbed = {
       title: '✍️ IO Signed by Vendor',
-      color: 0x3b82f6, // blue
+      color: 0x3b82f6,
       fields: [
         { name: 'Company', value: data.companyName, inline: true },
         { name: 'Campaign', value: data.campaignName, inline: true },
@@ -134,7 +143,7 @@ export class DiscordService {
     };
 
     try {
-      await axios.post(this.webhookUrl, { embeds: [embed] });
+      await axios.post(webhookUrl, { embeds: [embed] });
       this.logger.log(`Discord IO signed notification sent for ${data.companyName}`);
       return true;
     } catch (error: any) {
@@ -147,13 +156,14 @@ export class DiscordService {
     companyName: string;
     dashboardUrl?: string;
   }): Promise<boolean> {
-    if (!this.webhookUrl) return false;
+    const webhookUrl = await this.getWebhookUrl();
+    if (!webhookUrl) return false;
 
-    const dashboardUrl = data.dashboardUrl || process.env.DASHBOARD_URL || 'http://localhost:3001';
+    const dashboardUrl = data.dashboardUrl || await this.getDashboardUrl();
 
     const embed: DiscordEmbed = {
       title: '📝 Lead Purchase Agreement Signed',
-      color: 0x10b981, // green
+      color: 0x10b981,
       fields: [
         { name: 'Company', value: data.companyName, inline: true },
         { name: 'Action Required', value: `[Countersign in Dashboard](${dashboardUrl}/vendors)`, inline: false },
@@ -163,7 +173,7 @@ export class DiscordService {
     };
 
     try {
-      await axios.post(this.webhookUrl, { embeds: [embed] });
+      await axios.post(webhookUrl, { embeds: [embed] });
       this.logger.log(`Discord agreement signed notification sent for ${data.companyName}`);
       return true;
     } catch (error: any) {
@@ -177,11 +187,12 @@ export class DiscordService {
     campaignName: string;
     ioNumber: string;
   }): Promise<boolean> {
-    if (!this.webhookUrl) return false;
+    const webhookUrl = await this.getWebhookUrl();
+    if (!webhookUrl) return false;
 
     const embed: DiscordEmbed = {
       title: '✅ IO Countersigned & Active',
-      color: 0x10b981, // green
+      color: 0x10b981,
       fields: [
         { name: 'Company', value: data.companyName, inline: true },
         { name: 'Campaign', value: data.campaignName, inline: true },
@@ -192,7 +203,7 @@ export class DiscordService {
     };
 
     try {
-      await axios.post(this.webhookUrl, { embeds: [embed] });
+      await axios.post(webhookUrl, { embeds: [embed] });
       this.logger.log(`Discord IO countersigned notification sent for ${data.companyName}`);
       return true;
     } catch (error: any) {
@@ -202,7 +213,8 @@ export class DiscordService {
   }
 
   async sendStartupNotification(): Promise<void> {
-    if (!this.webhookUrl) return;
+    const webhookUrl = await this.getWebhookUrl();
+    if (!webhookUrl) return;
 
     const embed: DiscordEmbed = {
       title: '✅ GrovLabs QA Agent Online',
@@ -212,7 +224,7 @@ export class DiscordService {
     };
 
     try {
-      await axios.post(this.webhookUrl, { embeds: [embed] });
+      await axios.post(webhookUrl, { embeds: [embed] });
       this.logger.log('Startup notification sent to Discord');
     } catch (error: any) {
       this.logger.warn(`Startup Discord notification failed: ${error.message}`);

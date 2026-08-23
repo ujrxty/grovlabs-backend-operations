@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { SettingsModule } from './config/settings.module.js';
 import { JobsModule } from './jobs/jobs.module.js';
 import { TrackDriveModule } from './trackdrive/trackdrive.module.js';
 import { TranscriptionModule } from './transcription/transcription.module.js';
@@ -25,6 +26,7 @@ import { NonConversionQaModule } from './non-conversion-qa/non-conversion-qa.mod
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    SettingsModule,
     JobsModule,
     TrackDriveModule,
     TranscriptionModule,
