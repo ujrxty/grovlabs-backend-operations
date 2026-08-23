@@ -30,7 +30,7 @@ export async function sendNotificationEmail(params: {
     const resend = new Resend(apiKey);
 
     const { data, error } = await resend.emails.send({
-      from: `${EMAIL_CONFIG.fromName} <onboarding@resend.dev>`,
+      from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.fromEmail}>`,
       to: params.recipientEmail,
       replyTo: params.replyTo || EMAIL_CONFIG.fromEmail,
       subject: params.subject,

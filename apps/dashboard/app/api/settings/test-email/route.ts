@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       const testEmail = settings.contactEmail || 'delivered@resend.dev'
 
       const { data, error } = await resend.emails.send({
-        from: `${settings.smtpFromName || settings.companyName} <onboarding@resend.dev>`,
+        from: `${settings.smtpFromName || settings.companyName} <${settings.smtpFromEmail || 'noreply@grovlabs.com'}>`,
         to: testEmail,
         subject: `Test Email from ${settings.companyName}`,
         html: `
