@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
 import { TranscriptionService } from '../transcription/transcription.service.js';
 import { AnalysisService, AnalysisResult } from '../analysis/analysis.service.js';
-import { TelegramService } from '../telegram/telegram.service.js';
+import { DiscordService } from '../discord/discord.service.js';
 import { JobQueueService } from '../jobs/job-queue.service.js';
 import { CAMPAIGN_DURATION_THRESHOLDS } from '../config/constants.js';
 
@@ -16,7 +16,7 @@ export class CallsService {
     private readonly trackdrive: TrackDriveService,
     private readonly transcription: TranscriptionService,
     private readonly analysis: AnalysisService,
-    private readonly telegram: TelegramService,
+    private readonly discord: DiscordService,
     private readonly jobQueue: JobQueueService,
   ) {
     // Register the call processing handler
@@ -228,8 +228,8 @@ export class CallsService {
           });
         }
 
-        // Send Telegram alert
-        const alertSent = await this.telegram.sendAlert({
+        // Send Discord alert
+        const alertSent = await this.discord.sendFlaggedCallAlert({
           callId,
           trackdriveCallId,
           callerNumber,

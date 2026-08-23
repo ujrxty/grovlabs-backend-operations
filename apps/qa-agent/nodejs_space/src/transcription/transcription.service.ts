@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import FormData from 'form-data';
 
 @Injectable()
 export class TranscriptionService {
@@ -8,61 +9,44 @@ export class TranscriptionService {
   constructor(private readonly configService: ConfigService) {}
 
   /**
-   * Transcribe audio using Abacus AI LLM API (Whisper-compatible).
-   * Sends the audio as base64 to the LLM with a transcription prompt.
+   * Transcribe audio using OpenAI Whisper API.
    */
   async transcribeAudio(audioBuffer: Buffer, fileName: string = 'recording.mp3'): Promise<string> {
     this.logger.log(`Transcribing audio file: ${fileName} (${audioBuffer.length} bytes)`);
 
-    const apiKey = this.configService.get<string>('ABACUSAI_API_KEY', '');
-    const base64Audio = audioBuffer.toString('base64');
-    const mimeType = fileName.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg';
+    const apiKey = this.configService.get<string>('OPENAI_API_KEY', '');
 
     try {
-      const response = await fetch('https://apps.abacus.ai/v1/chat/completions', {
+      const formData = new FormData();
+      formData.append('file', audioBuffer, {
+        filename: fileName,
+        contentType: fileName.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg',
+      });
+      formData.append('model', 'whisper-1');
+      formData.append('response_format', 'text');
+
+      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
+          ...formData.getHeaders(),
         },
-        body: JSON.stringify({
-          model: 'gemini-2.5-flash',
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'file',
-                  file: {
-                    filename: fileName,
-                    file_data: `data:${mimeType};base64,${base64Audio}`,
-                  },
-                },
-                {
-                  type: 'text',
-                  text: 'Please transcribe this phone call recording word-for-word. Include all speakers and label them as Speaker 1, Speaker 2, etc. Capture everything said including hesitations, partial words, and background speech. Return ONLY the transcription text, no commentary.',
-                },
-              ],
-            },
-          ],
-          stream: false,
-        }),
+        body: formData.getBuffer(),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`LLM API error (${response.status}): ${errorText}`);
+        throw new Error(`Whisper API error (${response.status}): ${errorText}`);
       }
 
-      const data = (await response.json()) as any;
-      const transcript = data?.choices?.[0]?.message?.content?.trim();
+      const transcript = await response.text();
 
-      if (!transcript) {
-        throw new Error('Empty transcript received from LLM API');
+      if (!transcript || transcript.trim().length === 0) {
+        throw new Error('Empty transcript received from Whisper API');
       }
 
       this.logger.log(`Transcription completed: ${transcript.length} characters`);
-      return transcript;
+      return transcript.trim();
     } catch (error: any) {
       this.logger.error(`Transcription failed: ${error.message}`);
       throw error;

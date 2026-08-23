@@ -230,6 +230,86 @@ export class DiscordService {
       this.logger.warn(`Startup Discord notification failed: ${error.message}`);
     }
   }
+
+  async sendFlaggedCallAlert(data: {
+    callId: string;
+    trackdriveCallId: string;
+    callerNumber?: string;
+    callerCity?: string;
+    callerState?: string;
+    affiliateName: string;
+    campaignName: string;
+    buyerName?: string;
+    duration: number;
+    detectedTriggers: string[];
+    confidenceScore: number;
+    aiSummary: string;
+    recordingUrl?: string;
+    isHighSensitivity?: boolean;
+  }): Promise<boolean> {
+    const webhookUrl = await this.getWebhookUrl();
+    if (!webhookUrl) {
+      this.logger.warn('Discord webhook URL not configured');
+      return false;
+    }
+
+    const dashboardUrl = await this.getDashboardUrl();
+    const severityColor = data.confidenceScore >= 80 ? 0xef4444 // red
+      : data.confidenceScore >= 60 ? 0xf97316 // orange
+      : data.confidenceScore >= 40 ? 0xeab308 // yellow
+      : 0x6b7280; // gray
+
+    const severityLabel = data.confidenceScore >= 80 ? '🔴 CRITICAL'
+      : data.confidenceScore >= 60 ? '🟠 HIGH'
+      : data.confidenceScore >= 40 ? '🟡 MEDIUM'
+      : '⚪ LOW';
+
+    const triggersText = data.detectedTriggers.length > 0
+      ? data.detectedTriggers.map(t => `• "${t}"`).join('\n').substring(0, 500)
+      : 'None detected';
+
+    const location = [data.callerCity, data.callerState].filter(Boolean).join(', ') || 'Unknown';
+
+    const embed: DiscordEmbed = {
+      title: `🚨 Flagged Call - ${severityLabel}`,
+      color: severityColor,
+      fields: [
+        { name: 'Affiliate', value: data.affiliateName || 'Unknown', inline: true },
+        { name: 'Campaign', value: data.campaignName || 'Unknown', inline: true },
+        { name: 'Confidence', value: `${data.confidenceScore}%`, inline: true },
+        { name: 'Duration', value: `${data.duration}s`, inline: true },
+        { name: 'Caller', value: data.callerNumber || 'Unknown', inline: true },
+        { name: 'Location', value: location, inline: true },
+        { name: 'Detected Triggers', value: triggersText, inline: false },
+        { name: 'AI Summary', value: data.aiSummary.substring(0, 500) || 'No summary', inline: false },
+      ],
+      footer: { text: `Call ID: ${data.trackdriveCallId}` },
+      timestamp: new Date().toISOString(),
+    };
+
+    if (data.isHighSensitivity) {
+      embed.fields!.unshift({ name: '⚠️ HIGH SENSITIVITY', value: 'Affiliate under enhanced monitoring', inline: false });
+    }
+
+    if (data.buyerName) {
+      embed.fields!.splice(3, 0, { name: 'Buyer', value: data.buyerName, inline: true });
+    }
+
+    embed.fields!.push({
+      name: 'Actions',
+      value: `[View in Dashboard](${dashboardUrl}/calls/${data.callId})${data.recordingUrl ? ` • [Recording](${data.recordingUrl})` : ''}`,
+      inline: false,
+    });
+
+    try {
+      await axios.post(webhookUrl, { embeds: [embed] });
+      this.logger.log(`Discord flagged call alert sent for ${data.trackdriveCallId}`);
+      return true;
+    } catch (error: any) {
+      this.logger.error(`Failed to send Discord flagged call alert: ${error.message}`);
+      return false;
+    }
+  }
 }
 
 interface DiscordEmbed {
