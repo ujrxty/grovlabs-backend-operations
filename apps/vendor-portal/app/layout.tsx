@@ -23,7 +23,6 @@ export async function generateMetadata() {
     openGraph: {
       title: 'GrovLabs - Vendor Portal',
       description: 'Apply to become a GrovLabs vendor partner.',
-      images: [{ url: '/og-image.png' }],
     },
   }
 }
