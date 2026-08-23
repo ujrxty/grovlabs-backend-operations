@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     })
     console.log('Verification email result:', JSON.stringify(emailResult))
 
-    if (emailResult?.success === false && !emailResult?.disabled) {
+    if (emailResult?.success === false && !(emailResult as any)?.disabled) {
       return NextResponse.json({ success: false, error: 'Failed to send verification email. Please try again.' }, { status: 500 })
     }
 

@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { CheckCircle, XCircle, MoreHorizontal, RefreshCw, Clock, Building2 } from 'lucide-react'
+import { CheckCircle, XCircle, MoreHorizontal, RefreshCw, Clock } from 'lucide-react'
 
 const QA_AGENT_URL = process.env.NEXT_PUBLIC_QA_AGENT_URL || 'http://localhost:3003'
 
@@ -102,7 +102,6 @@ export function ApplicationsContent() {
       <PageHeader
         title="Vendor Applications"
         description={`${pendingCount} pending application${pendingCount !== 1 ? 's' : ''} awaiting review`}
-        icon={Building2}
         actions={
           <Button variant="outline" size="sm" onClick={fetchApplications} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />

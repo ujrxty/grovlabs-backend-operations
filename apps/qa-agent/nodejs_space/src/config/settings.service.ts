@@ -94,8 +94,9 @@ export class SettingsService {
     const settings = await this.getSettings();
     // Fallback to env var if setting is empty
     const value = settings[key];
-    if (!value || value === '') {
-      return this.getEnvFallback(key) as SystemSettings[K];
+    if (value === undefined || value === null || value === '') {
+      const fallback = this.getEnvFallback(key);
+      return (fallback || DEFAULT_SETTINGS[key]) as SystemSettings[K];
     }
     return value;
   }
