@@ -115,6 +115,14 @@ export class OnboardingController {
     return this.svc.rejectApplication(id, dto.reason, dto.details);
   }
 
+  @Delete('admin/applications/:id')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Delete application', description: 'Permanently deletes an application.' })
+  @ApiParam({ name: 'id', description: 'Application ID' })
+  async deleteApplication(@Param('id') id: string) {
+    return this.svc.deleteApplication(id);
+  }
+
   @Post('admin/io/:id/countersign')
   @HttpCode(200)
   @ApiOperation({ summary: 'Countersign IO', description: 'Admin countersigns the IO after vendor has signed. Activates IO and sends welcome email.' })

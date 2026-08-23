@@ -383,6 +383,16 @@ export class OnboardingService {
     return { message: 'Application rejected', reason: reasonText };
   }
 
+  async deleteApplication(id: string) {
+    const app = await this.prisma.vendor_application.findUnique({ where: { id } });
+    if (!app) throw new NotFoundException('Application not found');
+
+    await this.prisma.vendor_application.delete({ where: { id } });
+    this.logger.log(`Application deleted: ${app.company_name} (${id})`);
+
+    return { message: 'Application deleted' };
+  }
+
   // ==================== IO SIGNING ====================
 
   async getIOForSigning(signToken: string) {

@@ -99,7 +99,7 @@ export function ApplicationsContent() {
     if (!confirm('Are you sure you want to delete this application? This cannot be undone.')) return
     setActionLoading(id)
     try {
-      await fetch(`/api/applications/${id}`, { method: 'DELETE' })
+      await fetch(`${QA_AGENT_URL}/onboarding/admin/applications/${id}`, { method: 'DELETE' })
       fetchApplications()
     } catch (err) {
       console.error('Delete failed:', err)
