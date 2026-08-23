@@ -441,13 +441,13 @@ export function BuyerBillingContent() {
                 {buyerDropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setBuyerDropdownOpen(false)} />
-                    <div className="absolute left-0 top-full mt-1 z-50 w-full rounded-lg border bg-white shadow-lg py-1 max-h-[320px] overflow-y-auto">
+                    <div className="absolute left-0 top-full mt-1 z-50 w-full rounded-lg border bg-background shadow-lg py-1 max-h-[320px] overflow-y-auto">
                       {buyers.length === 0 && (
                         <div className="px-4 py-3 text-sm text-muted-foreground">No buyers found</div>
                       )}
                       {buyers.length > 0 && (
                         <button
-                          className="w-full text-left px-4 py-2 text-xs font-medium text-primary border-b hover:bg-muted/50 transition-colors"
+                          className="w-full text-left px-4 py-2 text-xs font-medium text-primary border-b border-border hover:bg-muted transition-colors"
                           onClick={selectAllBuyers}
                         >
                           {selectedBuyers.length === buyers.length ? 'Clear all' : 'Select all'}
@@ -459,8 +459,8 @@ export function BuyerBillingContent() {
                           <button
                             key={b.td_buyer_id}
                             className={cn(
-                              'w-full text-left px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors flex items-start gap-2.5',
-                              checked && 'bg-primary/5'
+                              'w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-start gap-2.5',
+                              checked && 'bg-primary/10'
                             )}
                             onClick={() => toggleBuyer(b)}
                           >
