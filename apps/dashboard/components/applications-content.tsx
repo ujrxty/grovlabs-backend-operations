@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { CheckCircle, XCircle, MoreHorizontal, RefreshCw, Clock } from 'lucide-react'
+import { CheckCircle, XCircle, MoreHorizontal, RefreshCw, Clock, Trash2 } from 'lucide-react'
 
 const QA_AGENT_URL = process.env.NEXT_PUBLIC_QA_AGENT_URL || 'http://localhost:3003'
 
@@ -91,6 +91,18 @@ export function ApplicationsContent() {
       fetchApplications()
     } catch (err) {
       console.error('Reject failed:', err)
+    }
+    setActionLoading(null)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this application? This cannot be undone.')) return
+    setActionLoading(id)
+    try {
+      await fetch(`/api/applications/${id}`, { method: 'DELETE' })
+      fetchApplications()
+    } catch (err) {
+      console.error('Delete failed:', err)
     }
     setActionLoading(null)
   }
@@ -230,9 +242,22 @@ export function ApplicationsContent() {
                         </div>
                       )}
                       {app.status !== 'pending' && (
-                        <span className="text-xs text-muted-foreground">
-                          {app.status === 'approved' ? 'Approved' : 'Rejected'}
-                        </span>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(app.id)}
+                              className="text-red-500 focus:text-red-500"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
                     </TableCell>
                   </TableRow>
