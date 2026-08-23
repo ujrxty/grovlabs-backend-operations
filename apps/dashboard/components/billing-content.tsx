@@ -777,7 +777,7 @@ export function BillingContent() {
                 {vendorDropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setVendorDropdownOpen(false)} />
-                    <div className="absolute left-0 top-full mt-1 z-50 w-full rounded-lg border bg-white shadow-lg py-1 max-h-[300px] overflow-y-auto">
+                    <div className="absolute left-0 top-full mt-1 z-50 w-full rounded-lg border bg-background shadow-lg py-1 max-h-[300px] overflow-y-auto">
                       {vendors.map((v) => (
                         <button
                           key={v.td_source_id}

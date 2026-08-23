@@ -207,7 +207,7 @@ export function VendorsContent() {
             {dropdownOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 z-50 w-[220px] rounded-lg border bg-white shadow-lg py-1 max-h-[400px] overflow-y-auto">
+                <div className="absolute right-0 top-full mt-1 z-50 w-[220px] rounded-lg border bg-background shadow-lg py-1 max-h-[400px] overflow-y-auto">
                   {TIME_RANGES.map((range) => (
                     <button
                       key={range.value}
