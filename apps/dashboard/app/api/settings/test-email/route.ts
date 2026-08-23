@@ -4,10 +4,20 @@ import { authOptions } from '@/lib/auth'
 import nodemailer from 'nodemailer'
 import dns from 'dns'
 
-// Force IPv4 DNS resolution globally to avoid ENETUNREACH on IPv6
-dns.setDefaultResultOrder('ipv4first')
-
 export const dynamic = 'force-dynamic'
+
+// Custom DNS lookup that only returns IPv4
+function ipv4Lookup(hostname: string, options: any, callback: Function) {
+  dns.resolve4(hostname, (err, addresses) => {
+    if (err) {
+      callback(err, null, null);
+    } else if (addresses && addresses.length > 0) {
+      callback(null, addresses[0], 4);
+    } else {
+      callback(new Error('No IPv4 address found'), null, null);
+    }
+  });
+}
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -31,7 +41,9 @@ export async function POST(request: NextRequest) {
       tls: {
         rejectUnauthorized: false,
       },
-    })
+      // Force IPv4 lookup
+      dnsLookup: ipv4Lookup as any,
+    } as any)
 
     // Verify connection
     await transporter.verify()

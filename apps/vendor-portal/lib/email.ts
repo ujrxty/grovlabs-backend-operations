@@ -1,8 +1,18 @@
 import nodemailer from 'nodemailer';
 import dns from 'dns';
 
-// Force IPv4 DNS resolution globally to avoid ENETUNREACH on IPv6
-dns.setDefaultResultOrder('ipv4first');
+// Custom DNS lookup that only returns IPv4
+function ipv4Lookup(hostname: string, options: any, callback: Function) {
+  dns.resolve4(hostname, (err, addresses) => {
+    if (err) {
+      callback(err, null, null);
+    } else if (addresses && addresses.length > 0) {
+      callback(null, addresses[0], 4);
+    } else {
+      callback(new Error('No IPv4 address found'), null, null);
+    }
+  });
+}
 
 // Email configuration for GrovLabs
 export const EMAIL_CONFIG = {
@@ -28,7 +38,9 @@ function getTransporter() {
     tls: {
       rejectUnauthorized: false,
     },
-  });
+    // Force IPv4 lookup
+    dnsLookup: ipv4Lookup as any,
+  } as any);
 }
 
 export async function sendNotificationEmail(params: {
