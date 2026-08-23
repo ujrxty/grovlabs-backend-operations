@@ -61,3 +61,21 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     return NextResponse.json({ error: 'Failed to update vendor' }, { status: 500 })
   }
 }
+
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions)
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  try {
+    // Delete related records first
+    await prisma.lead_purchase_agreement.deleteMany({ where: { insertion_order: { vendor_id: params?.id } } })
+    await prisma.insertion_order.deleteMany({ where: { vendor_id: params?.id } })
+    await prisma.vendor_application.deleteMany({ where: { vendor_id: params?.id } })
+    await prisma.vendor_profile.delete({ where: { id: params?.id } })
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error('Vendor delete error:', error)
+    return NextResponse.json({ error: 'Failed to delete vendor' }, { status: 500 })
+  }
+}
