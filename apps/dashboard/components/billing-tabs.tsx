@@ -30,7 +30,7 @@ export function BillingTabs() {
           className={cn(
             'flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors',
             tab === 'vendors'
-              ? 'bg-white text-primary shadow-sm'
+              ? 'bg-background text-primary shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
           )}
         >
@@ -42,7 +42,7 @@ export function BillingTabs() {
           className={cn(
             'flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors',
             tab === 'buyers'
-              ? 'bg-white text-primary shadow-sm'
+              ? 'bg-background text-primary shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
           )}
         >

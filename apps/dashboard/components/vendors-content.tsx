@@ -379,7 +379,7 @@ export function VendorsContent() {
                               {v.campaigns.length === 0 ? (
                                 <p className="text-xs text-muted-foreground">No campaign data.</p>
                               ) : (
-                                <div className="overflow-x-auto rounded-lg border bg-white">
+                                <div className="overflow-x-auto rounded-lg border bg-background">
                                   <table className="w-full text-xs">
                                     <thead>
                                       <tr className="border-b bg-muted/40 text-muted-foreground">
