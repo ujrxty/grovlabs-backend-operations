@@ -266,16 +266,16 @@ export function VendorsContent() {
 
       {/* Alerts panel */}
       {!loading && data && data.alerts?.length > 0 && (
-        <Card className="border-amber-200 bg-amber-50/50">
+        <Card className="border-amber-200 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/10">
           <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
               <h3 className="font-display font-semibold text-sm">Performance Alerts</h3>
-              <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">{data.alerts.length}</Badge>
+              <Badge className="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-500/30">{data.alerts.length}</Badge>
             </div>
             <div className="space-y-2">
               {data.alerts.map((a) => (
-                <div key={a.trafficSourceId} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg bg-white border border-amber-100 px-3 py-2.5">
+                <div key={a.trafficSourceId} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg bg-background border border-amber-100 dark:border-amber-500/20 px-3 py-2.5">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className={cn('h-2 w-2 rounded-full', a.severity === 'critical' ? 'bg-red-500' : 'bg-amber-500')} />
