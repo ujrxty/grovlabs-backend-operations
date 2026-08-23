@@ -25,10 +25,10 @@ export async function POST(request: NextRequest) {
         pass: settings.smtpPass,
       },
       // Force IPv4 to avoid ENETUNREACH on IPv6
-      family: 4,
+      dnsOptions: { family: 4 },
       connectionTimeout: 30000,
       greetingTimeout: 15000,
-    })
+    } as any)
 
     // Verify connection
     await transporter.verify()

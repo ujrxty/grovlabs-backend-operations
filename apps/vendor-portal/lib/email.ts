@@ -22,10 +22,10 @@ function getTransporter() {
       pass: process.env.SMTP_PASS,
     },
     // Force IPv4 to avoid ENETUNREACH on IPv6
-    family: 4,
+    dnsOptions: { family: 4 },
     connectionTimeout: 30000,
     greetingTimeout: 15000,
-  });
+  } as any);
 }
 
 export async function sendNotificationEmail(params: {
