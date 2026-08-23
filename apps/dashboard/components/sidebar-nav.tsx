@@ -10,7 +10,6 @@ import {
   FileText,
   PhoneCall,
   LogOut,
-  Shield,
   Receipt,
   PhoneOff,
   Siren,
@@ -45,9 +44,10 @@ export function SidebarNav() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-2 py-3 mb-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#a3e635] text-[#050505]">
-          <Shield className="h-5 w-5" />
+      <div className="flex items-center gap-3 px-2 py-3 mb-4">
+        <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-[#050505] border border-white/10">
+          <span className="text-white font-extrabold text-lg" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>G</span>
+          <span className="absolute bottom-1.5 right-1.5 h-2 w-2 rounded-full bg-[#c4ff00]" />
         </div>
         <div>
           <h2 className="font-display text-base font-semibold tracking-tight text-white">GrovLabs</h2>
