@@ -7,6 +7,9 @@ export interface QASettings {
   highSensitivityConfidenceThreshold: number;
   primaryTriggers: string[];
   secondaryTriggers: string[];
+  scheduleStartHour: number;
+  scheduleEndHour: number;
+  scheduleTimezone: string;
 }
 
 const DEFAULT_SETTINGS: QASettings = {
@@ -80,6 +83,9 @@ const DEFAULT_SETTINGS: QASettings = {
     'this is harassment',
     'leave me alone',
   ],
+  scheduleStartHour: 8,
+  scheduleEndHour: 18,
+  scheduleTimezone: 'America/Los_Angeles',
 };
 
 @Injectable()
@@ -160,5 +166,17 @@ export class QASettingsService {
 
   getSecondaryTriggers(): string[] {
     return (this.cachedSettings || DEFAULT_SETTINGS).secondaryTriggers;
+  }
+
+  getScheduleStartHour(): number {
+    return (this.cachedSettings || DEFAULT_SETTINGS).scheduleStartHour;
+  }
+
+  getScheduleEndHour(): number {
+    return (this.cachedSettings || DEFAULT_SETTINGS).scheduleEndHour;
+  }
+
+  getScheduleTimezone(): string {
+    return (this.cachedSettings || DEFAULT_SETTINGS).scheduleTimezone;
   }
 }

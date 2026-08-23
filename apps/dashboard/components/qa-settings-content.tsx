@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Save, Loader2, Plus, X, AlertTriangle, Clock, Target, MessageSquare } from 'lucide-react'
+import { Save, Loader2, Plus, X, AlertTriangle, Clock, Target, MessageSquare, CalendarClock } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface QASettings {
@@ -17,6 +17,9 @@ interface QASettings {
   highSensitivityConfidenceThreshold: number
   primaryTriggers: string[]
   secondaryTriggers: string[]
+  scheduleStartHour: number
+  scheduleEndHour: number
+  scheduleTimezone: string
 }
 
 const DEFAULT_SETTINGS: QASettings = {
@@ -45,6 +48,9 @@ const DEFAULT_SETTINGS: QASettings = {
     'who are you people',
     'this is a scam',
   ],
+  scheduleStartHour: 8,
+  scheduleEndHour: 18,
+  scheduleTimezone: 'America/Los_Angeles',
 }
 
 export function QASettingsContent() {
@@ -218,6 +224,67 @@ export function QASettingsContent() {
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Schedule Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarClock className="h-5 w-5 text-primary" />
+            QA Bot Schedule
+          </CardTitle>
+          <CardDescription>
+            Set when the QA bot runs. It processes calls hourly within this window.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <Label>Start Hour</Label>
+              <select
+                value={settings.scheduleStartHour}
+                onChange={e => setSettings(prev => ({ ...prev, scheduleStartHour: parseInt(e.target.value, 10) }))}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {Array.from({ length: 24 }, (_, i) => (
+                  <option key={i} value={i}>
+                    {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label>End Hour</Label>
+              <select
+                value={settings.scheduleEndHour}
+                onChange={e => setSettings(prev => ({ ...prev, scheduleEndHour: parseInt(e.target.value, 10) }))}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {Array.from({ length: 24 }, (_, i) => (
+                  <option key={i} value={i}>
+                    {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label>Timezone</Label>
+              <select
+                value={settings.scheduleTimezone}
+                onChange={e => setSettings(prev => ({ ...prev, scheduleTimezone: e.target.value }))}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="America/Los_Angeles">Pacific (PST/PDT)</option>
+                <option value="America/Denver">Mountain (MST/MDT)</option>
+                <option value="America/Chicago">Central (CST/CDT)</option>
+                <option value="America/New_York">Eastern (EST/EDT)</option>
+              </select>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            QA bot runs hourly from {settings.scheduleStartHour === 0 ? '12' : settings.scheduleStartHour > 12 ? settings.scheduleStartHour - 12 : settings.scheduleStartHour}:00 {settings.scheduleStartHour < 12 ? 'AM' : 'PM'} to {settings.scheduleEndHour === 0 ? '12' : settings.scheduleEndHour > 12 ? settings.scheduleEndHour - 12 : settings.scheduleEndHour}:00 {settings.scheduleEndHour < 12 ? 'AM' : 'PM'} in your selected timezone.
+          </p>
         </CardContent>
       </Card>
 
