@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import nodemailer from 'nodemailer'
-import dns from 'dns'
-import { promisify } from 'util'
-
-const resolve4 = promisify(dns.resolve4)
+import { Resend } from 'resend'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,74 +12,55 @@ export async function POST(request: NextRequest) {
   try {
     const settings = await request.json()
 
-    if (!settings.smtpHost || !settings.smtpUser || !settings.smtpPass) {
-      return NextResponse.json({ success: false, message: 'SMTP settings incomplete' }, { status: 400 })
-    }
-
-    // Resolve hostname to IPv4 first
-    let host = settings.smtpHost
-    try {
-      const addresses = await resolve4(settings.smtpHost)
-      if (addresses && addresses.length > 0) {
-        host = addresses[0]
-        console.log(`Resolved ${settings.smtpHost} to IPv4: ${host}`)
+    // Use Resend if provider is resend
+    if (settings.smtpProvider === 'resend') {
+      if (!settings.resendApiKey) {
+        return NextResponse.json({ success: false, message: 'Resend API key is required' }, { status: 400 })
       }
-    } catch (e) {
-      console.log(`Could not resolve IPv4 for ${settings.smtpHost}, using hostname`)
+
+      const resend = new Resend(settings.resendApiKey)
+      const testEmail = settings.contactEmail || 'delivered@resend.dev'
+
+      const { data, error } = await resend.emails.send({
+        from: `${settings.smtpFromName || settings.companyName} <onboarding@resend.dev>`,
+        to: testEmail,
+        subject: `Test Email from ${settings.companyName}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, ${settings.brandColor || '#8b5a2b'}, ${adjustColor(settings.brandColor || '#8b5a2b', -20)}); padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 20px;">${settings.companyName}</h1>
+            </div>
+            <div style="padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+              <h2 style="margin: 0 0 16px; font-size: 18px; color: #1f2937;">Email Test Successful!</h2>
+              <p style="color: #4b5563; line-height: 1.6;">
+                Your Resend email settings are configured correctly.
+              </p>
+              <p style="color: #6b7280; font-size: 13px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                You can now send emails through Resend.
+              </p>
+            </div>
+          </div>
+        `,
+      })
+
+      if (error) {
+        return NextResponse.json({ success: false, message: error.message }, { status: 500 })
+      }
+
+      return NextResponse.json({ success: true, message: `Test email sent to ${testEmail}` })
     }
 
-    const transporter = nodemailer.createTransport({
-      host: host,
-      port: parseInt(settings.smtpPort) || 587,
-      secure: settings.smtpPort === '465',
-      auth: {
-        user: settings.smtpUser,
-        pass: settings.smtpPass,
-      },
-      tls: {
-        rejectUnauthorized: false,
-        servername: settings.smtpHost, // Use original hostname for TLS
-      },
-    })
-
-    // Verify connection
-    await transporter.verify()
-
-    // Send test email to the contact email
-    const testEmail = settings.contactEmail || settings.smtpUser
-    await transporter.sendMail({
-      from: `"${settings.smtpFromName || settings.companyName}" <${settings.smtpFromEmail || settings.smtpUser}>`,
-      to: testEmail,
-      subject: `Test Email from ${settings.companyName}`,
-      html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, ${settings.brandColor || '#8b5a2b'}, ${adjustColor(settings.brandColor || '#8b5a2b', -20)}); padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 20px;">${settings.companyName}</h1>
-          </div>
-          <div style="padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-            <h2 style="margin: 0 0 16px; font-size: 18px; color: #1f2937;">SMTP Test Successful!</h2>
-            <p style="color: #4b5563; line-height: 1.6;">
-              Your email settings are configured correctly. This test email was sent via:
-            </p>
-            <ul style="color: #4b5563; line-height: 1.8;">
-              <li><strong>Host:</strong> ${settings.smtpHost}</li>
-              <li><strong>Port:</strong> ${settings.smtpPort}</li>
-              <li><strong>From:</strong> ${settings.smtpFromEmail || settings.smtpUser}</li>
-            </ul>
-            <p style="color: #6b7280; font-size: 13px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-              You can now send invoices, statements, and alerts through your own email server.
-            </p>
-          </div>
-        </div>
-      `,
-    })
-
-    return NextResponse.json({ success: true, message: `Test email sent to ${testEmail}` })
-  } catch (error: any) {
-    console.error('SMTP test failed:', error)
+    // SMTP path (kept for backward compatibility but likely won't work on Render)
     return NextResponse.json({
       success: false,
-      message: error.message || 'Failed to connect to SMTP server',
+      message: 'SMTP is blocked on this platform. Please use Resend instead.'
+    }, { status: 400 })
+
+  } catch (error: any) {
+    console.error('Email test failed:', error)
+    return NextResponse.json({
+      success: false,
+      message: error.message || 'Failed to send email',
     }, { status: 500 })
   }
 }

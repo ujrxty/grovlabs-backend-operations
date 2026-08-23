@@ -1,8 +1,4 @@
-import nodemailer from 'nodemailer';
-import dns from 'dns';
-import { promisify } from 'util';
-
-const resolve4 = promisify(dns.resolve4);
+import { Resend } from 'resend';
 
 // Email configuration for GrovLabs
 export const EMAIL_CONFIG = {
@@ -16,36 +12,6 @@ export const EMAIL_CONFIG = {
   fromName: process.env.SMTP_FROM_NAME || 'GrovLabs',
 }
 
-async function getTransporter() {
-  const hostname = process.env.SMTP_HOST || 'smtp.gmail.com';
-
-  // Resolve hostname to IPv4 first
-  let host = hostname;
-  try {
-    const addresses = await resolve4(hostname);
-    if (addresses && addresses.length > 0) {
-      host = addresses[0];
-      console.log(`Resolved ${hostname} to IPv4: ${host}`);
-    }
-  } catch (e) {
-    console.log(`Could not resolve IPv4 for ${hostname}, using hostname`);
-  }
-
-  return nodemailer.createTransport({
-    host: host,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    tls: {
-      rejectUnauthorized: false,
-      servername: hostname, // Use original hostname for TLS
-    },
-  });
-}
-
 export async function sendNotificationEmail(params: {
   notificationId?: string;
   subject: string;
@@ -53,19 +19,31 @@ export async function sendNotificationEmail(params: {
   recipientEmail: string;
   replyTo?: string;
 }) {
-  try {
-    const transporter = await getTransporter();
+  const apiKey = process.env.RESEND_API_KEY;
 
-    const result = await transporter.sendMail({
-      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.fromEmail}>`,
+  if (!apiKey) {
+    console.log('RESEND_API_KEY not set, skipping email');
+    return { success: false, error: 'Email not configured' };
+  }
+
+  try {
+    const resend = new Resend(apiKey);
+
+    const { data, error } = await resend.emails.send({
+      from: `${EMAIL_CONFIG.fromName} <onboarding@resend.dev>`,
       to: params.recipientEmail,
       replyTo: params.replyTo || EMAIL_CONFIG.fromEmail,
       subject: params.subject,
       html: params.body,
     });
 
-    console.log('Email sent:', result.messageId);
-    return { success: true, messageId: result.messageId };
+    if (error) {
+      console.error('Email send error:', error.message);
+      return { success: false, error: error.message };
+    }
+
+    console.log('Email sent:', data?.id);
+    return { success: true, messageId: data?.id };
   } catch (error: any) {
     console.error('Email send error:', error?.message ?? error);
     return { success: false, error: error?.message ?? 'Unknown error' };

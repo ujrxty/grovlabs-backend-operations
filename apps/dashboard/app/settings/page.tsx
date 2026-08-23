@@ -34,7 +34,8 @@ const COLOR_PRESETS = [
   { value: '#0891b2', label: 'Teal', preview: 'bg-[#0891b2]' },
 ]
 
-const SMTP_PROVIDERS = [
+const EMAIL_PROVIDERS = [
+  { value: 'resend', label: 'Resend (Recommended)', host: '', port: '' },
   { value: 'gmail', label: 'Gmail SMTP', host: 'smtp.gmail.com', port: '587' },
   { value: 'outlook', label: 'Outlook/Office 365', host: 'smtp.office365.com', port: '587' },
   { value: 'sendgrid', label: 'SendGrid', host: 'smtp.sendgrid.net', port: '587' },
@@ -61,6 +62,8 @@ interface Settings {
   smtpFromEmail: string
   smtpFromName: string
   smtpSecure: boolean
+  // Resend Settings
+  resendApiKey: string
   // AI Settings
   openaiApiKey: string
   // TrackDrive Settings
@@ -84,9 +87,9 @@ const DEFAULT_SETTINGS: Settings = {
   contactEmail: 'uj@grovlabs.com',
   contactPhone: '+1 (754) 344-0773',
   brandColor: '#8b5a2b',
-  // SMTP defaults
+  // Email defaults
   smtpEnabled: false,
-  smtpProvider: 'gmail',
+  smtpProvider: 'resend',
   smtpHost: 'smtp.gmail.com',
   smtpPort: '587',
   smtpUser: '',
@@ -94,6 +97,8 @@ const DEFAULT_SETTINGS: Settings = {
   smtpFromEmail: '',
   smtpFromName: 'GrovLabs Inc',
   smtpSecure: true,
+  // Resend
+  resendApiKey: '',
   // AI Settings
   openaiApiKey: '',
   // TrackDrive Settings
@@ -161,7 +166,7 @@ export default function SettingsPage() {
   }
 
   const handleProviderChange = (provider: string) => {
-    const preset = SMTP_PROVIDERS.find(p => p.value === provider)
+    const preset = EMAIL_PROVIDERS.find(p => p.value === provider)
     if (preset) {
       setSettings(prev => ({
         ...prev,
@@ -397,55 +402,23 @@ export default function SettingsPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {SMTP_PROVIDERS.map((p) => (
+                        {EMAIL_PROVIDERS.map((p) => (
                           <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  {settings.smtpProvider === 'resend' ? (
                     <div className="space-y-2">
-                      <Label htmlFor="smtpHost">SMTP Host</Label>
-                      <Input
-                        id="smtpHost"
-                        value={settings.smtpHost}
-                        onChange={(e) => updateField('smtpHost', e.target.value)}
-                        placeholder="smtp.gmail.com"
-                        disabled={settings.smtpProvider !== 'custom'}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="smtpPort">Port</Label>
-                      <Input
-                        id="smtpPort"
-                        value={settings.smtpPort}
-                        onChange={(e) => updateField('smtpPort', e.target.value)}
-                        placeholder="587"
-                      />
-                      <p className="text-xs text-muted-foreground">Use 465 for SSL, 587 for TLS</p>
-                    </div>
-                  </div>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="smtpUser">Username / Email</Label>
-                      <Input
-                        id="smtpUser"
-                        value={settings.smtpUser}
-                        onChange={(e) => updateField('smtpUser', e.target.value)}
-                        placeholder="your-email@gmail.com"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="smtpPass">Password / App Password</Label>
+                      <Label htmlFor="resendApiKey">Resend API Key</Label>
                       <div className="relative">
                         <Input
-                          id="smtpPass"
+                          id="resendApiKey"
                           type={showPassword ? 'text' : 'password'}
-                          value={settings.smtpPass}
-                          onChange={(e) => updateField('smtpPass', e.target.value)}
-                          placeholder="••••••••••••"
+                          value={settings.resendApiKey}
+                          onChange={(e) => updateField('resendApiKey', e.target.value)}
+                          placeholder="re_..."
                         />
                         <button
                           type="button"
@@ -455,13 +428,72 @@ export default function SettingsPage() {
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
-                      {settings.smtpProvider === 'gmail' && (
-                        <p className="text-xs text-muted-foreground">
-                          Use an <a href="https://support.google.com/accounts/answer/185833" target="_blank" className="text-primary underline">App Password</a>, not your regular password
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Get your API key from <a href="https://resend.com/api-keys" target="_blank" className="text-primary underline">resend.com/api-keys</a>
+                      </p>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="smtpHost">SMTP Host</Label>
+                        <Input
+                          id="smtpHost"
+                          value={settings.smtpHost}
+                          onChange={(e) => updateField('smtpHost', e.target.value)}
+                          placeholder="smtp.gmail.com"
+                          disabled={settings.smtpProvider !== 'custom'}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="smtpPort">Port</Label>
+                        <Input
+                          id="smtpPort"
+                          value={settings.smtpPort}
+                          onChange={(e) => updateField('smtpPort', e.target.value)}
+                          placeholder="587"
+                        />
+                        <p className="text-xs text-muted-foreground">Use 465 for SSL, 587 for TLS</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {settings.smtpProvider !== 'resend' && (
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="smtpUser">Username / Email</Label>
+                        <Input
+                          id="smtpUser"
+                          value={settings.smtpUser}
+                          onChange={(e) => updateField('smtpUser', e.target.value)}
+                          placeholder="your-email@gmail.com"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="smtpPass">Password / App Password</Label>
+                        <div className="relative">
+                          <Input
+                            id="smtpPass"
+                            type={showPassword ? 'text' : 'password'}
+                            value={settings.smtpPass}
+                            onChange={(e) => updateField('smtpPass', e.target.value)}
+                            placeholder="••••••••••••"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        {settings.smtpProvider === 'gmail' && (
+                          <p className="text-xs text-muted-foreground">
+                            Use an <a href="https://support.google.com/accounts/answer/185833" target="_blank" className="text-primary underline">App Password</a>, not your regular password
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">

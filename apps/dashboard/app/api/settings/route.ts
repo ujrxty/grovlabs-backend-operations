@@ -17,9 +17,9 @@ const DEFAULT_SETTINGS = {
   contactEmail: 'uj@grovlabs.com',
   contactPhone: '+1 (754) 344-0773',
   brandColor: '#8b5a2b',
-  // SMTP Settings
+  // Email Settings
   smtpEnabled: false,
-  smtpProvider: 'gmail',
+  smtpProvider: 'resend',
   smtpHost: 'smtp.gmail.com',
   smtpPort: '587',
   smtpUser: '',
@@ -27,6 +27,7 @@ const DEFAULT_SETTINGS = {
   smtpFromEmail: '',
   smtpFromName: 'GrovLabs Inc',
   smtpSecure: true,
+  resendApiKey: '',
   // AI Settings
   openaiApiKey: '',
   // TrackDrive Settings
