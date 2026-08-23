@@ -422,8 +422,8 @@ export default function SettingsPage() {
                         value={settings.smtpPort}
                         onChange={(e) => updateField('smtpPort', e.target.value)}
                         placeholder="587"
-                        disabled={settings.smtpProvider !== 'custom'}
                       />
+                      <p className="text-xs text-muted-foreground">Use 465 for SSL, 587 for TLS</p>
                     </div>
                   </div>
 
