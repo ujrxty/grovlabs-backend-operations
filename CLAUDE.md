@@ -154,6 +154,11 @@ public/favicon.svg    SVG favicon
 The favicon (`public/favicon.svg` and `app/icon.svg`) is consistent across all apps:
 dashboard, vendor-portal, and landing. Same as grovlabs.com (agency website).
 
+### OpenGraph Images
+
+Dynamic OG images for link previews in `app/opengraph-image.tsx` (all apps).
+Uses `next/og` ImageResponse with dark theme, GrovLabs branding, and lime accents.
+
 Tailwind v4 — **no `tailwind.config`**. Theme in `@theme` block in globals.css.
 
 ### Design System
@@ -189,11 +194,32 @@ Key components:
 
 ## Dashboard (apps/dashboard)
 
-Internal admin dashboard. Next.js 14 + NextAuth.
+Internal admin dashboard. Next.js 14 + NextAuth. Supports light/dark themes.
 
 Default admin users (from seed):
 - rayan@grovlabs.com / Admin123!
 - uj@grovlabs.com / GrovLabs26!
+
+### Dark Theme Guidelines
+
+**Never use hardcoded light colors.** Use theme-aware classes:
+- `bg-background` instead of `bg-white` for surfaces
+- `bg-muted` or `bg-muted/50` for subtle backgrounds
+- `border` instead of `border-gray-200`
+- `text-foreground` / `text-muted-foreground` for text
+
+For colored elements needing dark variants:
+```tsx
+// Bad
+className="bg-amber-50 border-amber-200"
+
+// Good
+className="bg-amber-50/50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30"
+```
+
+Exceptions (OK to use `bg-white`):
+- `bg-white/10` etc. — opacity-based glass effects work in dark mode
+- Toggle switch thumbs — need contrast against track
 
 Features:
 - Campaign management (CRUD, activate/deactivate)
