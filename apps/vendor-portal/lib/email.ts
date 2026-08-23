@@ -39,7 +39,7 @@ function getTransporter() {
       rejectUnauthorized: false,
     },
     // Force IPv4 lookup
-    dnsLookup: ipv4Lookup as any,
+    lookup: ipv4Lookup as any,
   } as any);
 }
 
