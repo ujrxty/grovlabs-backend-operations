@@ -21,6 +21,7 @@ import { CampaignMonitorModule } from './campaign-monitor/campaign-monitor.modul
 import { VendorStatsModule } from './vendor-stats/vendor-stats.module.js';
 import { SalesQaModule } from './sales-qa/sales-qa.module.js';
 import { NonConversionQaModule } from './non-conversion-qa/non-conversion-qa.module.js';
+import { QASettingsModule } from './qa-settings/qa-settings.module.js';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { NonConversionQaModule } from './non-conversion-qa/non-conversion-qa.mod
     VendorStatsModule,
     SalesQaModule,
     NonConversionQaModule,
+    QASettingsModule,
   ],
 })
 export class AppModule {}

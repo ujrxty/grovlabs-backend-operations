@@ -19,6 +19,7 @@ import {
   Settings,
   UsersRound,
   ScrollText,
+  Sliders,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -29,6 +30,7 @@ const navItems = [
   { href: '/campaigns', label: 'Campaigns', icon: Megaphone },
   { href: '/insertion-orders', label: 'Insertion Orders', icon: FileText },
   { href: '/call-qa', label: 'Call QA Logs', icon: PhoneCall },
+  { href: '/qa-settings', label: 'QA Settings', icon: Sliders },
   { href: '/non-conversion-qa', label: 'Non-Conversion QA', icon: PhoneOff },
   { href: '/sales-monitoring', label: 'Sales Monitoring', icon: ClipboardCheck },
   { href: '/loss-monitor', label: 'Loss Monitor', icon: Siren },
