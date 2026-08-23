@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Search, Eye, ChevronLeft, ChevronRight, CheckCircle, Clock, XCircle, FileText, Download, Loader2, PenLine, Ban } from 'lucide-react'
+import { Search, Eye, ChevronLeft, ChevronRight, CheckCircle, Clock, XCircle, FileText, Download, Loader2, PenLine, Ban, Trash2 } from 'lucide-react'
 import { InsertionOrder, LeadPurchaseAgreement } from '@/lib/types'
 import { AddCampaignDialog } from '@/components/add-campaign-dialog'
 import { toast } from 'sonner'
@@ -52,6 +52,7 @@ export function IOContent() {
   const [countersigningIO, setCountersigningIO] = useState(false)
   const [voiding, setVoiding] = useState(false)
   const [resending, setResending] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchOrders = useCallback(async () => {
     setLoading(true)
@@ -154,6 +155,25 @@ export function IOContent() {
       toast.error('Failed to void insertion order.')
     }
     setVoiding(false)
+  }
+
+  const deleteIO = async (ioId: string, ioNumber: string) => {
+    if (!confirm(`Are you sure you want to PERMANENTLY DELETE ${ioNumber}? This will also delete any attached agreements. This cannot be undone.`)) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/insertion-orders/${ioId}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data?.error || 'Failed to delete insertion order.')
+      } else {
+        toast.success(`${ioNumber} deleted`)
+        setViewIO(null)
+        fetchOrders()
+      }
+    } catch {
+      toast.error('Failed to delete insertion order.')
+    }
+    setDeleting(false)
   }
 
   const resendIOEmail = async (ioId: string, ioNumber: string) => {
@@ -495,6 +515,21 @@ export function IOContent() {
                   <p className="text-xs text-muted-foreground mt-1.5">Voids this IO and any pending agreements attached to it. Sign links will be invalidated.</p>
                 </div>
               )}
+
+              {/* Delete IO action */}
+              <div className="border-t pt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  disabled={deleting}
+                  onClick={() => deleteIO(detail.id, detail.io_number)}
+                >
+                  {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                  Delete IO
+                </Button>
+                <p className="text-xs text-muted-foreground mt-1.5">Permanently removes this IO and all attached agreements from the database.</p>
+              </div>
             </div>
           ) : null}
         </DialogContent>
