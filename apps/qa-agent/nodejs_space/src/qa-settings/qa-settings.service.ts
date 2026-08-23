@@ -101,8 +101,9 @@ export class QASettingsService {
 
       if (result && result[0]?.settings_json) {
         const dbSettings = JSON.parse(result[0].settings_json);
-        this.cachedSettings = { ...DEFAULT_SETTINGS, ...dbSettings };
-        return this.cachedSettings;
+        const merged = { ...DEFAULT_SETTINGS, ...dbSettings };
+        this.cachedSettings = merged;
+        return merged;
       }
     } catch (error) {
       this.logger.warn('Failed to load QA settings from DB, using defaults');
