@@ -522,3 +522,9 @@ model sales_qa_snapshot {
   @@unique([snapshot_date, review_month, campaign_category])
   @@index([review_month, campaign_category])
 }
+
+model system_settings {
+  key           String   @id
+  settings_json String
+  updated_at    DateTime @default(now()) @updatedAt
+}

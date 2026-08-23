@@ -317,6 +317,12 @@ model lead_purchase_agreement {
   @@index([status])
 }
 
+model system_settings {
+  key           String   @id
+  settings_json String
+  updated_at    DateTime @default(now()) @updatedAt
+}
+
 model io_counter {
   id    String @id @default("singleton")
   year  Int
