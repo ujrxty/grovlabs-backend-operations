@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { EMAIL_CONFIG } from '@/lib/email-config'
+import { Resend } from 'resend'
 
 function formatMoney(amount: number): string {
   return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -200,81 +201,31 @@ export async function POST(req: Request) {
     // Build email HTML with campaign summary
     const htmlBody = buildInvoiceHtml(data)
 
-    const senderDomain = EMAIL_CONFIG.getSenderDomain(process.env.NEXTAUTH_URL)
-
-    // 3. Send the invoice to each recipient (the gateway accepts one address
-    //    per request, so we loop and aggregate the results).
-    const sent: string[] = []
-    const failed: { email: string; reason: string }[] = []
-    let notificationsDisabled = false
-
-    for (const recipient of recipients) {
-      try {
-        const response = await fetch('https://apps.abacus.ai/api/sendNotificationEmail', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            deployment_token: process.env.ABACUSAI_API_KEY,
-            app_id: process.env.WEB_APP_ID,
-            notification_id: process.env.NOTIF_ID_BUYER_INVOICE,
-            subject: `Invoice - ${data.buyerName} - ${periodLabel}`,
-            body: htmlBody,
-            is_html: true,
-            recipient_email: recipient,
-            reply_to: EMAIL_CONFIG.contactEmail,
-            sender_email: `noreply@${senderDomain}`,
-            sender_alias: EMAIL_CONFIG.companyName,
-          }),
-        })
-
-        const raw = await response.text()
-        let result: any = null
-        try {
-          result = JSON.parse(raw)
-        } catch {
-          console.error('Send invoice: non-JSON response from email gateway', recipient, response.status, raw.slice(0, 300))
-          failed.push({ email: recipient, reason: `gateway status ${response.status}` })
-          continue
-        }
-
-        if (!response.ok || !result?.success) {
-          if (result?.notification_disabled) {
-            notificationsDisabled = true
-            continue
-          }
-          console.error('Send invoice: email gateway error', recipient, response.status, JSON.stringify(result).slice(0, 300))
-          failed.push({ email: recipient, reason: result?.message || `gateway status ${response.status}` })
-          continue
-        }
-
-        sent.push(recipient)
-      } catch (err: any) {
-        console.error('Send invoice: send failed', recipient, err)
-        failed.push({ email: recipient, reason: err?.message || 'send failed' })
-      }
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      return NextResponse.json({ error: 'Email service not configured (RESEND_API_KEY missing)' }, { status: 500 })
     }
 
-    // All recipients failed
-    if (sent.length === 0 && failed.length > 0) {
-      return NextResponse.json(
-        { error: `The invoice could not be sent. ${failed.map((f) => `${f.email} (${f.reason})`).join('; ')}` },
-        { status: 502 }
-      )
+    const resend = new Resend(apiKey)
+    const fromEmail = process.env.SMTP_FROM_EMAIL || 'noreply@grovlabs.com'
+    const fromName = process.env.SMTP_FROM_NAME || EMAIL_CONFIG.companyName
+
+    // Send to all recipients at once (Resend supports arrays)
+    const { data: emailData, error } = await resend.emails.send({
+      from: `${fromName} <${fromEmail}>`,
+      to: recipients,
+      replyTo: EMAIL_CONFIG.contactEmail,
+      subject: `Invoice - ${data.buyerName} - ${periodLabel}`,
+      html: htmlBody,
+    })
+
+    if (error) {
+      console.error('Send invoice error:', error)
+      return NextResponse.json({ error: error.message || 'Failed to send invoice' }, { status: 502 })
     }
 
-    // None sent but notifications disabled
-    if (sent.length === 0 && notificationsDisabled) {
-      return NextResponse.json({ success: true, message: 'Invoice skipped (notifications disabled)' })
-    }
-
-    // Success (possibly partial)
-    const recipientLabel = sent.length === 1 ? sent[0] : `${sent.length} recipients`
-    let message = `Invoice sent to ${recipientLabel}`
-    if (failed.length > 0) {
-      message += ` — but failed for ${failed.map((f) => f.email).join(', ')}`
-    }
-
-    return NextResponse.json({ success: true, message, sent, failed: failed.map((f) => f.email) })
+    const recipientLabel = recipients.length === 1 ? recipients[0] : `${recipients.length} recipients`
+    return NextResponse.json({ success: true, message: `Invoice sent to ${recipientLabel}`, messageId: emailData?.id })
   } catch (error: any) {
     console.error('Send invoice error:', error)
     return NextResponse.json({ error: error.message || 'Failed to send invoice' }, { status: 500 })
