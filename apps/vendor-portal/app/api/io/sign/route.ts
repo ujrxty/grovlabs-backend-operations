@@ -37,18 +37,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'This IO has already been signed or is not available for signing' }, { status: 400 })
     }
 
-    // Update IO in local DB
-    await prisma.insertion_order.update({
-      where: { id: io?.id ?? '' },
-      data: {
-        vendor_signed_at: new Date(),
-        vendor_sign_name: sign_name?.trim?.() ?? '',
-        vendor_sign_ip: ip,
-        status: 'pending_counter',
-      },
-    })
-
-    // Also submit signature to backend service
+    // Submit signature to backend service FIRST (it will update the DB)
     let agreementSignUrl = ''
     let agreementSignToken = ''
     try {
