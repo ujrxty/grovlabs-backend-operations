@@ -966,6 +966,15 @@ This Agreement may be executed in two or more counterparts, each of which will b
     });
   }
 
+  /** Get the vendor's master LPA (one per vendor) */
+  async getAgreementByVendorId(vendorId: string): Promise<any> {
+    return this.prisma.lead_purchase_agreement.findFirst({
+      where: { vendor_id: vendorId },
+      orderBy: { created_at: 'asc' },
+      include: { vendor: true, insertion_order: { include: { campaign: true } } },
+    });
+  }
+
   /** Vendor signs the agreement */
   async vendorSignAgreement(signToken: string, signName: string, signIp: string): Promise<any> {
     const agreement = await this.prisma.lead_purchase_agreement.findUnique({

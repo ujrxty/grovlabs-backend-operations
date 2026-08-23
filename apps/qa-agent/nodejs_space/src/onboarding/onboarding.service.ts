@@ -422,8 +422,8 @@ export class OnboardingService {
       this.logger.error(`Telegram IO alert failed: ${e.message}`),
     );
 
-    // Find the linked Lead Purchase Agreement so the vendor can sign it next
-    const agreement = await this.io.getAgreementByIOId(ioRecord.id);
+    // Find the vendor's master Lead Purchase Agreement (one per vendor, not per IO)
+    const agreement = await this.io.getAgreementByVendorId(ioRecord.vendor_id);
     const portalOrigin = this.config.get<string>('VENDOR_PORTAL_URL', 'http://localhost:3000');
     const agreementSignUrl = agreement
       ? new URL(`/agreement/sign/${agreement.sign_token}`, portalOrigin).toString()

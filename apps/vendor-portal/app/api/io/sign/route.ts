@@ -55,9 +55,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Fallback: get LPA sign token directly from local DB if backend didn't return it
+    // Use vendor_id, not io_id, because there's ONE master LPA per vendor
     if (!agreementSignToken) {
       const lpa = await prisma.lead_purchase_agreement.findFirst({
-        where: { io_id: io?.id ?? '' },
+        where: { vendor_id: io?.vendor_id ?? '' },
+        orderBy: { created_at: 'asc' },
         select: { sign_token: true, status: true },
       })
       if (lpa?.sign_token && lpa?.status === 'pending_vendor') {
