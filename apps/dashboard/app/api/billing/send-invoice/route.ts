@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { uploadBuffer, getFileUrl } from '@/lib/s3'
 import { EMAIL_CONFIG } from '@/lib/email-config'
 
 function formatMoney(amount: number): string {
@@ -49,38 +48,9 @@ interface InvoiceData {
 }
 
 // ---------------------------------------------------------------------------
-// CSV generation – full call detail attached to every invoice email
+// Email HTML – Summary by Campaign only (no itemized calls)
 // ---------------------------------------------------------------------------
-function buildCsvContent(data: InvoiceData): string {
-  const escape = (v: string) => {
-    if (v.includes(',') || v.includes('"') || v.includes('\n')) {
-      return '"' + v.replace(/"/g, '""') + '"'
-    }
-    return v
-  }
-
-  const rows: string[] = ['Date,Campaign,Caller ID,City,Duration (sec),Amount Due']
-  for (const c of data.campaignBreakdown) {
-    for (const call of c.callDetails || []) {
-      rows.push([
-        escape(formatDateTime(call.date)),
-        escape(c.campaign),
-        escape(call.callerNumber || ''),
-        escape(call.city || ''),
-        String(call.duration || 0),
-        call.revenue.toFixed(2),
-      ].join(','))
-    }
-  }
-  rows.push('')
-  rows.push(`,,,,TOTAL,$${formatMoney(data.totalRevenue)}`)
-  return rows.join('\n')
-}
-
-// ---------------------------------------------------------------------------
-// Email HTML – Summary by Campaign only (no itemized calls), + CSV link
-// ---------------------------------------------------------------------------
-function buildInvoiceHtml(data: InvoiceData, csvDownloadUrl: string): string {
+function buildInvoiceHtml(data: InvoiceData): string {
   const { companyName, contactEmail, primaryColor, gradientStart, gradientEnd, accentColor, companyTagline } = EMAIL_CONFIG
   const periodLabel = `${formatDate(data.periodStart)} - ${formatDate(data.periodEnd)}`
 
@@ -173,14 +143,6 @@ function buildInvoiceHtml(data: InvoiceData, csvDownloadUrl: string): string {
         </table>
       </div>
 
-      <!-- CSV Download Button -->
-      <div style="text-align: center; margin-bottom: 24px;">
-        <a href="${csvDownloadUrl}" style="display: inline-block; background: linear-gradient(135deg, ${gradientStart} 0%, ${gradientEnd} 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; letter-spacing: 0.3px;">
-          ⬇ Download Full Call Detail (CSV)
-        </a>
-        <p style="font-size: 12px; color: #9ca3af; margin: 8px 0 0;">Contains the complete call-by-call breakdown for this invoice period.</p>
-      </div>
-
       <!-- Footer -->
       <p style="font-size: 13px; color: #9ca3af; line-height: 1.5; margin: 24px 0 0;">
         Questions about this invoice? Contact <a href="mailto:${contactEmail}" style="color: ${primaryColor};">${contactEmail}</a>.
@@ -235,15 +197,8 @@ export async function POST(req: Request) {
 
     const periodLabel = `${formatDate(data.periodStart)} - ${formatDate(data.periodEnd)}`
 
-    // 1. Generate CSV and upload to cloud storage (public URL so buyer can download)
-    const csvContent = buildCsvContent(data)
-    const safeName = (data.buyerName || 'buyer').replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '')
-    const csvFileName = `invoice_${safeName}_${data.periodStart}_${data.periodEnd}.csv`
-    const cloud_storage_path = await uploadBuffer(csvFileName, csvContent, 'text/csv', true)
-    const csvDownloadUrl = await getFileUrl(cloud_storage_path, 'text/csv', true)
-
-    // 2. Build email HTML with campaign summary + CSV download link
-    const htmlBody = buildInvoiceHtml(data, csvDownloadUrl)
+    // Build email HTML with campaign summary
+    const htmlBody = buildInvoiceHtml(data)
 
     const senderDomain = EMAIL_CONFIG.getSenderDomain(process.env.NEXTAUTH_URL)
 
