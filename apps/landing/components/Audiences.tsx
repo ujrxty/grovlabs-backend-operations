@@ -46,7 +46,10 @@ function Track({
       </ol>
 
       <Reveal delay={0.5}>
-        <a href="#contact" className={`btn mt-7 ${variant === "secondary" ? "btn-secondary" : ""}`}>
+        <a
+          href={variant === "secondary" ? "https://portal.grovlabs.com" : "#contact"}
+          className={`btn mt-7 ${variant === "secondary" ? "btn-secondary" : ""}`}
+        >
           {cta}
           <ArrowRight size={15} strokeWidth={1.8} aria-hidden="true" />
         </a>
