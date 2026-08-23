@@ -79,9 +79,10 @@ export class SettingsService {
 
       if (result && result[0]?.settings_json) {
         const dbSettings = JSON.parse(result[0].settings_json);
-        this.cachedSettings = { ...DEFAULT_SETTINGS, ...dbSettings };
+        const merged: SystemSettings = { ...DEFAULT_SETTINGS, ...dbSettings };
+        this.cachedSettings = merged;
         this.cacheExpiry = Date.now() + this.CACHE_TTL;
-        return this.cachedSettings;
+        return merged;
       }
     } catch (error) {
       this.logger.warn('Failed to load settings from DB, using defaults');
