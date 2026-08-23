@@ -3,21 +3,11 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import nodemailer from 'nodemailer'
 import dns from 'dns'
+import { promisify } from 'util'
+
+const resolve4 = promisify(dns.resolve4)
 
 export const dynamic = 'force-dynamic'
-
-// Custom DNS lookup that only returns IPv4
-function ipv4Lookup(hostname: string, options: any, callback: Function) {
-  dns.resolve4(hostname, (err, addresses) => {
-    if (err) {
-      callback(err, null, null);
-    } else if (addresses && addresses.length > 0) {
-      callback(null, addresses[0], 4);
-    } else {
-      callback(new Error('No IPv4 address found'), null, null);
-    }
-  });
-}
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -30,8 +20,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'SMTP settings incomplete' }, { status: 400 })
     }
 
+    // Resolve hostname to IPv4 first
+    let host = settings.smtpHost
+    try {
+      const addresses = await resolve4(settings.smtpHost)
+      if (addresses && addresses.length > 0) {
+        host = addresses[0]
+        console.log(`Resolved ${settings.smtpHost} to IPv4: ${host}`)
+      }
+    } catch (e) {
+      console.log(`Could not resolve IPv4 for ${settings.smtpHost}, using hostname`)
+    }
+
     const transporter = nodemailer.createTransport({
-      host: settings.smtpHost,
+      host: host,
       port: parseInt(settings.smtpPort) || 587,
       secure: settings.smtpPort === '465',
       auth: {
@@ -40,10 +42,9 @@ export async function POST(request: NextRequest) {
       },
       tls: {
         rejectUnauthorized: false,
+        servername: settings.smtpHost, // Use original hostname for TLS
       },
-      // Force IPv4 lookup
-      lookup: ipv4Lookup as any,
-    } as any)
+    })
 
     // Verify connection
     await transporter.verify()

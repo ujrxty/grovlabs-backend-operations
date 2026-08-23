@@ -1,18 +1,8 @@
 import nodemailer from 'nodemailer';
 import dns from 'dns';
+import { promisify } from 'util';
 
-// Custom DNS lookup that only returns IPv4
-function ipv4Lookup(hostname: string, options: any, callback: Function) {
-  dns.resolve4(hostname, (err, addresses) => {
-    if (err) {
-      callback(err, null, null);
-    } else if (addresses && addresses.length > 0) {
-      callback(null, addresses[0], 4);
-    } else {
-      callback(new Error('No IPv4 address found'), null, null);
-    }
-  });
-}
+const resolve4 = promisify(dns.resolve4);
 
 // Email configuration for GrovLabs
 export const EMAIL_CONFIG = {
@@ -26,9 +16,23 @@ export const EMAIL_CONFIG = {
   fromName: process.env.SMTP_FROM_NAME || 'GrovLabs',
 }
 
-function getTransporter() {
+async function getTransporter() {
+  const hostname = process.env.SMTP_HOST || 'smtp.gmail.com';
+
+  // Resolve hostname to IPv4 first
+  let host = hostname;
+  try {
+    const addresses = await resolve4(hostname);
+    if (addresses && addresses.length > 0) {
+      host = addresses[0];
+      console.log(`Resolved ${hostname} to IPv4: ${host}`);
+    }
+  } catch (e) {
+    console.log(`Could not resolve IPv4 for ${hostname}, using hostname`);
+  }
+
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    host: host,
     port: parseInt(process.env.SMTP_PORT || '587'),
     secure: process.env.SMTP_SECURE === 'true',
     auth: {
@@ -37,10 +41,9 @@ function getTransporter() {
     },
     tls: {
       rejectUnauthorized: false,
+      servername: hostname, // Use original hostname for TLS
     },
-    // Force IPv4 lookup
-    lookup: ipv4Lookup as any,
-  } as any);
+  });
 }
 
 export async function sendNotificationEmail(params: {
@@ -51,7 +54,7 @@ export async function sendNotificationEmail(params: {
   replyTo?: string;
 }) {
   try {
-    const transporter = getTransporter();
+    const transporter = await getTransporter();
 
     const result = await transporter.sendMail({
       from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.fromEmail}>`,
