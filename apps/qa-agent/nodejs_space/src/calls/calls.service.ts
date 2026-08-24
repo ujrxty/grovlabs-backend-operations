@@ -88,12 +88,12 @@ export class CallsService {
       const duration = Number(callData?.total_duration) || Number(callData?.answered_duration) || 0;
       const recordingUrl = callData?.recording_url || '';
       const affiliateTrackdriveId = String(callData?.traffic_source_id || '');
-      const affiliateName = callData?.traffic_source || callData?.offer || 'Unknown';
+      const affiliateName = callData?.traffic_source_name || callData?.traffic_source || 'Unknown';
       const campaignId = String(callData?.offer_id || '');
       const campaignName = callData?.offer || 'Unknown';
       const buyerId = String(callData?.buyer_id || '');
       const buyerName = callData?.buyer || '';
-      const callerNumber = callData?.caller_number || callData?.call_id || trackdriveCallId;
+      const callerNumber = callData?.caller_number || callData?.caller_id || '';
       const callerCity = callData?.caller_city || '';
       const callerState = callData?.['token-state'] || '';
       const callCategory = callData?.category || '';
