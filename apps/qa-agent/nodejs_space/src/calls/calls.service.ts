@@ -49,13 +49,14 @@ export class CallsService {
     await this.jobQueue.addJob('process_call', {
       callId: call.id,
       trackdriveCallId,
+      webhookData,
     });
 
     return call.id;
   }
 
-  private async processCall(data: { callId: string; trackdriveCallId: string }): Promise<void> {
-    const { callId, trackdriveCallId } = data;
+  private async processCall(data: { callId: string; trackdriveCallId: string; webhookData?: any }): Promise<void> {
+    const { callId, trackdriveCallId, webhookData } = data;
     this.logger.log(`Processing call: ${trackdriveCallId}`);
 
     try {
@@ -65,22 +66,34 @@ export class CallsService {
         data: { status: 'processing' },
       });
 
-      // Step 1: Fetch call details from TrackDrive
-      this.logger.log(`Step 1: Fetching call details for ${trackdriveCallId}`);
-      const callDetails = await this.trackdrive.getCallDetails(trackdriveCallId);
-      // TrackDrive returns { status, success, call: {...} } for single call
-      const callData = callDetails?.call || callDetails;
+      // Use webhook data directly - TrackDrive sends data as query params
+      // Only fetch from API if webhook data is incomplete
+      let callData = webhookData || {};
 
-      // Map actual TrackDrive field names (verified against real API response)
-      const duration = callData?.total_duration || callData?.answered_duration || 0;
+      // If we have a numeric call ID (not a phone number), try to fetch more details
+      const isNumericId = /^\d+$/.test(trackdriveCallId);
+      if (isNumericId && !callData.recording_url) {
+        this.logger.log(`Step 1: Fetching call details for numeric ID ${trackdriveCallId}`);
+        try {
+          const callDetails = await this.trackdrive.getCallDetails(trackdriveCallId);
+          callData = { ...callData, ...(callDetails?.call || callDetails) };
+        } catch (err: any) {
+          this.logger.warn(`Could not fetch call details: ${err.message}, using webhook data`);
+        }
+      } else {
+        this.logger.log(`Step 1: Using webhook data directly (call_id is phone number or data complete)`);
+      }
+
+      // Map fields - support both webhook query params and API response formats
+      const duration = Number(callData?.total_duration) || Number(callData?.answered_duration) || 0;
       const recordingUrl = callData?.recording_url || '';
       const affiliateTrackdriveId = String(callData?.traffic_source_id || '');
-      const affiliateName = callData?.traffic_source || 'Unknown';
+      const affiliateName = callData?.traffic_source || callData?.offer || 'Unknown';
       const campaignId = String(callData?.offer_id || '');
       const campaignName = callData?.offer || 'Unknown';
       const buyerId = String(callData?.buyer_id || '');
       const buyerName = callData?.buyer || '';
-      const callerNumber = callData?.caller_number || '';
+      const callerNumber = callData?.caller_number || callData?.call_id || trackdriveCallId;
       const callerCity = callData?.caller_city || '';
       const callerState = callData?.['token-state'] || '';
       const callCategory = callData?.category || '';
@@ -138,10 +151,10 @@ export class CallsService {
 
       // Step 4: Check recording availability
       if (!recordingUrl) {
-        this.logger.warn(`Call ${trackdriveCallId}: No recording URL available`);
+        this.logger.log(`Call ${trackdriveCallId}: No recording URL available, skipping QA`);
         await this.prisma.call.update({
           where: { id: callId },
-          data: { status: 'error' },
+          data: { status: 'skipped' },
         });
         return;
       }
