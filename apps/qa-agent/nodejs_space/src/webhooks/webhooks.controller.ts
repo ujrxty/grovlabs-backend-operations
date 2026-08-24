@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Body, Headers, Query, Logger, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, Headers, Query, Logger, HttpCode, HttpStatus, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CallsService } from '../calls/calls.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
+import { Request } from 'express';
 
 @ApiTags('Webhooks')
 @Controller('webhooks')
@@ -20,13 +21,16 @@ export class WebhooksController {
   @ApiResponse({ status: 200, description: 'Webhook received successfully' })
   @ApiResponse({ status: 400, description: 'Invalid webhook payload' })
   async handleTrackdriveWebhook(
+    @Req() req: Request,
     @Body() body: any,
     @Headers() headers: Record<string, string>,
     @Query() query: Record<string, string>,
   ) {
+    this.logger.log(`TrackDrive webhook - URL: ${req.originalUrl}`);
     this.logger.log(`TrackDrive webhook - Content-Type: ${headers['content-type']}`);
     this.logger.log(`TrackDrive webhook - Body keys: ${Object.keys(body || {}).join(', ') || 'EMPTY'}`);
     this.logger.log(`TrackDrive webhook - Query keys: ${Object.keys(query || {}).join(', ') || 'EMPTY'}`);
+    this.logger.log(`TrackDrive webhook - req.query: ${JSON.stringify(req.query)}`);
     this.logger.log(`TrackDrive webhook received: ${JSON.stringify(body).substring(0, 500)}`);
 
     // Merge body and query params (TrackDrive might send data in either)
