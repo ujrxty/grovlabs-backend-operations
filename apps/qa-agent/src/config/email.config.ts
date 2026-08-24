@@ -1,27 +1,27 @@
-// Centralized email configuration for The Broken Wood Inc
+// Centralized email configuration for GrovLabs
 // Update these values to customize email branding
 
 export const EMAIL_CONFIG = {
   // Company Info
-  companyName: 'The Broken Wood Inc',
-  companyShortName: 'The Broken Wood',
+  companyName: 'GrovLabs Inc',
+  companyShortName: 'GrovLabs',
   companyTagline: 'Performance Marketing',
 
   // Contact Info
-  contactEmail: 'sammyabdel@thebrokenwood.com',
-  contactName: 'Sammy Abdel',
-  contactPhone: '+1 (862) 366-7366',
+  contactEmail: 'uj@grovlabs.com',
+  contactName: 'GrovLabs Team',
+  contactPhone: '',
 
-  // Brand Colors (copper/wood theme)
-  primaryColor: '#8b5a2b',
-  accentColor: '#f5e6d3',
+  // Brand Colors (GrovLabs theme - dark with lime accent)
+  primaryColor: '#050505',
+  accentColor: '#c4ff00',
 
   // Get sender domain from APP_ORIGIN env var
   getSenderDomain(): string {
     try {
-      return new URL(process.env.APP_ORIGIN || 'https://vendor.thebrokenwood.com').hostname;
+      return new URL(process.env.APP_ORIGIN || 'https://grovlabs.com').hostname;
     } catch {
-      return 'thebrokenwood.com';
+      return 'grovlabs.com';
     }
   },
 };

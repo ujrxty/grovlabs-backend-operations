@@ -417,7 +417,7 @@ Respond with raw JSON only.`;
           recipient_email: stats.vendorEmail,
           sender_email: `noreply@${hostname}`,
           sender_alias: 'The Broken Wood Inc',
-          reply_to: 'sammyabdel@thebrokenwood.com',
+          reply_to: 'uj@grovlabs.com',
         }),
       });
 
@@ -440,7 +440,7 @@ Respond with raw JSON only.`;
             subject: `[Copy] ${subject}`,
             body: html,
             is_html: true,
-            recipient_email: 'sammyabdel@thebrokenwood.com',
+            recipient_email: 'uj@grovlabs.com',
             sender_email: `noreply@${hostname}`,
             sender_alias: 'The Broken Wood Inc',
           }),

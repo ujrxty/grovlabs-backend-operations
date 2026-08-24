@@ -573,7 +573,7 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
             recipient_email: recipient,
             sender_email: `noreply@${hostname}`,
             sender_alias: 'The Broken Wood Inc',
-            reply_to: 'sammyabdel@thebrokenwood.com',
+            reply_to: 'uj@grovlabs.com',
           }),
         });
         const result = (await response.json()) as any;
@@ -646,7 +646,7 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
         reviewed: reviews.length,
         failures: failures.length,
       });
-      await this.sendEmail(subject, html, ['sammyabdel@thebrokenwood.com']);
+      await this.sendEmail(subject, html, ['uj@grovlabs.com']);
       await this.sendTelegram(this.buildTelegramSummary(reviews, dateStr));
     }
 

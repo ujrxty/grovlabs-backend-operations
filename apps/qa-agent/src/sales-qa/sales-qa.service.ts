@@ -1001,7 +1001,7 @@ export class SalesQaService {
             recipient_email: recipient,
             sender_email: `noreply@${hostname}`,
             sender_alias: 'The Broken Wood Inc',
-            reply_to: 'sammyabdel@thebrokenwood.com',
+            reply_to: 'uj@grovlabs.com',
           }),
         });
         const result = (await response.json()) as any;
@@ -1069,7 +1069,7 @@ export class SalesQaService {
         reviewed: reviews.length,
         failures: failures.length,
       });
-      await this.sendEmail(subject, html, ['sammyabdel@thebrokenwood.com']);
+      await this.sendEmail(subject, html, ['uj@grovlabs.com']);
       await this.sendTelegram(this.buildTelegramSummary(reviews, dateStr));
     }
 
