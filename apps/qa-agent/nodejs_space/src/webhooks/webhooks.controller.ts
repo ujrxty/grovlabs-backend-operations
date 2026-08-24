@@ -23,6 +23,8 @@ export class WebhooksController {
     @Body() body: any,
     @Headers() headers: Record<string, string>,
   ) {
+    this.logger.log(`TrackDrive webhook - Content-Type: ${headers['content-type']}`);
+    this.logger.log(`TrackDrive webhook - Body keys: ${Object.keys(body || {}).join(', ') || 'EMPTY'}`);
     this.logger.log(`TrackDrive webhook received: ${JSON.stringify(body).substring(0, 500)}`);
 
     try {
