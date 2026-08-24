@@ -93,7 +93,7 @@ export function CallQAContent() {
             <TableHeader>
               <TableRow>
                 <TableHead>Date & Time</TableHead>
-                <TableHead>Call ID</TableHead>
+                <TableHead>Caller</TableHead>
                 <TableHead>Vendor</TableHead>
                 <TableHead>Campaign</TableHead>
                 <TableHead>Duration</TableHead>
@@ -121,7 +121,7 @@ export function CallQAContent() {
                 (calls ?? []).map((call: CallRecord) => (
                   <TableRow key={call?.id} className={cn('hover:bg-muted/50', call?.qa_analysis?.is_flagged ? 'bg-red-50/50' : '')}>
                     <TableCell className="text-xs whitespace-nowrap">{call?.created_at ? new Date(call.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + new Date(call.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '—'}</TableCell>
-                    <TableCell className="font-mono text-xs">{call?.trackdrive_call_id?.slice?.(0, 12) ?? 'N/A'}</TableCell>
+                    <TableCell className="font-mono text-xs">{call?.caller_number || call?.trackdrive_call_id?.slice?.(0, 12) || '—'}</TableCell>
                     <TableCell className="text-sm">{call?.affiliate?.name ?? '—'}</TableCell>
                     <TableCell className="text-sm">{call?.campaign_name ?? '—'}</TableCell>
                     <TableCell className="font-mono text-sm">{formatDuration(call?.duration ?? 0)}</TableCell>
