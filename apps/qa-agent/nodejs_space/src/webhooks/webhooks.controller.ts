@@ -22,23 +22,28 @@ export class WebhooksController {
   async handleTrackdriveWebhook(
     @Body() body: any,
     @Headers() headers: Record<string, string>,
+    @Query() query: Record<string, string>,
   ) {
     this.logger.log(`TrackDrive webhook - Content-Type: ${headers['content-type']}`);
     this.logger.log(`TrackDrive webhook - Body keys: ${Object.keys(body || {}).join(', ') || 'EMPTY'}`);
+    this.logger.log(`TrackDrive webhook - Query keys: ${Object.keys(query || {}).join(', ') || 'EMPTY'}`);
     this.logger.log(`TrackDrive webhook received: ${JSON.stringify(body).substring(0, 500)}`);
+
+    // Merge body and query params (TrackDrive might send data in either)
+    const payload = { ...query, ...body };
 
     try {
       // TrackDrive outgoing webhooks send call data directly with fields like:
       // id, uuid, recording_url, traffic_source, offer, buyer, total_duration, etc.
       // The webhook may also send nested under body.call or body.data
       const callId =
-        body?.id ||
-        body?.call_id ||
-        body?.call?.id ||
-        body?.data?.call_id ||
-        body?.data?.id;
+        payload?.id ||
+        payload?.call_id ||
+        payload?.call?.id ||
+        payload?.data?.call_id ||
+        payload?.data?.id;
 
-      const event = body?.event || body?.trigger_type || 'call_ended';
+      const event = payload?.event || payload?.trigger_type || 'call_ended';
 
       if (!callId) {
         this.logger.warn('Webhook received without call ID');
@@ -50,7 +55,7 @@ export class WebhooksController {
       // Queue call for async processing
       const internalCallId = await this.callsService.queueCallForProcessing(
         String(callId),
-        body,
+        payload,
       );
 
       return {
