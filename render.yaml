@@ -29,6 +29,8 @@ services:
         generateValue: true
       - key: NEXTAUTH_URL
         sync: false
+      - key: NEXT_PUBLIC_QA_AGENT_URL
+        value: https://api.grovlabs.com
 
   # Vendor Portal
   - type: web
@@ -45,6 +47,8 @@ services:
         fromDatabase:
           name: grovlabs-database
           property: connectionString
+      - key: NEXT_PUBLIC_QA_AGENT_URL
+        value: https://api.grovlabs.com
 
   # QA Agent (NestJS Backend)
   - type: web
