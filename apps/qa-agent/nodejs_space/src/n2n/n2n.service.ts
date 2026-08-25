@@ -393,7 +393,7 @@ Legal Name (including corporate designator) Legal Name (including corporate desi
                                             ${partner.organized_in || ''}
 Organized In                                Organized In
 
-Usman Javed                                 ${partner.contact_name}
+${EMAIL_CONFIG.contactName}                                 ${partner.contact_name}
 Contact Name                                Contact Name
 
 +1 (754) 344-0773                           ${partner.contact_phone}
@@ -471,7 +471,7 @@ MASTER SERVICES AGREEMENT
 Grovlabs • Lead and Call Purchase / Supply
 
 THIS MASTER SERVICES AGREEMENT ("MSA" or "Agreement") is dated ${today}, by and between
-Grovlabs, a Delaware corporation located at [Address] ("Grovlabs"), and ${partner.legal_name},
+Grovlabs, a ${EMAIL_CONFIG.companyOrganizedIn} limited liability company located at [Address] ("Grovlabs"), and ${partner.legal_name},
 a ${partner.organized_in || '____________'} located at ${partner.address_line1 || '____________'}
 ("Counterparty"), each a "Party" and together the "Parties."
 
@@ -636,7 +636,7 @@ uncured five (5) business days after written notice.
 
 14.1 No waiver. No waiver of any provision or breach constitutes a continuing waiver.
 
-14.2 Governing law. This Agreement is governed by the laws of Delaware.
+14.2 Governing law. This Agreement is governed by the laws of ${EMAIL_CONFIG.companyOrganizedIn}.
 
 14.3 Assignment. Neither Party may assign this Agreement without the other Party's prior
 written consent.
@@ -778,11 +778,11 @@ Date                                        Date
         <div class="field-label">Legal Name (including corporate designator)</div>
       </div>
       <div class="field-row">
-        <div class="field-value">Delaware</div>
+        <div class="field-value">${EMAIL_CONFIG.companyOrganizedIn}</div>
         <div class="field-label">Organized In</div>
       </div>
       <div class="field-row">
-        <div class="field-value">Usman Javed</div>
+        <div class="field-value">${EMAIL_CONFIG.contactName}</div>
         <div class="field-label">Contact Name</div>
       </div>
       <div class="field-row">
@@ -790,15 +790,15 @@ Date                                        Date
         <div class="field-label">Contact Phone Number</div>
       </div>
       <div class="field-row">
-        <div class="field-value">uj@grovlabs.com</div>
+        <div class="field-value">${EMAIL_CONFIG.contactEmail}</div>
         <div class="field-label">Contact Email</div>
       </div>
       <div class="field-row">
-        <div class="field-value"></div>
+        <div class="field-value">${EMAIL_CONFIG.companyAddress1}</div>
         <div class="field-label">Business Address 1</div>
       </div>
       <div class="field-row">
-        <div class="field-value"></div>
+        <div class="field-value">${EMAIL_CONFIG.companyAddress2}</div>
         <div class="field-label">Business Address 2</div>
       </div>
     </div>
@@ -975,7 +975,7 @@ Date                                        Date
 
   <div class="msa-text">
     <p>
-      <strong>THIS MASTER SERVICES AGREEMENT</strong> ("MSA" or "Agreement") is dated <u>&nbsp;${today}&nbsp;</u>, by and between <strong>Grovlabs</strong>, a Delaware corporation located at ________________________ ("Grovlabs"), and <strong>${partner.legal_name}</strong>, a ${partner.organized_in || '____________'} located at ${partner.address_line1 || '____________'} ("Counterparty"), each a "Party" and together the "Parties."
+      <strong>THIS MASTER SERVICES AGREEMENT</strong> ("MSA" or "Agreement") is dated <u>&nbsp;${today}&nbsp;</u>, by and between <strong>Grovlabs</strong>, a ${EMAIL_CONFIG.companyOrganizedIn} limited liability company located at ________________________ ("Grovlabs"), and <strong>${partner.legal_name}</strong>, a ${partner.organized_in || '____________'} located at ${partner.address_line1 || '____________'} ("Counterparty"), each a "Party" and together the "Parties."
     </p>
 
     <h3>1. STRUCTURE AND ROLE DESIGNATION</h3>
@@ -1094,7 +1094,7 @@ Date                                        Date
 
     <h3>16. MISCELLANEOUS</h3>
     <p><strong>16.1 No waiver.</strong> No waiver, express or implied, of any provision or breach constitutes a continuing waiver of that or any other provision.</p>
-    <p><strong>16.2 Governing law and venue.</strong> This Agreement is governed by the laws of Delaware, without regard to conflict-of-law rules. The Parties submit to the exclusive jurisdiction of the courts of Delaware. The United Nations Convention on Contracts for the International Sale of Goods does not apply.</p>
+    <p><strong>16.2 Governing law and venue.</strong> This Agreement is governed by the laws of ${EMAIL_CONFIG.companyOrganizedIn}, without regard to conflict-of-law rules. The Parties submit to the exclusive jurisdiction of the courts of ${EMAIL_CONFIG.companyOrganizedIn}. The United Nations Convention on Contracts for the International Sale of Goods does not apply.</p>
     <p><strong>16.3 Assignment.</strong> Neither Party may assign this Agreement or any IO without the other Party's prior written consent, not to be unreasonably withheld, except to an affiliate or to a successor in a merger or sale of substantially all assets, provided the assignee assumes the obligations in writing.</p>
     <p><strong>16.4 Entire agreement and amendment.</strong> This Agreement, together with all IOs and addenda, is the entire agreement on this subject and supersedes prior negotiations and understandings. Amendment requires a writing signed by both Parties, except that lead type and pricing may be modified by email under Section 3(d).</p>
     <p><strong>16.5 Public statements.</strong> Neither Party shall issue a public statement or press release referencing the other Party without prior written consent.</p>
@@ -1230,7 +1230,7 @@ Date                                        Date
     <div class="party">
       <h3>Grovlabs</h3>
       <div class="party-field"><label>Legal Name</label><span>Grovlabs</span></div>
-      <div class="party-field"><label>Contact Name</label><span>Usman Javed</span></div>
+      <div class="party-field"><label>Contact Name</label><span>${EMAIL_CONFIG.contactName}</span></div>
       <div class="party-field"><label>Phone</label><span>+1 (754) 344-0773</span></div>
       <div class="party-field"><label>Email</label><span>uj@grovlabs.com</span></div>
     </div>

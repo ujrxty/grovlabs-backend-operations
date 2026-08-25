@@ -6,6 +6,10 @@ export const EMAIL_CONFIG = {
   companyName: 'GrovLabs Inc',
   companyShortName: 'GrovLabs',
   companyTagline: 'Performance Marketing',
+  companyLegalName: 'GrovLabs LLC',
+  companyOrganizedIn: 'Missouri',
+  companyAddress1: '8301 State Line Rd Ste 220',
+  companyAddress2: 'Kansas City, MO 64114',
 
   // Contact Info
   contactEmail: 'uj@grovlabs.com',
