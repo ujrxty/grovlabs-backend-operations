@@ -381,14 +381,17 @@ export function IOContent() {
                         </span>
                       </div>
                     </div>
-                    {detail?.status === 'pending_counter' && (
-                      <div className="pt-1">
+                    <div className="flex gap-2 pt-1">
+                      <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => window.open(`${process.env.NEXT_PUBLIC_QA_AGENT_URL || 'http://localhost:3003'}/onboarding/admin/io/${detail.id}/download`, '_blank')}>
+                        <Download className="h-3 w-3 mr-1.5" /> Download
+                      </Button>
+                      {detail?.status === 'pending_counter' && (
                         <Button size="sm" className="text-xs h-7" onClick={() => countersignIO(detail.id, detail.io_number)} disabled={countersigningIO}>
                           {countersigningIO ? <Loader2 className="h-3 w-3 mr-1.5 animate-spin" /> : <PenLine className="h-3 w-3 mr-1.5" />}
                           Countersign IO
                         </Button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
 
                   {/* LPA Document Card */}

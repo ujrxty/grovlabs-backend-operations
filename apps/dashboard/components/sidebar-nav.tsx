@@ -19,6 +19,7 @@ import {
   UsersRound,
   ScrollText,
   Sliders,
+  Network,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -28,6 +29,7 @@ const navItems = [
   { href: '/vendors', label: 'Vendors', icon: Users },
   { href: '/campaigns', label: 'Campaigns', icon: Megaphone },
   { href: '/insertion-orders', label: 'Insertion Orders', icon: FileText },
+  { href: '/network-partners', label: 'Network Partners', icon: Network },
   { href: '/call-qa', label: 'Call QA Logs', icon: PhoneCall },
   { href: '/qa-settings', label: 'QA Settings', icon: Sliders },
   { href: '/non-conversion-qa', label: 'Non-Conversion QA', icon: PhoneOff },

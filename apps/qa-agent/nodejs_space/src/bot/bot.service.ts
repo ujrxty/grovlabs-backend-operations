@@ -87,6 +87,14 @@ export class BotService {
           await this.sendMessage(chatId, result);
         }
         await this.answerCallback(botToken, callbackId, result ? 'Done' : 'Processing...');
+      }
+      // N2N partner application callbacks (n2na_ = approve, n2nr_ = reject)
+      else if (data.match(/^n2n[ar]_/)) {
+        const result = await this.handleN2NCallback(data);
+        if (result) {
+          await this.sendMessage(chatId, result);
+        }
+        await this.answerCallback(botToken, callbackId, result ? 'Done' : 'Processing...');
       } else {
         await this.answerCallback(botToken, callbackId, 'Unknown action');
       }
@@ -104,6 +112,81 @@ export class BotService {
       });
     } catch (e: any) {
       this.logger.error(`answerCallbackQuery failed: ${e.message}`);
+    }
+  }
+
+  private async handleN2NCallback(data: string): Promise<string> {
+    try {
+      // Dynamic import to avoid circular dependency
+      const { N2NApplicationService } = await import('../n2n/n2n-application.service.js');
+      const { PrismaService } = await import('../prisma/prisma.service.js');
+      const { TelegramService } = await import('../telegram/telegram.service.js');
+
+      // We need to get the service instance - for now use prisma directly
+      const prisma = new PrismaService();
+      await prisma.onModuleInit();
+
+      const shortId = data.slice(5); // Remove 'n2na_' or 'n2nr_'
+      const isApprove = data.startsWith('n2na_');
+
+      // Find application by short ID
+      const apps = await prisma.network_partner_application.findMany({
+        where: { id: { startsWith: shortId } },
+      });
+
+      if (apps.length === 0) {
+        return `Application not found: ${shortId}`;
+      }
+
+      const app = apps[0];
+
+      if (app.status !== 'pending') {
+        return `Application already ${app.status}`;
+      }
+
+      if (isApprove) {
+        // Create partner and update application
+        const partner = await prisma.network_partner.create({
+          data: {
+            legal_name: app.company_name,
+            organized_in: app.organized_in,
+            contact_name: app.contact_name,
+            contact_email: app.contact_email,
+            contact_phone: app.contact_phone,
+            address_line1: app.address_line1,
+            address_line2: app.address_line2,
+            can_buy: app.wants_to_buy,
+            can_sell: app.wants_to_sell,
+            notes: `Applied via website. Verticals: ${app.verticals || 'N/A'}`,
+          },
+        });
+
+        await prisma.network_partner_application.update({
+          where: { id: app.id },
+          data: {
+            status: 'approved',
+            reviewed_at: new Date(),
+            reviewed_by: 'Telegram',
+            partner_id: partner.id,
+          },
+        });
+
+        return `✅ N2N Partner approved: ${app.company_name}\nPartner ID: ${partner.id.slice(0, 8)}`;
+      } else {
+        await prisma.network_partner_application.update({
+          where: { id: app.id },
+          data: {
+            status: 'rejected',
+            reviewed_at: new Date(),
+            reviewed_by: 'Telegram',
+          },
+        });
+
+        return `❌ N2N Partner rejected: ${app.company_name}`;
+      }
+    } catch (err: any) {
+      this.logger.error(`N2N callback error: ${err.message}`);
+      return `Error: ${err.message}`;
     }
   }
 

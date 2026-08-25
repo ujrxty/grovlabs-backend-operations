@@ -89,7 +89,7 @@ ${this.escapeHtml(payload.aiSummary)}
     }
   }
 
-  async sendMessage(text: string): Promise<boolean> {
+  async sendMessage(text: string, keyboard?: any): Promise<boolean> {
     const botToken = this.configService.get<string>('TELEGRAM_BOT_TOKEN', '');
     const chatId = this.configService.get<string>('TELEGRAM_CHAT_ID', '');
 
@@ -100,12 +100,16 @@ ${this.escapeHtml(payload.aiSummary)}
 
     try {
       const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-      await axios.post(url, {
+      const payload: any = {
         chat_id: chatId,
         text,
-        parse_mode: 'HTML',
+        parse_mode: 'Markdown',
         disable_web_page_preview: true,
-      });
+      };
+      if (keyboard) {
+        payload.reply_markup = keyboard;
+      }
+      await axios.post(url, payload);
       return true;
     } catch (error: any) {
       this.logger.error(`Failed to send Telegram message: ${error.message}`);

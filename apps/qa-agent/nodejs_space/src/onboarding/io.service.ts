@@ -39,7 +39,7 @@ export class IOService {
   /** Build IO terms from campaign — comprehensive legal protection */
   buildTerms(campaign: any, vendorName: string, specialTerms?: string): string {
     const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    const billingDesc = 'Bi-Weekly Net 15 (all billable activity for each two-week period is payable 15 days after the close of that period; if the due date falls on a weekend or holiday, payment is due the next business day)';
+    const billingDesc = this.formatBillingCycle(campaign.billing_cycle);
 
     const lines: (string | null)[] = [
       `AFFILIATE INSERTION ORDER`,
@@ -235,7 +235,8 @@ export class IOService {
 
   /** Build IO terms for multiple campaigns — one IO covering all */
   buildMultiCampaignTerms(campaigns: any[], vendorName: string, specialTerms?: string): string {
-    const billingDesc = 'Bi-Weekly Net 15 (all billable activity for each two-week period is payable 15 days after the close of that period; if the due date falls on a weekend or holiday, payment is due the next business day)';
+    // Use billing cycle from first campaign, or default
+    const billingDesc = this.formatBillingCycle(campaigns[0]?.billing_cycle);
 
     // Build campaign specs table
     const campaignSpecs: string[] = [];
@@ -449,6 +450,22 @@ export class IOService {
       per_qualified_call: 'per qualified call',
     };
     return map[type] || type;
+  }
+
+  private formatBillingCycle(cycle?: string): string {
+    const descriptions: Record<string, string> = {
+      'weekly': 'Weekly Net 7 (all billable activity for each week is payable 7 days after the close of that week)',
+      'biweekly': 'Bi-Weekly Net 15 (all billable activity for each two-week period is payable 15 days after the close of that period)',
+      'bi-weekly': 'Bi-Weekly Net 15 (all billable activity for each two-week period is payable 15 days after the close of that period)',
+      'bi-weekly_net15': 'Bi-Weekly Net 15 (all billable activity for each two-week period is payable 15 days after the close of that period)',
+      'monthly': 'Monthly Net 30 (all billable activity for each month is payable 30 days after the close of that month)',
+      'net7': 'Net 7 (payable 7 days from invoice date)',
+      'net15': 'Net 15 (payable 15 days from invoice date)',
+      'net30': 'Net 30 (payable 30 days from invoice date)',
+    };
+    const normalized = (cycle || '').toLowerCase().trim().replace(/\s+/g, '_');
+    // Return mapped description, or the raw value if provided, or generic fallback
+    return descriptions[normalized] || cycle || 'As specified in campaign terms';
   }
 
   /** Create IO for approved vendor + single campaign */
@@ -893,7 +910,7 @@ This Agreement may be executed in two or more counterparts, each of which will b
     <tr><td>Contact</td><td>${contactName}</td></tr>
     <tr><td>Campaign(s)</td><td>${campaignNames}</td></tr>
     <tr><td>Payout</td><td>$${Number(io.payout).toFixed(2)} ${this.formatPayoutType(io.payout_type)}</td></tr>
-    <tr><td>Billing Cycle</td><td>${io.billing_cycle || 'Bi-Weekly Net 15'}</td></tr>
+    <tr><td>Billing Cycle</td><td>${this.formatBillingCycle(io.billing_cycle)}</td></tr>
     <tr><td>Status</td><td><span class="status-badge ${io.status === 'active' ? 'status-active' : 'status-pending'}">${statusLabel}</span></td></tr>
     ${io.effective_date ? `<tr><td>Effective Date</td><td>${new Date(io.effective_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td></tr>` : ''}
   </table>

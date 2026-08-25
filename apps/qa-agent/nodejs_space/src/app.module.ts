@@ -22,6 +22,7 @@ import { VendorStatsModule } from './vendor-stats/vendor-stats.module.js';
 import { SalesQaModule } from './sales-qa/sales-qa.module.js';
 import { NonConversionQaModule } from './non-conversion-qa/non-conversion-qa.module.js';
 import { QASettingsModule } from './qa-settings/qa-settings.module.js';
+import { N2NModule } from './n2n/n2n.module.js';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { QASettingsModule } from './qa-settings/qa-settings.module.js';
     SalesQaModule,
     NonConversionQaModule,
     QASettingsModule,
+    N2NModule,
   ],
 })
 export class AppModule {}

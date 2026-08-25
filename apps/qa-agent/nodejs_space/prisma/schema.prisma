@@ -529,3 +529,118 @@ model system_settings {
   settings_json String
   updated_at    DateTime @default(now()) @updatedAt
 }
+
+// ============================================
+// N2N Network Partner Models
+// ============================================
+
+model network_partner {
+  id                String   @id @default(uuid())
+  legal_name        String
+  organized_in      String?
+  contact_name      String
+  contact_phone     String
+  contact_email     String   @unique
+  address_line1     String?
+  address_line2     String?
+  can_buy           Boolean  @default(false)
+  can_sell          Boolean  @default(false)
+  status            String   @default("active")
+  notes             String?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  network_ios       network_io[]
+  application       network_partner_application?
+
+  @@index([status])
+  @@index([contact_email])
+}
+
+model network_partner_application {
+  id                String    @id @default(uuid())
+  company_name      String
+  organized_in      String?
+  contact_name      String
+  contact_email     String
+  contact_phone     String
+  address_line1     String?
+  address_line2     String?
+  website           String?
+
+  // What they want to do
+  wants_to_buy      Boolean   @default(false)
+  wants_to_sell     Boolean   @default(false)
+
+  // Their business details
+  verticals         String?   // comma-separated: medicare, solar, legal, etc.
+  estimated_volume  String?   // daily/weekly volume
+  traffic_sources   String?   // where their traffic comes from
+  current_partners  String?   // who they currently work with
+
+  // Additional info
+  comments          String?
+  referred_by       String?
+
+  // Agreement
+  terms_agreed      Boolean   @default(false)
+  agreed_ip         String?
+  agreed_at         DateTime?
+
+  // Status tracking
+  status            String    @default("pending") // pending, approved, rejected
+  status_reason     String?
+  reviewed_at       DateTime?
+  reviewed_by       String?
+  status_token      String    @unique @default(uuid())
+
+  // Link to created partner profile
+  partner_id        String?   @unique
+  partner           network_partner? @relation(fields: [partner_id], references: [id])
+
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  @@index([status])
+  @@index([contact_email])
+  @@index([status_token])
+}
+
+model network_io {
+  id                    String    @id @default(uuid())
+  io_number             String    @unique
+  network_id            String
+  grovlabs_role         String    // "buyer" or "seller"
+  industry              String?
+  lead_type             String?
+  geo                   String?
+  daily_cap             String?
+  concurrency           String?
+  payment_terms         String?
+  start_date            DateTime?
+  end_date              DateTime?
+  compensation_type     String?
+  compensation_amount   Decimal?  @db.Decimal(10, 2)
+  minimum_duration      Int?
+  hours_of_operation    String?
+  payout_threshold      Decimal?  @db.Decimal(10, 2)
+  other_terms           String?
+  io_terms              String
+  msa_terms             String
+  status                String    @default("pending_network")
+  sign_token            String    @unique
+  network_signed_at     DateTime?
+  network_sign_name     String?
+  network_sign_title    String?
+  network_sign_ip       String?
+  counter_signed_at     DateTime?
+  counter_sign_name     String?
+  counter_sign_title    String?
+  counter_sign_ip       String?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+  network               network_partner @relation(fields: [network_id], references: [id])
+
+  @@index([network_id])
+  @@index([status])
+  @@index([sign_token])
+}
