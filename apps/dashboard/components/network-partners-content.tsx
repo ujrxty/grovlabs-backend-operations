@@ -33,7 +33,7 @@ import {
 import {
   Plus, RefreshCw, Search, Building2, FileText, ArrowLeftRight,
   ChevronDown, ChevronRight, Send, CheckCircle, Clock, ExternalLink,
-  Inbox, Check, X,
+  Inbox, Check, X, Pencil, Trash2,
 } from 'lucide-react'
 
 const QA_AGENT_URL = process.env.NEXT_PUBLIC_QA_AGENT_URL || 'http://localhost:3003'
@@ -293,6 +293,36 @@ export function NetworkPartnersContent() {
     setSubmitting(false)
   }
 
+  const handleDeleteApp = async (id: string) => {
+    if (!confirm('Delete this application?')) return
+    try {
+      await fetch(`${QA_AGENT_URL}/n2n/applications/${id}`, { method: 'DELETE' })
+      fetchApplications()
+    } catch (e) {
+      console.error('Failed to delete application:', e)
+    }
+  }
+
+  const handleDeletePartner = async (id: string) => {
+    if (!confirm('Delete this partner and all their IOs?')) return
+    try {
+      await fetch(`${QA_AGENT_URL}/n2n/partners/${id}`, { method: 'DELETE' })
+      fetchPartners()
+    } catch (e) {
+      console.error('Failed to delete partner:', e)
+    }
+  }
+
+  const handleDeleteIO = async (ioId: string) => {
+    if (!confirm('Delete this IO?')) return
+    try {
+      await fetch(`${QA_AGENT_URL}/n2n/ios/${ioId}`, { method: 'DELETE' })
+      fetchPartners()
+    } catch (e) {
+      console.error('Failed to delete IO:', e)
+    }
+  }
+
   const pendingApps = applications.filter(a => a.status === 'pending')
 
   return (
@@ -373,28 +403,38 @@ export function NetworkPartnersContent() {
                             Submitted: {new Date(app.created_at).toLocaleString()}
                           </p>
                         </div>
-                        {isPending && (
-                          <div className="flex gap-2 shrink-0">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                              onClick={() => handleRejectApp(app.id)}
-                              disabled={submitting}
-                            >
-                              <X className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handleApproveApp(app.id)}
-                              disabled={submitting}
-                            >
-                              <Check className="h-4 w-4 mr-1" />
-                              Approve
-                            </Button>
-                          </div>
-                        )}
+                        <div className="flex gap-2 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                            onClick={() => handleDeleteApp(app.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          {isPending && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                onClick={() => handleRejectApp(app.id)}
+                                disabled={submitting}
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Reject
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleApproveApp(app.id)}
+                                disabled={submitting}
+                              >
+                                <Check className="h-4 w-4 mr-1" />
+                                Approve
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -471,8 +511,21 @@ export function NetworkPartnersContent() {
                       {partner.contact_name} &middot; {partner.contact_email}
                     </p>
                   </div>
-                  <div className="text-right text-sm text-muted-foreground">
-                    {partner.network_ios?.length || 0} IOs
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {partner.network_ios?.length || 0} IOs
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeletePartner(partner.id)
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
 
@@ -562,6 +615,17 @@ export function NetworkPartnersContent() {
                                     Executed
                                   </Badge>
                                 )}
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDeleteIO(io.id)
+                                  }}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
                               </div>
                             </div>
                           )

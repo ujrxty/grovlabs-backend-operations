@@ -348,6 +348,34 @@ export class N2NApplicationService {
     return updated;
   }
 
+  async updateApplication(id: string, data: Partial<{
+    company_name: string;
+    organized_in: string;
+    contact_name: string;
+    contact_email: string;
+    contact_phone: string;
+    address_line1: string;
+    address_line2: string;
+    website: string;
+    wants_to_buy: boolean;
+    wants_to_sell: boolean;
+    verticals: string;
+    estimated_volume: string;
+    traffic_sources: string;
+    current_partners: string;
+    comments: string;
+    referred_by: string;
+  }>) {
+    return this.prisma.network_partner_application.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async deleteApplication(id: string) {
+    return this.prisma.network_partner_application.delete({ where: { id } });
+  }
+
   private buildIOTerms(partner: any, data: any): string {
     const buyerChecked = data.grovlabs_role === 'buyer' ? '☑' : '☐';
     const sellerChecked = data.grovlabs_role === 'seller' ? '☑' : '☐';

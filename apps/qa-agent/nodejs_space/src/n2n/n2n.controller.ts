@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Param, Body, Query, Req, Res, Logger, HttpCode,
+  Controller, Get, Post, Patch, Delete, Param, Body, Query, Req, Res, Logger, HttpCode,
   BadRequestException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
@@ -204,6 +204,14 @@ export class N2NController {
     return this.svc.updatePartner(id, dto);
   }
 
+  @Delete('partners/:id')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Delete a network partner' })
+  @ApiParam({ name: 'id', description: 'Partner ID' })
+  async deletePartner(@Param('id') id: string) {
+    return this.svc.deletePartner(id);
+  }
+
   // ==================== IO MANAGEMENT ====================
 
   @Get('ios')
@@ -232,6 +240,25 @@ export class N2NController {
       start_date: dto.start_date ? new Date(dto.start_date) : undefined,
       end_date: dto.end_date ? new Date(dto.end_date) : undefined,
     });
+  }
+
+  @Patch('ios/:id')
+  @ApiOperation({ summary: 'Update an IO' })
+  @ApiParam({ name: 'id', description: 'IO ID' })
+  async updateIO(@Param('id') id: string, @Body() dto: Partial<CreateIODto>) {
+    return this.svc.updateIO(id, {
+      ...dto,
+      start_date: dto.start_date ? new Date(dto.start_date) : undefined,
+      end_date: dto.end_date ? new Date(dto.end_date) : undefined,
+    });
+  }
+
+  @Delete('ios/:id')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Delete an IO' })
+  @ApiParam({ name: 'id', description: 'IO ID' })
+  async deleteIO(@Param('id') id: string) {
+    return this.svc.deleteIO(id);
   }
 
   // ==================== IO SIGNING (public, token-authenticated) ====================

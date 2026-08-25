@@ -85,6 +85,11 @@ export class N2NService {
     });
   }
 
+  async deletePartner(id: string) {
+    await this.prisma.network_io.deleteMany({ where: { network_id: id } });
+    return this.prisma.network_partner.delete({ where: { id } });
+  }
+
   // ============================================
   // IO Generation
   // ============================================
@@ -191,6 +196,35 @@ export class N2NService {
       include: { network: true },
       orderBy: { created_at: 'desc' },
     });
+  }
+
+  async updateIO(id: string, data: Partial<{
+    grovlabs_role: 'buyer' | 'seller';
+    industry: string;
+    lead_type: string;
+    geo: string;
+    daily_cap: string;
+    concurrency: string;
+    payment_terms: string;
+    start_date: Date;
+    end_date: Date;
+    compensation_type: string;
+    compensation_amount: number;
+    minimum_duration: number;
+    hours_of_operation: string;
+    payout_threshold: number;
+    other_terms: string;
+    status: string;
+  }>) {
+    return this.prisma.network_io.update({
+      where: { id },
+      data,
+      include: { network: true },
+    });
+  }
+
+  async deleteIO(id: string) {
+    return this.prisma.network_io.delete({ where: { id } });
   }
 
   async signIO(token: string, name: string, title?: string, ip?: string) {

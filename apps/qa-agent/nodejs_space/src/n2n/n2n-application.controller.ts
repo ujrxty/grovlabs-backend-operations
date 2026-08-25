@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Param, Body, Query, Req, Logger, HttpCode,
+  Controller, Get, Post, Patch, Delete, Param, Body, Query, Req, Logger, HttpCode,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { ApiTags, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger';
@@ -139,5 +139,23 @@ export class N2NApplicationController {
     @Body() body: { reason?: string; reviewed_by?: string },
   ) {
     return this.svc.rejectApplication(id, body.reason, body.reviewed_by);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update an application' })
+  @ApiParam({ name: 'id', description: 'Application ID' })
+  async updateApplication(
+    @Param('id') id: string,
+    @Body() body: Partial<CreateApplicationDto>,
+  ) {
+    return this.svc.updateApplication(id, body);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Delete an application' })
+  @ApiParam({ name: 'id', description: 'Application ID' })
+  async deleteApplication(@Param('id') id: string) {
+    return this.svc.deleteApplication(id);
   }
 }
