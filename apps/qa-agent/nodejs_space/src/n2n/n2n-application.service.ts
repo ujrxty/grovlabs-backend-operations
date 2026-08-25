@@ -4,27 +4,19 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { DiscordService } from '../discord/discord.service.js';
 import { EMAIL_CONFIG } from '../config/email.config.js';
 import { randomBytes } from 'crypto';
-import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 @Injectable()
 export class N2NApplicationService {
   private readonly logger = new Logger(N2NApplicationService.name);
-  private transporter: nodemailer.Transporter;
+  private resend: Resend;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly discord: DiscordService,
     private readonly config: ConfigService,
   ) {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    this.resend = new Resend(process.env.RESEND_API_KEY);
   }
 
   private generateIONumber(): string {
@@ -273,8 +265,8 @@ export class N2NApplicationService {
 </div>`;
 
     try {
-      await this.transporter.sendMail({
-        from: `"${EMAIL_CONFIG.companyName}" <${process.env.SMTP_FROM_EMAIL || EMAIL_CONFIG.contactEmail}>`,
+      await this.resend.emails.send({
+        from: `${EMAIL_CONFIG.companyName} <${process.env.RESEND_FROM_EMAIL || 'noreply@grovlabs.com'}>`,
         to: email,
         replyTo: EMAIL_CONFIG.contactEmail,
         subject: `Partnership Approved — ${companyName}`,
@@ -311,8 +303,8 @@ export class N2NApplicationService {
 </div>`;
 
     try {
-      await this.transporter.sendMail({
-        from: `"${EMAIL_CONFIG.companyName}" <${process.env.SMTP_FROM_EMAIL || EMAIL_CONFIG.contactEmail}>`,
+      await this.resend.emails.send({
+        from: `${EMAIL_CONFIG.companyName} <${process.env.RESEND_FROM_EMAIL || 'noreply@grovlabs.com'}>`,
         to: email,
         replyTo: EMAIL_CONFIG.contactEmail,
         subject: `Welcome to ${EMAIL_CONFIG.companyShortName} — ${companyName}`,
