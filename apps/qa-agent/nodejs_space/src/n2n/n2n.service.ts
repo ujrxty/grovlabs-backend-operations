@@ -1,17 +1,22 @@
 import { Injectable, Logger, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { DiscordService } from '../discord/discord.service.js';
+import { EMAIL_CONFIG } from '../config/email.config.js';
 import { randomBytes } from 'crypto';
+import { Resend } from 'resend';
 
 @Injectable()
 export class N2NService {
   private readonly logger = new Logger(N2NService.name);
   private appService: any = null; // Lazy-loaded to avoid circular dep
+  private resend: Resend;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly discord: DiscordService,
-  ) {}
+  ) {
+    this.resend = new Resend(process.env.RESEND_API_KEY);
+  }
 
   setApplicationService(svc: any): void {
     this.appService = svc;
@@ -334,9 +339,37 @@ export class N2NService {
 
   async sendSignRequestEmail(id: string) {
     const io = await this.getIO(id);
-    const signUrl = `${process.env.VENDOR_PORTAL_URL || 'https://partners.grovlabs.com'}/n2n/sign/${io.sign_token}`;
-    this.logger.log(`Sign request for N2N IO ${io.io_number}: ${signUrl}`);
-    return { success: true, io_number: io.io_number, sign_url: signUrl };
+    const signUrl = `${process.env.VENDOR_PORTAL_URL || 'https://portal.grovlabs.com'}/n2n/sign/${io.sign_token}`;
+
+    const html = `
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a;">
+  <div style="border-bottom:3px solid #1a1a1a;padding-bottom:16px;margin-bottom:24px;">
+    <h2 style="margin:0;font-size:20px;font-weight:600;">Partnership Agreement Ready for Signature</h2>
+  </div>
+  <p>Hi ${io.network.contact_name},</p>
+  <p>Your Master Services Agreement and Insertion Order (<b>${io.io_number}</b>) with ${EMAIL_CONFIG.companyShortName} is ready for your review and signature.</p>
+  <p style="margin:24px 0;">
+    <a href="${signUrl}" style="display:inline-block;background:#1a1a1a;color:#fff;padding:12px 28px;border-radius:4px;text-decoration:none;font-weight:500;">Review &amp; Sign Agreement</a>
+  </p>
+  <p style="color:#718096;">Once you sign, we'll countersign and your partnership will be active.</p>
+  <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;"/>
+  <p style="color:#718096;font-size:13px;">${EMAIL_CONFIG.companyName} — ${EMAIL_CONFIG.companyTagline}</p>
+</div>`;
+
+    try {
+      await this.resend.emails.send({
+        from: `${EMAIL_CONFIG.companyName} <${process.env.RESEND_FROM_EMAIL || 'noreply@grovlabs.com'}>`,
+        to: io.network.contact_email,
+        replyTo: EMAIL_CONFIG.contactEmail,
+        subject: `Sign Your Partnership Agreement — ${io.io_number}`,
+        html,
+      });
+      this.logger.log(`Sign request email sent to ${io.network.contact_email} for IO ${io.io_number}`);
+      return { success: true, io_number: io.io_number, sign_url: signUrl };
+    } catch (err: any) {
+      this.logger.error(`Failed to send sign request email: ${err.message}`);
+      return { success: false, error: err.message, sign_url: signUrl };
+    }
   }
 
   // ============================================
