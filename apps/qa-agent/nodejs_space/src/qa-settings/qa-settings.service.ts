@@ -145,7 +145,7 @@ export class QASettingsService {
     const settings = this.cachedSettings || DEFAULT_SETTINGS;
     const normalized = campaignName.toLowerCase();
     for (const [key, value] of Object.entries(settings.durationThresholds)) {
-      if (key !== 'default' && normalized.includes(key)) {
+      if (key !== 'default' && normalized.includes(key.toLowerCase())) {
         return value;
       }
     }
