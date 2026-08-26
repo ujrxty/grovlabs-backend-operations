@@ -5,7 +5,7 @@ import { TranscriptionService } from '../transcription/transcription.service.js'
 import { AnalysisService, AnalysisResult } from '../analysis/analysis.service.js';
 import { DiscordService } from '../discord/discord.service.js';
 import { JobQueueService } from '../jobs/job-queue.service.js';
-import { CAMPAIGN_DURATION_THRESHOLDS } from '../config/constants.js';
+import { QASettingsService } from '../qa-settings/qa-settings.service.js';
 
 @Injectable()
 export class CallsService {
@@ -18,6 +18,7 @@ export class CallsService {
     private readonly analysis: AnalysisService,
     private readonly discord: DiscordService,
     private readonly jobQueue: JobQueueService,
+    private readonly qaSettings: QASettingsService,
   ) {
     // Register the call processing handler
     this.jobQueue.registerHandler('process_call', (data) => this.processCall(data));
@@ -137,8 +138,9 @@ export class CallsService {
         affiliate?.high_sensitivity_until != null &&
         new Date(affiliate.high_sensitivity_until) > new Date();
 
-      // Step 3: Duration threshold check
-      const threshold = this.getDurationThreshold(campaignName);
+      // Step 3: Duration threshold check (load settings from DB)
+      await this.qaSettings.getSettings();
+      const threshold = this.qaSettings.getDurationThreshold(campaignName);
       this.logger.log(`Call ${trackdriveCallId} threshold check: duration=${duration}s, threshold=${threshold}s, campaign=${campaignName}, highSensitivity=${isHighSensitivity}`);
       if (duration < threshold && !isHighSensitivity) {
         this.logger.log(
@@ -284,16 +286,6 @@ export class CallsService {
       }).catch(() => {});
       throw error; // Re-throw for retry
     }
-  }
-
-  private getDurationThreshold(campaignName: string): number {
-    const normalized = campaignName.toLowerCase();
-    for (const [key, value] of Object.entries(CAMPAIGN_DURATION_THRESHOLDS)) {
-      if (key !== 'default' && normalized.includes(key)) {
-        return value;
-      }
-    }
-    return CAMPAIGN_DURATION_THRESHOLDS.default;
   }
 
   async getFlaggedCalls(options: {

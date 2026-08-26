@@ -4,9 +4,10 @@ import { TrackDriveModule } from '../trackdrive/trackdrive.module.js';
 import { TranscriptionModule } from '../transcription/transcription.module.js';
 import { AnalysisModule } from '../analysis/analysis.module.js';
 import { DiscordModule } from '../discord/discord.module.js';
+import { QASettingsModule } from '../qa-settings/qa-settings.module.js';
 
 @Module({
-  imports: [TrackDriveModule, TranscriptionModule, AnalysisModule, DiscordModule],
+  imports: [TrackDriveModule, TranscriptionModule, AnalysisModule, DiscordModule, QASettingsModule],
   providers: [CallsService],
   exports: [CallsService],
 })
