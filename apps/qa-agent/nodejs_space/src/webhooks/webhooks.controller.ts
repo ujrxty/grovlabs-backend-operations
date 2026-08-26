@@ -2,6 +2,7 @@ import { Controller, Post, Get, Body, Headers, Query, Logger, HttpCode, HttpStat
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CallsService } from '../calls/calls.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 import { Request } from 'express';
 
 @ApiTags('Webhooks')
@@ -12,6 +13,7 @@ export class WebhooksController {
   constructor(
     private readonly callsService: CallsService,
     private readonly trackdrive: TrackDriveService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Get('trackdrive')
@@ -125,6 +127,44 @@ export class WebhooksController {
       this.logger.error(`Failed to list recent calls: ${error.message}`);
       return { error: error.message };
     }
+  }
+
+  @Post('fix-durations')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Fix duration for old calls by extracting from trackdrive_data' })
+  @ApiResponse({ status: 200, description: 'Durations fixed' })
+  async fixDurations() {
+    this.logger.log('Starting duration fix for old calls...');
+
+    // Get all calls with duration=0 that have trackdrive_data
+    const calls = await this.prisma.call.findMany({
+      where: { duration: 0 },
+      select: { id: true, trackdrive_data: true },
+    });
+
+    let fixed = 0;
+    for (const call of calls) {
+      const data = call.trackdrive_data as any;
+      if (!data) continue;
+
+      const duration = Number(data.total_duration) || Number(data.answered_duration) || Number(data.duration) || 0;
+      if (duration > 0) {
+        await this.prisma.call.update({
+          where: { id: call.id },
+          data: { duration },
+        });
+        fixed++;
+        this.logger.log(`Fixed call ${call.id}: duration=${duration}s`);
+      }
+    }
+
+    this.logger.log(`Duration fix complete: ${fixed}/${calls.length} calls updated`);
+    return {
+      success: true,
+      totalWithZeroDuration: calls.length,
+      fixed,
+      message: `Updated ${fixed} calls with correct duration`
+    };
   }
 
   @Post('test/process-call')
