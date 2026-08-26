@@ -14,27 +14,44 @@ export class WebhooksController {
     private readonly trackdrive: TrackDriveService,
   ) {}
 
+  @Get('trackdrive')
+  @ApiOperation({ summary: 'Receive TrackDrive webhook events (GET)' })
+  @ApiResponse({ status: 200, description: 'Webhook received successfully' })
+  async handleTrackdriveWebhookGet(
+    @Req() req: Request,
+    @Query() query: Record<string, string>,
+  ) {
+    return this.processTrackdriveWebhook(req, query, {});
+  }
+
   @Post('trackdrive')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Receive TrackDrive webhook events' })
+  @ApiOperation({ summary: 'Receive TrackDrive webhook events (POST)' })
   @ApiBody({ description: 'TrackDrive webhook payload', schema: { type: 'object' } })
   @ApiResponse({ status: 200, description: 'Webhook received successfully' })
   @ApiResponse({ status: 400, description: 'Invalid webhook payload' })
-  async handleTrackdriveWebhook(
+  async handleTrackdriveWebhookPost(
     @Req() req: Request,
     @Body() body: any,
     @Headers() headers: Record<string, string>,
     @Query() query: Record<string, string>,
   ) {
-    this.logger.log(`TrackDrive webhook - URL: ${req.originalUrl}`);
-    this.logger.log(`TrackDrive webhook - Content-Type: ${headers['content-type']}`);
+    this.logger.log(`TrackDrive POST - Content-Type: ${headers['content-type']}`);
+    return this.processTrackdriveWebhook(req, query, body);
+  }
+
+  private async processTrackdriveWebhook(
+    req: Request,
+    query: Record<string, string>,
+    body: any,
+  ) {
+    this.logger.log(`TrackDrive webhook - Method: ${req.method}, URL: ${req.originalUrl}`);
     this.logger.log(`TrackDrive webhook - Body keys: ${Object.keys(body || {}).join(', ') || 'EMPTY'}`);
     this.logger.log(`TrackDrive webhook - Query keys: ${Object.keys(query || {}).join(', ') || 'EMPTY'}`);
-    this.logger.log(`TrackDrive webhook - req.query: ${JSON.stringify(req.query)}`);
-    this.logger.log(`TrackDrive webhook received: ${JSON.stringify(body).substring(0, 500)}`);
 
     // Merge body and query params (TrackDrive might send data in either)
     const payload = { ...query, ...body };
+    this.logger.log(`TrackDrive payload total_duration=${payload.total_duration}, recording_url=${payload.recording_url ? 'present' : 'missing'}`);
 
     try {
       // TrackDrive outgoing webhooks send call data directly with fields like:

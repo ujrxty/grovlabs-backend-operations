@@ -85,7 +85,8 @@ export class CallsService {
       }
 
       // Map fields - support both webhook query params and API response formats
-      const duration = Number(callData?.total_duration) || Number(callData?.answered_duration) || 0;
+      const duration = Number(callData?.total_duration) || Number(callData?.answered_duration) || Number(callData?.duration) || Number(callData?.call_duration) || 0;
+      this.logger.log(`Call ${trackdriveCallId} duration: total_duration=${callData?.total_duration}, answered_duration=${callData?.answered_duration} => final ${duration}s`);
       const recordingUrl = callData?.recording_url || '';
       const affiliateTrackdriveId = String(callData?.traffic_source_id || '');
       const affiliateName = callData?.traffic_source_name || callData?.traffic_source || 'Unknown';
@@ -138,6 +139,7 @@ export class CallsService {
 
       // Step 3: Duration threshold check
       const threshold = this.getDurationThreshold(campaignName);
+      this.logger.log(`Call ${trackdriveCallId} threshold check: duration=${duration}s, threshold=${threshold}s, campaign=${campaignName}, highSensitivity=${isHighSensitivity}`);
       if (duration < threshold && !isHighSensitivity) {
         this.logger.log(
           `Call ${trackdriveCallId} skipped: duration ${duration}s < threshold ${threshold}s`,
