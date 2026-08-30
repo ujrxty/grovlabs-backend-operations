@@ -105,34 +105,36 @@ export function CallQAContent() {
                     <Zap className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">OpenAI Credits</p>
-                    <div className="flex items-center gap-1">
-                      <span className="text-lg font-semibold">{openaiUsage.used}</span>
-                      <span className="text-muted-foreground">/</span>
-                      {editingLimit ? (
-                        <div className="flex items-center gap-1">
-                          <Input
-                            type="number"
-                            className="w-20 h-7 text-sm"
-                            value={newLimit}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewLimit(e.target.value)}
-                            onKeyDown={(e: React.KeyboardEvent) => e.key === 'Enter' && saveLimit()}
-                            autoFocus
-                          />
-                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={saveLimit}>
-                            <Check className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => { setNewLimit(openaiUsage.limit.replace('$', '')); setEditingLimit(true) }}
-                          className="text-lg font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1 group"
-                        >
-                          {openaiUsage.limit}
-                          <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-50" />
-                        </button>
-                      )}
-                    </div>
+                    <p className="text-xs text-muted-foreground">Used This Month</p>
+                    <p className="text-lg font-semibold">{openaiUsage.used}</p>
+                  </div>
+                  <div className="h-8 w-px bg-border" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total Credits</p>
+                    {editingLimit ? (
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground">$</span>
+                        <Input
+                          type="number"
+                          className="w-16 h-7 text-sm"
+                          value={newLimit}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewLimit(e.target.value)}
+                          onKeyDown={(e: React.KeyboardEvent) => e.key === 'Enter' && saveLimit()}
+                          autoFocus
+                        />
+                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={saveLimit}>
+                          <Check className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setNewLimit(openaiUsage.limit.replace('$', '')); setEditingLimit(true) }}
+                        className="text-lg font-semibold hover:text-primary flex items-center gap-1 group"
+                      >
+                        {openaiUsage.limit}
+                        <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 text-muted-foreground" />
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="h-8 w-px bg-border" />
