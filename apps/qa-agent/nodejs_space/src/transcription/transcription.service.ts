@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import FormData from 'form-data';
+import { OpenAIUsageService } from '../openai-usage/openai-usage.service.js';
 
 @Injectable()
 export class TranscriptionService {
   private readonly logger = new Logger(TranscriptionService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly usageService: OpenAIUsageService,
+  ) {}
 
   /**
    * Transcribe audio using OpenAI Whisper API, then format with GPT.
@@ -45,6 +49,10 @@ export class TranscriptionService {
       if (!rawTranscript || rawTranscript.trim().length === 0) {
         throw new Error('Empty transcript received from Whisper API');
       }
+
+      // Log Whisper usage (cost is per minute of audio, estimate from file size)
+      const estimatedMinutes = audioBuffer.length / (16000 * 2 * 60); // rough estimate
+      await this.usageService.logUsage('whisper-1', 0, 0, Math.max(0.1, estimatedMinutes));
 
       this.logger.log(`Raw transcription: ${rawTranscript.length} characters`);
 
@@ -98,6 +106,15 @@ Rules:
 
       const data = (await response.json()) as any;
       const formatted = data?.choices?.[0]?.message?.content?.trim();
+
+      // Log GPT-4o-mini usage
+      if (data?.usage) {
+        await this.usageService.logUsage(
+          'gpt-4o-mini',
+          data.usage.prompt_tokens || 0,
+          data.usage.completion_tokens || 0,
+        );
+      }
 
       return formatted || rawText;
     } catch (error: any) {

@@ -5,6 +5,7 @@ import {
   HIGH_SENSITIVITY_CONFIDENCE_THRESHOLD,
   NORMAL_CONFIDENCE_THRESHOLD,
 } from '../config/constants.js';
+import { OpenAIUsageService } from '../openai-usage/openai-usage.service.js';
 
 export interface AnalysisResult {
   detected_triggers: string[];
@@ -19,7 +20,10 @@ export interface AnalysisResult {
 export class AnalysisService {
   private readonly logger = new Logger(AnalysisService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly usageService: OpenAIUsageService,
+  ) {}
 
   async analyzeTranscript(
     transcript: string,
@@ -110,6 +114,15 @@ Respond with raw JSON only. Do not include code blocks, markdown, or any other f
 
       const data = (await response.json()) as any;
       const content = data?.choices?.[0]?.message?.content;
+
+      // Log GPT-4o usage
+      if (data?.usage) {
+        await this.usageService.logUsage(
+          'gpt-4o',
+          data.usage.prompt_tokens || 0,
+          data.usage.completion_tokens || 0,
+        );
+      }
 
       if (!content) {
         throw new Error('Empty response from LLM API');

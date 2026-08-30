@@ -644,3 +644,19 @@ model network_io {
   @@index([status])
   @@index([sign_token])
 }
+
+// ============================================
+// OpenAI Usage Tracking
+// ============================================
+
+model openai_usage {
+  id            String   @id @default(uuid())
+  model         String
+  input_tokens  Int      @default(0)
+  output_tokens Int      @default(0)
+  cost          Float    @default(0)
+  created_at    DateTime @default(now())
+
+  @@index([created_at])
+  @@index([model])
+}

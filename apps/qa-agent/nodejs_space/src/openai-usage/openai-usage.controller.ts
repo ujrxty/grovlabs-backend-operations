@@ -1,4 +1,4 @@
-import { Controller, Get, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OpenAIUsageService } from './openai-usage.service.js';
 
@@ -10,31 +10,31 @@ export class OpenAIUsageController {
   constructor(private readonly usageService: OpenAIUsageService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get OpenAI API usage and remaining credits' })
+  @ApiOperation({ summary: 'Get OpenAI API usage and budget' })
   @ApiResponse({ status: 200, description: 'Usage data returned' })
   async getUsage() {
-    const usage = await this.usageService.getUsage();
-    if (!usage) {
-      return { error: 'Could not fetch usage data' };
-    }
+    const [usage, budget] = await Promise.all([
+      this.usageService.getUsage(),
+      this.usageService.getBudget(),
+    ]);
+
+    const percentUsed = budget.limit > 0 ? Math.round((budget.used / budget.limit) * 100) : 0;
+
     return {
-      used: `$${usage.totalUsedUSD.toFixed(2)}`,
-      remaining: `$${usage.remainingUSD.toFixed(2)}`,
-      limit: `$${usage.hardLimitUSD.toFixed(2)}`,
-      percentUsed: Math.round((usage.totalUsedUSD / usage.hardLimitUSD) * 100),
-      dailyUsage: usage.dailyUsage.slice(-7), // Last 7 days
+      used: `$${budget.used.toFixed(2)}`,
+      remaining: `$${budget.remaining.toFixed(2)}`,
+      limit: `$${budget.limit.toFixed(2)}`,
+      percentUsed,
+      byModel: usage.byModel,
+      daily: usage.daily.slice(0, 7),
       topUpUrl: 'https://platform.openai.com/account/billing/overview',
     };
   }
 
-  @Get('quick')
-  @ApiOperation({ summary: 'Get quick stats - used, limit, remaining' })
-  @ApiResponse({ status: 200, description: 'Quick stats returned' })
-  async getQuickStats() {
-    const stats = await this.usageService.getQuickStats();
-    if (!stats) {
-      return { error: 'Could not fetch usage data' };
-    }
-    return stats;
+  @Post('budget')
+  @ApiOperation({ summary: 'Set monthly budget limit' })
+  async setBudget(@Body() body: { limit: number }) {
+    await this.usageService.setBudget(body.limit);
+    return { success: true, limit: body.limit };
   }
 }
