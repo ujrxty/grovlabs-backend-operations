@@ -37,10 +37,12 @@ export class OpenAIUsageService {
     }
 
     try {
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-      const startTime = Math.floor(startOfMonth.getTime() / 1000);
+      // Use UTC to match OpenAI's timestamps
+      const now = new Date();
+      const startOfMonth = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0);
+      const startTime = Math.floor(startOfMonth / 1000);
+
+      this.logger.log(`Fetching OpenAI costs from ${new Date(startOfMonth).toISOString()}`);
 
       const url = `https://api.openai.com/v1/organization/costs?start_time=${startTime}&bucket_width=1d&limit=31`;
       const response = await fetch(url, {
@@ -51,10 +53,13 @@ export class OpenAIUsageService {
       });
 
       if (!response.ok) {
+        const errText = await response.text();
+        this.logger.error(`OpenAI API error: ${response.status} - ${errText}`);
         throw new Error(`OpenAI API error: ${response.status}`);
       }
 
       const data = await response.json() as any;
+      this.logger.log(`OpenAI costs response: ${data.data?.length || 0} buckets`);
       let totalCost = 0;
       const daily: { date: string; cost: number }[] = [];
 
@@ -71,6 +76,7 @@ export class OpenAIUsageService {
         }
       }
 
+      this.logger.log(`OpenAI total cost calculated: $${totalCost.toFixed(2)}`);
       return { totalCost: Math.round(totalCost * 100) / 100, daily };
     } catch (error: any) {
       this.logger.error(`Failed to fetch OpenAI costs: ${error.message}`);
