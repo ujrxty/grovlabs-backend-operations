@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Search, Eye, ExternalLink, ChevronLeft, ChevronRight, AlertTriangle, FileText, Zap, DollarSign } from 'lucide-react'
+import { Search, Eye, ExternalLink, ChevronLeft, ChevronRight, AlertTriangle, FileText, Zap, DollarSign, Pencil, Check } from 'lucide-react'
 import { CallRecord } from '@/lib/types'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -41,6 +41,8 @@ export function CallQAContent() {
   const [total, setTotal] = useState(0)
   const [viewCall, setViewCall] = useState<CallRecord | null>(null)
   const [openaiUsage, setOpenaiUsage] = useState<OpenAIUsage | null>(null)
+  const [editingLimit, setEditingLimit] = useState(false)
+  const [newLimit, setNewLimit] = useState('')
 
   const fetchCalls = useCallback(async () => {
     setLoading(true)
@@ -71,6 +73,24 @@ export function CallQAContent() {
       .catch(() => {})
   }, [])
 
+  const saveLimit = async () => {
+    const limit = parseFloat(newLimit)
+    if (isNaN(limit) || limit <= 0) return
+    try {
+      await fetch('/api/openai-usage/budget', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit }),
+      })
+      const data = await fetch('/api/openai-usage').then(r => r.json())
+      if (!data.error) setOpenaiUsage(data)
+      setEditingLimit(false)
+      toast.success('Budget limit updated')
+    } catch {
+      toast.error('Failed to update limit')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader title="Call QA Logs" description={`Browse and filter analyzed calls (${total} total)`} />
@@ -86,7 +106,33 @@ export function CallQAContent() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">OpenAI Credits</p>
-                    <p className="text-lg font-semibold">{openaiUsage.used} <span className="text-muted-foreground font-normal">/ {openaiUsage.limit}</span></p>
+                    <div className="flex items-center gap-1">
+                      <span className="text-lg font-semibold">{openaiUsage.used}</span>
+                      <span className="text-muted-foreground">/</span>
+                      {editingLimit ? (
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            className="w-20 h-7 text-sm"
+                            value={newLimit}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewLimit(e.target.value)}
+                            onKeyDown={(e: React.KeyboardEvent) => e.key === 'Enter' && saveLimit()}
+                            autoFocus
+                          />
+                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={saveLimit}>
+                            <Check className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => { setNewLimit(openaiUsage.limit.replace('$', '')); setEditingLimit(true) }}
+                          className="text-lg font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1 group"
+                        >
+                          {openaiUsage.limit}
+                          <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-50" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="h-8 w-px bg-border" />
