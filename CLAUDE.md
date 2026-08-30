@@ -280,6 +280,27 @@ Key modules in QA Agent:
 Test endpoints:
 - `GET /webhooks/test/recent-calls` — list recent TrackDrive calls
 - `POST /webhooks/test/process-call` — manually process a call
+- `POST /webhooks/fix-durations` — backfill duration from stored trackdrive_data
+
+### Known TrackDrive Webhook Issue
+
+TrackDrive sometimes sends webhooks with empty `total_duration` and `recording_url` even for connected calls. This happens when the webhook fires before TrackDrive finishes processing.
+
+**Workaround:** Consider using "Recording Ready" trigger instead of "Call Ended" in TrackDrive webhook config.
+
+## N2N (Network-to-Network) Partnerships
+
+Module for managing bidirectional partnerships with other networks.
+
+Key endpoints:
+- `POST /n2n/applications` — submit partner application
+- `GET /n2n/applications` — list applications
+- `POST /n2n/applications/:id/approve` — approve application
+- `POST /n2n/ios/:id/send-sign-request` — send IO signing email
+- `GET /n2n/io/sign/:token/html` — view IO document (token-based)
+- `POST /n2n/io/sign/:token` — sign IO
+
+Uses Resend for emails. Templates in `n2n.service.ts` with company details from `config/email.config.ts`.
 
 ## Telegram Bot Setup
 
@@ -307,3 +328,20 @@ API uses Basic Auth with public/private key pair.
 **tsconfig.build.json missing include:** Must have `"include": ["src/**/*.ts"]` for tsc to find files.
 
 **Path alias (@/) not resolving:** Needs `baseUrl: "."` in tsconfig.json.
+
+## Related Projects (Outside Monorepo)
+
+### Revenue Wallpaper
+
+Location: `C:\E drive Data\revenue-wallpaper`
+
+Standalone Node.js app that displays TrackDrive revenue as dynamic Windows wallpaper.
+
+```bash
+cd "C:\E drive Data\revenue-wallpaper"
+npm start              # update once
+npm run watch          # continuous (every 5 min)
+node index.js goal 50000 Monthly Goal  # set goal
+```
+
+Auto-starts with Windows via VBS script in Startup folder.
