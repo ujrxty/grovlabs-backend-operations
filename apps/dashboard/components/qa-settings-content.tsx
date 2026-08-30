@@ -93,7 +93,9 @@ export function QASettingsContent() {
           setOpenaiUsage(data)
         }
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.error('Failed to fetch OpenAI usage:', err)
+      })
   }, [])
 
   const handleSave = async () => {
