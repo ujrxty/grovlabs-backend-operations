@@ -142,18 +142,18 @@ export function CallQAContent() {
                   <p className="text-xs text-muted-foreground">Remaining</p>
                   <p className="text-lg font-semibold text-green-600">{openaiUsage.remaining}</p>
                 </div>
-                <div className="hidden sm:block h-8 w-px bg-border" />
-                <div className="hidden sm:flex items-center gap-2 flex-1 max-w-[200px]">
-                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-8 w-px bg-border" />
+                <div className="flex items-center gap-3 flex-1 min-w-[150px] max-w-[300px]">
+                  <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
                     <div
                       className={cn(
                         'h-full rounded-full transition-all',
                         openaiUsage.percentUsed > 80 ? 'bg-red-500' : openaiUsage.percentUsed > 50 ? 'bg-amber-500' : 'bg-green-500'
                       )}
-                      style={{ width: `${Math.min(openaiUsage.percentUsed, 100)}%` }}
+                      style={{ width: `${Math.max(Math.min(openaiUsage.percentUsed, 100), 2)}%` }}
                     />
                   </div>
-                  <span className="text-xs text-muted-foreground">{openaiUsage.percentUsed}%</span>
+                  <span className="text-sm font-medium text-muted-foreground">{openaiUsage.percentUsed}%</span>
                 </div>
               </div>
               <Button variant="outline" size="sm" asChild>
