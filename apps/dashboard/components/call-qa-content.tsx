@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Search, Eye, ExternalLink, ChevronLeft, ChevronRight, AlertTriangle, FileText } from 'lucide-react'
+import { Search, Eye, ExternalLink, ChevronLeft, ChevronRight, AlertTriangle, FileText, Zap, DollarSign } from 'lucide-react'
 import { CallRecord } from '@/lib/types'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -19,6 +19,14 @@ function formatDuration(seconds: number): string {
   const m = Math.floor((seconds ?? 0) / 60)
   const s = (seconds ?? 0) % 60
   return `${m}:${s.toString().padStart(2, '0')}`
+}
+
+interface OpenAIUsage {
+  used: string
+  remaining: string
+  limit: string
+  percentUsed: number
+  topUpUrl: string
 }
 
 export function CallQAContent() {
@@ -32,6 +40,7 @@ export function CallQAContent() {
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
   const [viewCall, setViewCall] = useState<CallRecord | null>(null)
+  const [openaiUsage, setOpenaiUsage] = useState<OpenAIUsage | null>(null)
 
   const fetchCalls = useCallback(async () => {
     setLoading(true)
@@ -55,9 +64,59 @@ export function CallQAContent() {
 
   useEffect(() => { fetchCalls() }, [fetchCalls])
 
+  useEffect(() => {
+    fetch('/api/openai-usage')
+      .then(r => r.json())
+      .then(data => { if (!data.error) setOpenaiUsage(data) })
+      .catch(() => {})
+  }, [])
+
   return (
     <div className="space-y-6">
       <PageHeader title="Call QA Logs" description={`Browse and filter analyzed calls (${total} total)`} />
+
+      {openaiUsage && (
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <Zap className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">OpenAI Credits</p>
+                    <p className="text-lg font-semibold">{openaiUsage.used} <span className="text-muted-foreground font-normal">/ {openaiUsage.limit}</span></p>
+                  </div>
+                </div>
+                <div className="h-8 w-px bg-border" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Remaining</p>
+                  <p className="text-lg font-semibold text-green-600">{openaiUsage.remaining}</p>
+                </div>
+                <div className="hidden sm:block h-8 w-px bg-border" />
+                <div className="hidden sm:flex items-center gap-2 flex-1 max-w-[200px]">
+                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={cn(
+                        'h-full rounded-full transition-all',
+                        openaiUsage.percentUsed > 80 ? 'bg-red-500' : openaiUsage.percentUsed > 50 ? 'bg-amber-500' : 'bg-green-500'
+                      )}
+                      style={{ width: `${Math.min(openaiUsage.percentUsed, 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{openaiUsage.percentUsed}%</span>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <a href={openaiUsage.topUpUrl} target="_blank" rel="noopener noreferrer" className="gap-2">
+                  <DollarSign className="h-3 w-3" /> Top Up
+                </a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row gap-3">

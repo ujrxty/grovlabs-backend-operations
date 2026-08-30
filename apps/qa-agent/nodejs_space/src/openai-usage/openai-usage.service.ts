@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 // OpenAI pricing per 1K tokens (as of 2024)
@@ -23,7 +24,59 @@ export interface UsageEntry {
 export class OpenAIUsageService {
   private readonly logger = new Logger(OpenAIUsageService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  async fetchOpenAICosts(): Promise<{ totalCost: number; daily: { date: string; cost: number }[] }> {
+    const adminKey = this.configService.get<string>('OPENAI_ADMIN_KEY', '');
+    if (!adminKey) {
+      this.logger.warn('OPENAI_ADMIN_KEY not configured');
+      return { totalCost: 0, daily: [] };
+    }
+
+    try {
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const startTime = Math.floor(startOfMonth.getTime() / 1000);
+
+      const url = `https://api.openai.com/v1/organization/costs?start_time=${startTime}&bucket_width=1d&limit=31`;
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${adminKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const data = await response.json() as any;
+      let totalCost = 0;
+      const daily: { date: string; cost: number }[] = [];
+
+      for (const bucket of data.data || []) {
+        if (bucket.results && bucket.results.length > 0) {
+          for (const result of bucket.results) {
+            const cost = result.amount?.value || 0;
+            totalCost += cost;
+          }
+          daily.push({
+            date: bucket.start_time_iso?.split('T')[0] || '',
+            cost: bucket.results.reduce((sum: number, r: any) => sum + (r.amount?.value || 0), 0),
+          });
+        }
+      }
+
+      return { totalCost: Math.round(totalCost * 100) / 100, daily };
+    } catch (error: any) {
+      this.logger.error(`Failed to fetch OpenAI costs: ${error.message}`);
+      return { totalCost: 0, daily: [] };
+    }
+  }
 
   async logUsage(model: string, inputTokens: number, outputTokens: number, audioMinutes?: number): Promise<void> {
     const pricing = PRICING[model as keyof typeof PRICING] || PRICING['gpt-4o'];
@@ -99,20 +152,22 @@ export class OpenAIUsageService {
 
   async getBudget(): Promise<{ limit: number; used: number; remaining: number }> {
     try {
+      // Get budget limit from settings
       const result = await this.prisma.$queryRaw<{ settings_json: string }[]>`
         SELECT settings_json FROM system_settings WHERE key = 'openai_budget' LIMIT 1
       `;
+      const budget = result[0]?.settings_json ? JSON.parse(result[0].settings_json) : { limit: 120 };
 
-      const budget = result[0]?.settings_json ? JSON.parse(result[0].settings_json) : { limit: 100 };
-      const usage = await this.getUsage();
+      // Fetch real costs from OpenAI API
+      const { totalCost } = await this.fetchOpenAICosts();
 
       return {
-        limit: budget.limit || 100,
-        used: usage.totalCost,
-        remaining: Math.max(0, (budget.limit || 100) - usage.totalCost),
+        limit: budget.limit || 120,
+        used: totalCost,
+        remaining: Math.max(0, (budget.limit || 120) - totalCost),
       };
     } catch {
-      return { limit: 100, used: 0, remaining: 100 };
+      return { limit: 120, used: 0, remaining: 120 };
     }
   }
 

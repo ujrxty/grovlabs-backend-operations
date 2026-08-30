@@ -10,11 +10,11 @@ export class OpenAIUsageController {
   constructor(private readonly usageService: OpenAIUsageService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get OpenAI API usage and budget' })
+  @ApiOperation({ summary: 'Get OpenAI API usage from OpenAI directly' })
   @ApiResponse({ status: 200, description: 'Usage data returned' })
   async getUsage() {
-    const [usage, budget] = await Promise.all([
-      this.usageService.getUsage(),
+    const [openaiCosts, budget] = await Promise.all([
+      this.usageService.fetchOpenAICosts(),
       this.usageService.getBudget(),
     ]);
 
@@ -25,9 +25,8 @@ export class OpenAIUsageController {
       remaining: `$${budget.remaining.toFixed(2)}`,
       limit: `$${budget.limit.toFixed(2)}`,
       percentUsed,
-      byModel: usage.byModel,
-      daily: usage.daily.slice(0, 7),
-      topUpUrl: 'https://platform.openai.com/account/billing/overview',
+      daily: openaiCosts.daily.slice(0, 7),
+      topUpUrl: 'https://platform.openai.com/settings/organization/billing/overview',
     };
   }
 

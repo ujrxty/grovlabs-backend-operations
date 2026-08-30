@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Save, Loader2, Plus, X, AlertTriangle, Clock, Target, MessageSquare, CalendarClock, Zap, ExternalLink } from 'lucide-react'
+import { Save, Loader2, Plus, X, AlertTriangle, Clock, Target, MessageSquare, CalendarClock } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface QASettings {
@@ -53,14 +53,6 @@ const DEFAULT_SETTINGS: QASettings = {
   scheduleTimezone: 'America/Los_Angeles',
 }
 
-interface OpenAIUsage {
-  used: string
-  remaining: string
-  limit: string
-  percentUsed: number
-  topUpUrl: string
-}
-
 export function QASettingsContent() {
   const [settings, setSettings] = useState<QASettings>(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
@@ -69,7 +61,6 @@ export function QASettingsContent() {
   const [newThresholdValue, setNewThresholdValue] = useState('')
   const [newPrimaryTrigger, setNewPrimaryTrigger] = useState('')
   const [newSecondaryTrigger, setNewSecondaryTrigger] = useState('')
-  const [openaiUsage, setOpenaiUsage] = useState<OpenAIUsage | null>(null)
 
   useEffect(() => {
     fetch('/api/qa-settings')
@@ -83,18 +74,6 @@ export function QASettingsContent() {
       .catch(() => {
         toast.error('Failed to load QA settings')
         setLoading(false)
-      })
-
-    // Fetch OpenAI usage
-    fetch('/api/openai-usage')
-      .then(r => r.json())
-      .then(data => {
-        if (!data.error) {
-          setOpenaiUsage(data)
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch OpenAI usage:', err)
       })
   }, [])
 
@@ -204,49 +183,6 @@ export function QASettingsContent() {
           </Button>
         }
       />
-
-      {/* OpenAI Usage Card */}
-      {openaiUsage && (
-        <Card className="border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Zap className="h-5 w-5 text-amber-500" />
-              OpenAI API Usage
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap items-center gap-6">
-              <div>
-                <p className="text-2xl font-bold">{openaiUsage.used}</p>
-                <p className="text-xs text-muted-foreground">Used this month</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-green-500">{openaiUsage.remaining}</p>
-                <p className="text-xs text-muted-foreground">Remaining</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-muted-foreground">{openaiUsage.limit}</p>
-                <p className="text-xs text-muted-foreground">Monthly limit</p>
-              </div>
-              <div className="flex-1">
-                <div className="h-3 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${openaiUsage.percentUsed > 80 ? 'bg-red-500' : openaiUsage.percentUsed > 50 ? 'bg-amber-500' : 'bg-green-500'}`}
-                    style={{ width: `${Math.min(openaiUsage.percentUsed, 100)}%` }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{openaiUsage.percentUsed}% used</p>
-              </div>
-              <Button variant="outline" size="sm" asChild>
-                <a href={openaiUsage.topUpUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Top Up Credits
-                </a>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Confidence Thresholds */}
       <Card>
