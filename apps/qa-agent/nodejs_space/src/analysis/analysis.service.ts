@@ -101,7 +101,7 @@ Respond with raw JSON only. Do not include code blocks, markdown, or any other f
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: prompt }],
           response_format: { type: 'json_object' },
         }),
@@ -118,7 +118,7 @@ Respond with raw JSON only. Do not include code blocks, markdown, or any other f
       // Log GPT-4o usage
       if (data?.usage) {
         await this.usageService.logUsage(
-          'gpt-4o',
+          'gpt-4o-mini',
           data.usage.prompt_tokens || 0,
           data.usage.completion_tokens || 0,
         );
