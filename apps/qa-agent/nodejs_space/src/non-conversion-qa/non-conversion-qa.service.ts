@@ -126,10 +126,10 @@ export class NonConversionQaService {
             role: 'user',
             content: [
               {
-                type: 'file',
-                file: {
-                  filename: 'call.mp3',
-                  file_data: `data:audio/mpeg;base64,${b64}`,
+                type: 'input_audio',
+                input_audio: {
+                  data: b64,
+                  format: 'mp3',
                 },
               },
               { type: 'text', text: prompt },
