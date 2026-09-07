@@ -13,6 +13,7 @@ interface CallRow {
   vendor_name: string
   buyer_name: string | null
   campaign_name: string | null
+  caller_number: string | null
   caller_city: string | null
   caller_state: string | null
   duration: number
@@ -52,7 +53,7 @@ export async function GET(req: Request) {
     const rows = await prisma.$queryRaw<CallRow[]>(Prisma.sql`
       SELECT
         trackdrive_call_id, review_date, vendor_name, buyer_name, campaign_name,
-        caller_city, caller_state, duration, revenue, quote_issued, outcome_category,
+        caller_number, caller_city, caller_state, duration, revenue, quote_issued, outcome_category,
         follow_through_likelihood, quote_type, quote_amount, payment_mentioned,
         caller_response, what_happened, key_quote, recording_url, created_at
       FROM sales_qa_review
@@ -71,6 +72,7 @@ export async function GET(req: Request) {
       vendor_name: r.vendor_name,
       buyer_name: r.buyer_name,
       campaign_name: r.campaign_name,
+      caller_number: r.caller_number,
       caller_city: r.caller_city,
       caller_state: r.caller_state,
       duration: r.duration,

@@ -423,8 +423,9 @@ function VendorCalls({ loading, calls }: { loading: boolean; calls: SalesQaCall[
               </span>
             )}
             {c.payment_mentioned && (
-              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700"><CreditCard className="h-3.5 w-3.5" /> Payment discussed</span>
+              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-400"><CreditCard className="h-3.5 w-3.5" /> Payment discussed</span>
             )}
+            {c.caller_number && <span className="text-xs font-mono text-muted-foreground">{c.caller_number}</span>}
             <span className="text-xs text-muted-foreground">{[c.caller_city, c.caller_state].filter(Boolean).join(', ') || '—'}</span>
             <span className="text-xs text-muted-foreground">· {fmtDuration(c.duration)}</span>
             <span className="text-xs text-muted-foreground">· {c.review_date}</span>

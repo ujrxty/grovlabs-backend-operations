@@ -130,6 +130,7 @@ export interface SalesQaCall {
   vendor_name: string
   buyer_name: string | null
   campaign_name: string | null
+  caller_number: string | null
   caller_city: string | null
   caller_state: string | null
   duration: number
