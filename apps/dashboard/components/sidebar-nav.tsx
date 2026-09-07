@@ -20,6 +20,7 @@ import {
   ScrollText,
   Sliders,
   Network,
+  CalendarClock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -32,6 +33,7 @@ const navItems = [
   { href: '/network-partners', label: 'Network Partners', icon: Network },
   { href: '/call-qa', label: 'Call QA Logs', icon: PhoneCall },
   { href: '/qa-settings', label: 'QA Settings', icon: Sliders },
+  { href: '/scheduler', label: 'Report Scheduler', icon: CalendarClock },
   { href: '/non-conversion-qa', label: 'Non-Conversion QA', icon: PhoneOff },
   { href: '/sales-monitoring', label: 'Sales Monitoring', icon: ClipboardCheck },
   { href: '/loss-monitor', label: 'Loss Monitor', icon: Siren },

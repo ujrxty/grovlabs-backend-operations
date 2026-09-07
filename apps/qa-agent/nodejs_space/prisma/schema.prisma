@@ -660,3 +660,46 @@ model openai_usage {
   @@index([created_at])
   @@index([model])
 }
+
+// ============================================
+// Scheduler Settings (configurable via dashboard)
+// ============================================
+
+model scheduler_settings {
+  id                        String   @id @default("singleton")
+
+  // Master toggle
+  enabled                   Boolean  @default(false)
+
+  // Timezone for scheduling (IANA timezone string)
+  timezone                  String   @default("America/Phoenix")
+
+  // Vendor Daily Stats
+  vendor_stats_enabled      Boolean  @default(true)
+  vendor_stats_hour         Int      @default(18)  // 6 PM
+  vendor_stats_minute       Int      @default(0)
+
+  // Non-Conversion QA
+  non_conversion_qa_enabled Boolean  @default(true)
+  non_conversion_qa_hour    Int      @default(19)  // 7 PM
+  non_conversion_qa_minute  Int      @default(0)
+
+  // Sales QA
+  sales_qa_enabled          Boolean  @default(true)
+  sales_qa_hour             Int      @default(20)  // 8 PM
+  sales_qa_minute           Int      @default(0)
+
+  // Notification channels
+  discord_enabled           Boolean  @default(true)
+  discord_webhook_url       String?
+  email_enabled             Boolean  @default(true)
+  email_recipients          String   @default("uj@grovlabs.com")
+  telegram_enabled          Boolean  @default(true)
+
+  // Tracking
+  last_vendor_stats_run     DateTime?
+  last_non_conversion_run   DateTime?
+  last_sales_qa_run         DateTime?
+
+  updated_at                DateTime @updatedAt
+}

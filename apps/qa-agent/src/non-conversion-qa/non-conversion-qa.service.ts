@@ -609,6 +609,59 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
     }
   }
 
+  /** Send Discord embed summary. */
+  private async sendDiscord(reviews: CallReview[], dateStr: string): Promise<void> {
+    const webhookUrl = this.config.get<string>('DISCORD_WEBHOOK_URL', '');
+    if (!webhookUrl) {
+      this.logger.warn('Discord webhook not configured; skipping');
+      return;
+    }
+
+    const buyerReviews = reviews.filter((r) => r.fault_side === 'buyer');
+    const vendorReviews = reviews.filter((r) => r.fault_side === 'vendor');
+    const otherCount = reviews.length - buyerReviews.length - vendorReviews.length;
+
+    const buyerAgg = this.aggregateBy(buyerReviews, (r) => r.buyer_name || 'Unknown Buyer');
+    const vendorAgg = this.aggregateBy(vendorReviews, (r) => r.vendor_name || 'Unknown Vendor');
+
+    const fields: { name: string; value: string; inline?: boolean }[] = [
+      { name: 'Total Reviewed', value: String(reviews.length), inline: true },
+      { name: 'Buyer Fault', value: String(buyerReviews.length), inline: true },
+      { name: 'Vendor Fault', value: String(vendorReviews.length), inline: true },
+    ];
+
+    if (buyerAgg.length > 0) {
+      const buyerLines = buyerAgg.slice(0, 5).map((g) => {
+        const topReason = g.reasons[0] ? this.prettyReason(g.reasons[0].reason) : '';
+        return `**${g.key}**: ${g.total} (${topReason})`;
+      }).join('\n');
+      fields.push({ name: 'Buyer-Side Issues', value: buyerLines || 'None', inline: false });
+    }
+
+    if (vendorAgg.length > 0) {
+      const vendorLines = vendorAgg.slice(0, 5).map((g) => {
+        const topReason = g.reasons[0] ? this.prettyReason(g.reasons[0].reason) : '';
+        return `**${g.key}**: ${g.total} (${topReason})`;
+      }).join('\n');
+      fields.push({ name: 'Vendor-Side Issues', value: vendorLines || 'None', inline: false });
+    }
+
+    const embed = {
+      title: `Non-Conversion QA Report — ${dateStr}`,
+      color: 0x6366f1, // indigo
+      fields,
+      footer: { text: 'GrovLabs QA Agent' },
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      await axios.post(webhookUrl, { embeds: [embed] });
+      this.logger.log('Non-conversion Discord summary sent');
+    } catch (err: any) {
+      this.logger.error(`Discord summary failed: ${err.message}`);
+    }
+  }
+
   /**
    * Full orchestration: fetch non-converted calls -> review -> store -> report.
    * Designed to be called in the background (fire-and-forget) from the controller.
@@ -648,6 +701,7 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
       });
       await this.sendEmail(subject, html, ['uj@grovlabs.com']);
       await this.sendTelegram(this.buildTelegramSummary(reviews, dateStr));
+      await this.sendDiscord(reviews, dateStr);
     }
 
     this.logger.log(

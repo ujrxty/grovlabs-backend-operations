@@ -1036,6 +1036,49 @@ export class SalesQaService {
     }
   }
 
+  /** Send Discord embed summary for sales monitoring. */
+  private async sendDiscord(reviews: SalesReview[], dateStr: string): Promise<void> {
+    const webhookUrl = this.config.get<string>('DISCORD_WEBHOOK_URL', '');
+    if (!webhookUrl) {
+      this.logger.warn('Discord webhook not configured; skipping sales summary');
+      return;
+    }
+
+    const t = this.overallTotals(reviews);
+    const byBuyer = this.aggregateByBuyer(reviews);
+
+    const fields: { name: string; value: string; inline?: boolean }[] = [
+      { name: 'Billable Calls', value: String(t.total), inline: true },
+      { name: 'Quotes Issued', value: String(t.quotesIssued), inline: true },
+      { name: 'Sales Completed', value: String(t.sales), inline: true },
+      { name: 'Deferred/Pending', value: String(t.deferred + t.pending), inline: true },
+      { name: 'Declined', value: String(t.declined), inline: true },
+      { name: 'No Quote', value: String(t.noQuote), inline: true },
+    ];
+
+    if (byBuyer.length > 0) {
+      const buyerLines = byBuyer.slice(0, 5).map((g) =>
+        `**${g.buyer}**: ${g.total} calls, ${g.quotesIssued} quotes, ${g.sales} sales`
+      ).join('\n');
+      fields.push({ name: 'By Buyer', value: buyerLines, inline: false });
+    }
+
+    const embed = {
+      title: `Sales Monitoring Report — ${dateStr}`,
+      color: 0x10b981, // green
+      fields,
+      footer: { text: 'GrovLabs QA Agent' },
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      await axios.post(webhookUrl, { embeds: [embed] });
+      this.logger.log('Sales QA Discord summary sent');
+    } catch (err: any) {
+      this.logger.error(`Sales QA Discord summary failed: ${err.message}`);
+    }
+  }
+
   async runDailyReview(
     dateStr: string,
     options?: { cap?: number; notify?: boolean },
@@ -1071,6 +1114,7 @@ export class SalesQaService {
       });
       await this.sendEmail(subject, html, ['uj@grovlabs.com']);
       await this.sendTelegram(this.buildTelegramSummary(reviews, dateStr));
+      await this.sendDiscord(reviews, dateStr);
     }
 
     this.logger.log(

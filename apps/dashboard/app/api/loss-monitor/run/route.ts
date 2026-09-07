@@ -16,6 +16,52 @@ function money(n: number) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+async function sendDiscordAlert(alerts: LossAlert[], dateLabel: string, totalCalls: number): Promise<boolean> {
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL
+  if (!webhookUrl) return false
+
+  const criticalCount = alerts.filter((a) => a.severity === 'critical').length
+  const byType = new Map<AlertType, LossAlert[]>()
+  for (const a of alerts) {
+    if (!byType.has(a.type)) byType.set(a.type, [])
+    byType.get(a.type)!.push(a)
+  }
+
+  const fields: { name: string; value: string; inline?: boolean }[] = [
+    { name: 'Total Calls', value: String(totalCalls), inline: true },
+    { name: 'Issues', value: String(alerts.length), inline: true },
+    { name: 'Critical', value: String(criticalCount), inline: true },
+  ]
+
+  for (const [type, list] of Array.from(byType.entries())) {
+    const lines = list.slice(0, 5).map((a) => {
+      const who = [a.vendor, a.campaign || a.buyer].filter(Boolean).join(' → ')
+      return `**${who || a.buyer || '—'}**: ${a.message.slice(0, 80)}`
+    }).join('\n')
+    fields.push({ name: `${ALERT_TYPE_LABELS[type]} (${list.length})`, value: lines || 'None', inline: false })
+  }
+
+  const embed = {
+    title: `Loss Monitor Alert — ${dateLabel}`,
+    color: criticalCount > 0 ? 0xdc2626 : 0xf59e0b, // red if critical, amber otherwise
+    fields,
+    footer: { text: 'GrovLabs Loss Monitor' },
+    timestamp: new Date().toISOString(),
+  }
+
+  try {
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ embeds: [embed] }),
+    })
+    return true
+  } catch (e: any) {
+    console.error('Loss monitor Discord failed:', e?.message)
+    return false
+  }
+}
+
 function buildEmailHtml(alerts: LossAlert[], dateLabel: string, totalCalls: number): string {
   const { primaryColor, accentColor, companyName } = EMAIL_CONFIG
   const byType = new Map<AlertType, LossAlert[]>()
@@ -145,6 +191,9 @@ async function handle(req: Request): Promise<NextResponse> {
       }
     }
 
+    // Send Discord alert
+    const discordSent = await sendDiscordAlert(result.alerts, dateLabel, result.totalCalls)
+
     await prisma.loss_monitor_settings.update({
       where: { id: 'singleton' },
       data: { last_alert_at: now },
@@ -154,6 +203,7 @@ async function handle(req: Request): Promise<NextResponse> {
       sent: true,
       alerts: result.alerts.length,
       recipients: sendResults,
+      discordSent,
       checkedAt: now.toISOString(),
     })
   } catch (err: any) {
