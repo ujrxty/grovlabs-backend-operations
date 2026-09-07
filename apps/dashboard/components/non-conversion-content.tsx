@@ -498,23 +498,16 @@ export function NonConversionContent() {
               )}
 
               {detail.recording_url && (
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Recording</p>
-                  <audio controls preload="none" src={detail.recording_url} className="w-full h-10">
-                    Your browser does not support audio playback.
-                  </audio>
-                  <a href={detail.recording_url} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm" className="gap-2"><ExternalLink className="h-4 w-4" /> Open recording</Button>
-                  </a>
-                </div>
-              )}
-
-              {detail.raw_ai_response && (
                 <div className="border-t pt-3">
-                  <p className="text-xs text-muted-foreground mb-1">Full AI analysis</p>
-                  <pre className="text-xs bg-muted p-3 rounded-lg whitespace-pre-wrap max-h-56 overflow-y-auto">
-                    {JSON.stringify(detail.raw_ai_response, null, 2)}
-                  </pre>
+                  <p className="text-xs text-muted-foreground mb-2">Recording</p>
+                  <div className="flex items-center gap-3">
+                    <audio controls preload="none" src={detail.recording_url} className="flex-1 h-9">
+                      Your browser does not support audio playback.
+                    </audio>
+                    <a href={detail.recording_url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm" className="gap-1.5 shrink-0"><ExternalLink className="h-3.5 w-3.5" /> Open</Button>
+                    </a>
+                  </div>
                 </div>
               )}
             </div>

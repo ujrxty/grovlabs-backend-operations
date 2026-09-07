@@ -41,12 +41,12 @@ export function outcomeLabel(o: string | null | undefined): string {
 
 // Tailwind color classes per outcome (badge/pill styling).
 export const OUTCOME_BADGE: Record<string, string> = {
-  sale_completed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  quote_accepted_deferred: 'bg-teal-100 text-teal-700 border-teal-200',
-  quote_pending_approval: 'bg-sky-100 text-sky-700 border-sky-200',
-  quote_received_reviewing: 'bg-violet-100 text-violet-700 border-violet-200',
-  quote_declined: 'bg-amber-100 text-amber-700 border-amber-200',
-  no_quote_issued: 'bg-slate-100 text-slate-600 border-slate-200',
+  sale_completed: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30',
+  quote_accepted_deferred: 'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-500/20 dark:text-teal-400 dark:border-teal-500/30',
+  quote_pending_approval: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30',
+  quote_received_reviewing: 'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-500/20 dark:text-violet-400 dark:border-violet-500/30',
+  quote_declined: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30',
+  no_quote_issued: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-500/20 dark:text-slate-400 dark:border-slate-500/30',
 }
 
 export function outcomeBadgeClass(o: string | null | undefined): string {
@@ -56,10 +56,10 @@ export function outcomeBadgeClass(o: string | null | undefined): string {
 export const FOLLOW_THROUGH_ORDER = ['high', 'medium', 'low', 'none'] as const
 
 export const FOLLOW_THROUGH_BADGE: Record<string, string> = {
-  high: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  medium: 'bg-sky-100 text-sky-700 border-sky-200',
-  low: 'bg-amber-100 text-amber-700 border-amber-200',
-  none: 'bg-slate-100 text-slate-600 border-slate-200',
+  high: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30',
+  medium: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30',
+  low: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/20 dark:text-orange-400 dark:border-orange-500/30',
+  none: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-500/20 dark:text-slate-400 dark:border-slate-500/30',
 }
 
 export function followThroughBadgeClass(f: string | null | undefined): string {
