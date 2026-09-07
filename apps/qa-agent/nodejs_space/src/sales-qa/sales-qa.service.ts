@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import FormData from 'form-data';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
 
@@ -159,6 +160,30 @@ export class SalesQaService {
     return Buffer.from(resp.data);
   }
 
+  /** Transcribe audio using Whisper API. */
+  private async transcribeAudio(audio: Buffer, apiKey: string): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', audio, { filename: 'call.mp3', contentType: 'audio/mpeg' });
+    formData.append('model', 'whisper-1');
+    formData.append('response_format', 'text');
+
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        ...formData.getHeaders(),
+      },
+      body: formData.getBuffer(),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Whisper API error (${response.status}): ${errText.slice(0, 200)}`);
+    }
+
+    return response.text();
+  }
+
   // ---------------------------------------------------------------------------
   // AI analysis
   // ---------------------------------------------------------------------------
@@ -177,11 +202,13 @@ export class SalesQaService {
     const disposition = call.disposition_name || null;
     const revenue = call.revenue != null ? parseFloat(call.revenue) : null;
 
-    const apiKey = this.config.get<string>('ABACUSAI_API_KEY', '');
+    const apiKey = this.config.get<string>('OPENAI_API_KEY', '');
     const recordingUrl = call.recording_url as string;
 
     const audio = await this.downloadRecording(recordingUrl);
-    const b64 = audio.toString('base64');
+
+    // Step 1: Transcribe with Whisper
+    const transcript = await this.transcribeAudio(audio, apiKey);
 
     const prompt = this.buildPrompt({
       vendorName,
@@ -195,6 +222,7 @@ export class SalesQaService {
       callerState,
     });
 
+    // Step 2: Analyze transcript with GPT-4o-mini
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -202,24 +230,14 @@ export class SalesQaService {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'user',
-            content: [
-              {
-                type: 'input_audio',
-                input_audio: {
-                  data: b64,
-                  format: 'mp3',
-                },
-              },
-              { type: 'text', text: prompt },
-            ],
+            content: `${prompt}\n\n--- CALL TRANSCRIPT ---\n${transcript}`,
           },
         ],
         response_format: { type: 'json_object' },
-        stream: false,
       }),
     });
 
