@@ -24,6 +24,7 @@ import { NonConversionQaModule } from './non-conversion-qa/non-conversion-qa.mod
 import { QASettingsModule } from './qa-settings/qa-settings.module.js';
 import { N2NModule } from './n2n/n2n.module.js';
 import { OpenAIUsageModule } from './openai-usage/openai-usage.module.js';
+import { SchedulerModule } from './scheduler/scheduler.module.js';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { OpenAIUsageModule } from './openai-usage/openai-usage.module.js';
     QASettingsModule,
     N2NModule,
     OpenAIUsageModule,
+    SchedulerModule,
   ],
 })
 export class AppModule {}
