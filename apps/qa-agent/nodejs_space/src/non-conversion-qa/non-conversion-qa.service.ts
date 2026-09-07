@@ -598,6 +598,66 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
     }
   }
 
+  /** Send Discord webhook with embed. */
+  private async sendDiscord(reviews: CallReview[], dateStr: string): Promise<void> {
+    const webhookUrl = this.config.get<string>('DISCORD_WEBHOOK_URL', '');
+    if (!webhookUrl) {
+      this.logger.warn('Discord webhook not configured; skipping');
+      return;
+    }
+
+    const buyerFault = reviews.filter((r) => r.fault_side === 'buyer');
+    const vendorFault = reviews.filter((r) => r.fault_side === 'vendor');
+    const externalFault = reviews.filter((r) => r.fault_side === 'external');
+    const neutral = reviews.filter((r) => r.fault_side === 'neutral');
+
+    // Aggregate by buyer/vendor
+    const byBuyer = new Map<string, number>();
+    const byVendor = new Map<string, number>();
+    for (const r of buyerFault) {
+      const name = r.buyer_name || 'Unknown';
+      byBuyer.set(name, (byBuyer.get(name) || 0) + 1);
+    }
+    for (const r of vendorFault) {
+      const name = r.vendor_name || 'Unknown';
+      byVendor.set(name, (byVendor.get(name) || 0) + 1);
+    }
+
+    const buyerBreakdown = Array.from(byBuyer.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count]) => `• ${name}: ${count}`)
+      .join('\n') || 'None';
+
+    const vendorBreakdown = Array.from(byVendor.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count]) => `• ${name}: ${count}`)
+      .join('\n') || 'None';
+
+    const embed = {
+      title: `Non-Conversion QA Report — ${dateStr}`,
+      color: 0xf59e0b, // Amber
+      fields: [
+        { name: 'Total Reviewed', value: String(reviews.length), inline: true },
+        { name: 'Buyer Fault', value: String(buyerFault.length), inline: true },
+        { name: 'Vendor Fault', value: String(vendorFault.length), inline: true },
+        { name: 'External/Neutral', value: String(externalFault.length + neutral.length), inline: true },
+        { name: 'Top Buyers (at fault)', value: buyerBreakdown, inline: false },
+        { name: 'Top Vendors (at fault)', value: vendorBreakdown, inline: false },
+      ],
+      footer: { text: 'GrovLabs Non-Conversion QA' },
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      await axios.post(webhookUrl, { embeds: [embed] });
+      this.logger.log('Non-conversion Discord report sent');
+    } catch (err: any) {
+      this.logger.error(`Discord webhook failed: ${err.message}`);
+    }
+  }
+
   /**
    * Full orchestration: fetch non-converted calls -> review -> store -> report.
    * Designed to be called in the background (fire-and-forget) from the controller.
@@ -636,7 +696,7 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
         failures: failures.length,
       });
       await this.sendEmail(subject, html, ['uj@grovlabs.com']);
-      await this.sendTelegram(this.buildTelegramSummary(reviews, dateStr));
+      await this.sendDiscord(reviews, dateStr);
     }
 
     this.logger.log(

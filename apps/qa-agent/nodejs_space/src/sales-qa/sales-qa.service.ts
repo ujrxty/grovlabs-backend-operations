@@ -1036,6 +1036,46 @@ export class SalesQaService {
     }
   }
 
+  private async sendDiscord(reviews: any[], dateStr: string): Promise<void> {
+    const webhookUrl = this.config.get<string>('DISCORD_WEBHOOK_URL', '');
+    if (!webhookUrl) {
+      this.logger.warn('Discord webhook not configured; skipping');
+      return;
+    }
+
+    const quotesGiven = reviews.filter((r) => r.quote_issued).length;
+    const sales = reviews.filter((r) => r.outcome_category === 'sale_completed').length;
+    const buyerIntent = reviews.filter((r) => r.outcome_category === 'buyer_intent').length;
+    const undecided = reviews.filter((r) => r.outcome_category === 'undecided').length;
+    const declined = reviews.filter((r) => r.outcome_category === 'declined').length;
+
+    const totalRevenue = reviews
+      .filter((r) => r.outcome_category === 'sale_completed' && r.quote_amount)
+      .reduce((sum, r) => sum + (r.quote_amount || 0), 0);
+
+    const embed = {
+      title: `Sales QA Report — ${dateStr}`,
+      color: 0x10b981, // Green
+      fields: [
+        { name: 'Quotes Given', value: String(quotesGiven), inline: true },
+        { name: 'Sales Completed', value: String(sales), inline: true },
+        { name: 'Buyer Intent', value: String(buyerIntent), inline: true },
+        { name: 'Undecided', value: String(undecided), inline: true },
+        { name: 'Declined', value: String(declined), inline: true },
+        { name: 'Est. Revenue', value: `$${totalRevenue.toLocaleString()}`, inline: true },
+      ],
+      footer: { text: 'GrovLabs Sales QA' },
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      await axios.post(webhookUrl, { embeds: [embed] });
+      this.logger.log('Sales QA Discord report sent');
+    } catch (err: any) {
+      this.logger.error(`Sales QA Discord webhook failed: ${err.message}`);
+    }
+  }
+
   async runDailyReview(
     dateStr: string,
     options?: { cap?: number; notify?: boolean },
@@ -1070,7 +1110,7 @@ export class SalesQaService {
         failures: failures.length,
       });
       await this.sendEmail(subject, html, ['uj@grovlabs.com']);
-      await this.sendTelegram(this.buildTelegramSummary(reviews, dateStr));
+      await this.sendDiscord(reviews, dateStr);
     }
 
     this.logger.log(
