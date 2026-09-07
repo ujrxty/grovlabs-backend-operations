@@ -4,7 +4,7 @@ import { VendorStatsService } from '../vendor-stats/vendor-stats.service.js';
 import { NonConversionQaService } from '../non-conversion-qa/non-conversion-qa.service.js';
 import { SalesQaService } from '../sales-qa/sales-qa.service.js';
 
-interface SchedulerSettings {
+export interface SchedulerSettings {
   enabled: boolean;
   timezone: string;
   vendor_stats_enabled: boolean;
