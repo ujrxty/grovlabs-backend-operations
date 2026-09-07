@@ -151,4 +151,38 @@ export class NonConversionQaController {
       reviews,
     };
   }
+
+  @Post('backfill')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Backfill non-conversion reviews for a date range',
+    description:
+      'Processes each day in the range sequentially, reviewing non-converted calls. Returns progress. Call repeatedly until done=true.',
+  })
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Monitor API key' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        from: { type: 'string', example: '2026-08-01', description: 'Start date (YYYY-MM-DD)' },
+        to: { type: 'string', example: '2026-09-07', description: 'End date (YYYY-MM-DD). Defaults to today.' },
+        maxCallsPerDay: { type: 'number', example: 100, description: 'Max calls to review per day. Defaults to 100.' },
+        maxDays: { type: 'number', example: 3, description: 'Max days to process per invocation. Defaults to 3.' },
+      },
+      required: ['from'],
+    },
+  })
+  async backfill(
+    @Headers('x-api-key') apiKey: string,
+    @Body() body: { from: string; to?: string; maxCallsPerDay?: number; maxDays?: number },
+  ) {
+    this.assertApiKey(apiKey);
+    const from = body.from;
+    const to = body.to || this.service.resolveDate();
+    const maxCallsPerDay = body.maxCallsPerDay ?? 100;
+    const maxDays = body.maxDays ?? 3;
+
+    const result = await this.service.backfillRange(from, to, maxCallsPerDay, maxDays);
+    return result;
+  }
 }

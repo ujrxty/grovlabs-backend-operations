@@ -653,4 +653,86 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
       vendorFault,
     };
   }
+
+  /**
+   * Backfill a date range, processing up to maxDays per invocation.
+   * Idempotent - skips days that already have reviews.
+   */
+  async backfillRange(
+    from: string,
+    to: string,
+    maxCallsPerDay: number = 100,
+    maxDays: number = 3,
+  ): Promise<{
+    from: string;
+    to: string;
+    daysProcessed: string[];
+    daysSkipped: string[];
+    totalReviewed: number;
+    totalStored: number;
+    done: boolean;
+    nextDate: string | null;
+  }> {
+    const dates: string[] = [];
+    const start = new Date(from);
+    const end = new Date(to);
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      dates.push(d.toISOString().split('T')[0]);
+    }
+
+    const daysProcessed: string[] = [];
+    const daysSkipped: string[] = [];
+    let totalReviewed = 0;
+    let totalStored = 0;
+    let nextDate: string | null = null;
+
+    for (const dateStr of dates) {
+      if (daysProcessed.length >= maxDays) {
+        nextDate = dateStr;
+        break;
+      }
+
+      // Check if this date already has reviews
+      const existingReviews = await this.prisma.non_conversion_review.count({
+        where: { review_date: dateStr },
+      });
+
+      if (existingReviews > 0) {
+        this.logger.log(`Backfill: ${dateStr} already has ${existingReviews} reviews, skipping`);
+        daysSkipped.push(dateStr);
+        continue;
+      }
+
+      this.logger.log(`Backfill: Processing ${dateStr}...`);
+      try {
+        const result = await this.runDailyReview(dateStr, {
+          cap: maxCallsPerDay,
+          notify: false,
+        });
+        daysProcessed.push(dateStr);
+        totalReviewed += result.reviewed;
+        totalStored += result.stored;
+      } catch (err: any) {
+        this.logger.error(`Backfill failed for ${dateStr}: ${err.message}`);
+        daysProcessed.push(dateStr); // Count as processed to avoid infinite loop
+      }
+    }
+
+    const done = nextDate === null;
+    this.logger.log(
+      `Backfill chunk complete: ${daysProcessed.length} days processed, ${daysSkipped.length} skipped, done=${done}`,
+    );
+
+    return {
+      from,
+      to,
+      daysProcessed,
+      daysSkipped,
+      totalReviewed,
+      totalStored,
+      done,
+      nextDate,
+    };
+  }
 }
