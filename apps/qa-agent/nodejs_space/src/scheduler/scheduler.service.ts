@@ -219,11 +219,16 @@ export class SchedulerService implements OnModuleInit {
       this.logger.log('Triggering non-conversion QA review...');
       try {
         const result = await this.nonConversionQa.runDailyReview(dateStr);
-        await this.prisma.scheduler_settings.update({
-          where: { id: 'singleton' },
-          data: { last_non_conversion_run: now },
-        });
-        this.logger.log(`Non-conversion QA complete: ${result.reviewed} reviewed`);
+        // Only mark as done if we actually reviewed something OR there was nothing to review
+        // If all calls failed (failures > 0 and reviewed = 0), don't mark as done so it retries
+        const shouldMarkDone = result.reviewed > 0 || (result.failures === 0 && result.totalNonConverted === 0);
+        if (shouldMarkDone) {
+          await this.prisma.scheduler_settings.update({
+            where: { id: 'singleton' },
+            data: { last_non_conversion_run: now },
+          });
+        }
+        this.logger.log(`Non-conversion QA complete: ${result.reviewed} reviewed, ${result.failures} failures, marked done: ${shouldMarkDone}`);
       } catch (err: any) {
         this.logger.error(`Non-conversion QA failed: ${err.message}`);
       }
@@ -238,11 +243,15 @@ export class SchedulerService implements OnModuleInit {
       this.logger.log('Triggering sales QA review...');
       try {
         const result = await this.salesQa.runDailyReview(dateStr);
-        await this.prisma.scheduler_settings.update({
-          where: { id: 'singleton' },
-          data: { last_sales_qa_run: now },
-        });
-        this.logger.log(`Sales QA complete: ${result.reviewed} reviewed, ${result.sales} sales`);
+        // Only mark as done if we actually reviewed something OR there was nothing to review
+        const shouldMarkDone = result.reviewed > 0 || (result.failures === 0 && result.totalConverted === 0);
+        if (shouldMarkDone) {
+          await this.prisma.scheduler_settings.update({
+            where: { id: 'singleton' },
+            data: { last_sales_qa_run: now },
+          });
+        }
+        this.logger.log(`Sales QA complete: ${result.reviewed} reviewed, ${result.failures} failures, marked done: ${shouldMarkDone}`);
       } catch (err: any) {
         this.logger.error(`Sales QA failed: ${err.message}`);
       }
