@@ -618,7 +618,11 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
 
   /** Send Discord webhook with embed. */
   private async sendDiscord(reviews: CallReview[], dateStr: string): Promise<void> {
-    const webhookUrl = this.config.get<string>('DISCORD_WEBHOOK_URL', '');
+    // Try database settings first, fall back to env var
+    const settings = await this.prisma.scheduler_settings.findUnique({ where: { id: 'singleton' } });
+    const webhookUrl = (settings?.discord_enabled && settings?.discord_webhook_url)
+      ? settings.discord_webhook_url
+      : this.config.get<string>('DISCORD_WEBHOOK_URL', '');
     if (!webhookUrl) {
       this.logger.warn('Discord webhook not configured; skipping');
       return;
@@ -707,13 +711,17 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
     const vendorFault = reviews.filter((r) => r.fault_side === 'vendor').length;
 
     if (notify) {
+      const settings = await this.prisma.scheduler_settings.findUnique({ where: { id: 'singleton' } });
       const subject = `Non-Conversion QA — ${dateStr}: ${reviews.length} reviewed (Buyer ${buyerFault}, Vendor ${vendorFault})`;
       const html = this.buildEmailHtml(reviews, dateStr, {
         totalNonConverted,
         reviewed: reviews.length,
         failures: failures.length,
       });
-      await this.sendEmail(subject, html, ['uj@grovlabs.com']);
+      if (settings?.email_enabled && settings?.email_recipients) {
+        const recipients = settings.email_recipients.split(',').map((e) => e.trim()).filter(Boolean);
+        if (recipients.length > 0) await this.sendEmail(subject, html, recipients);
+      }
       await this.sendDiscord(reviews, dateStr);
     }
 
