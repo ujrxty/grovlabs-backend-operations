@@ -66,7 +66,7 @@ export class SalesQaController {
     @Body() body: { date?: string; cap?: number; notify?: boolean },
   ) {
     this.assertApiKey(apiKey);
-    const dateStr = this.service.resolveDate(body?.date);
+    const dateStr = await this.service.resolveDate(body?.date);
     const cap = typeof body?.cap === 'number' ? body.cap : undefined;
     const notify = typeof body?.notify === 'boolean' ? body.notify : true;
 
@@ -114,7 +114,7 @@ export class SalesQaController {
     @Body() body: { date?: string; cap?: number },
   ) {
     this.assertApiKey(apiKey);
-    const dateStr = this.service.resolveDate(body?.date);
+    const dateStr = await this.service.resolveDate(body?.date);
     const cap = typeof body?.cap === 'number' ? body.cap : undefined;
 
     void this.service
@@ -158,8 +158,8 @@ export class SalesQaController {
     @Body() body: { from: string; to?: string; maxCalls?: number },
   ) {
     this.assertApiKey(apiKey);
-    const from = this.service.resolveDate(body?.from);
-    const to = this.service.resolveDate(body?.to);
+    const from = await this.service.resolveDate(body?.from);
+    const to = await this.service.resolveDate(body?.to);
     const maxCalls = typeof body?.maxCalls === 'number' ? body.maxCalls : 60;
     return this.service.backfillChunk(from, to, maxCalls);
   }
@@ -194,8 +194,8 @@ export class SalesQaController {
     @Body() body: { from: string; to?: string; category?: string; maxCalls?: number },
   ) {
     this.assertApiKey(apiKey);
-    const from = this.service.resolveDate(body?.from);
-    const to = this.service.resolveDate(body?.to);
+    const from = await this.service.resolveDate(body?.from);
+    const to = await this.service.resolveDate(body?.to);
     const maxCalls = typeof body?.maxCalls === 'number' ? body.maxCalls : 60;
     return this.service.recheckSales(from, to, body?.category, maxCalls);
   }
@@ -219,8 +219,8 @@ export class SalesQaController {
     @Query('to') to?: string,
     @Query('category') category?: string,
   ) {
-    const fromStr = this.service.resolveDate(from);
-    const toStr = this.service.resolveDate(to);
+    const fromStr = await this.service.resolveDate(from);
+    const toStr = await this.service.resolveDate(to);
     return this.service.aggregateRange(fromStr, toStr, category);
   }
 
@@ -248,7 +248,7 @@ export class SalesQaController {
     @Body() body: { date?: string; limit?: number; store?: boolean },
   ) {
     this.assertApiKey(apiKey);
-    const dateStr = this.service.resolveDate(body?.date);
+    const dateStr = await this.service.resolveDate(body?.date);
     const limit = typeof body?.limit === 'number' ? body.limit : 5;
 
     const converted = await this.service.fetchConvertedCalls(dateStr);
@@ -281,7 +281,7 @@ export class SalesQaController {
     description: "PST date (YYYY-MM-DD) or 'yesterday'. Defaults to today.",
   })
   async getReviews(@Query('date') date?: string) {
-    const dateStr = this.service.resolveDate(date);
+    const dateStr = await this.service.resolveDate(date);
     const reviews = await this.service.getReviews(dateStr);
     const sales = reviews.filter((r) => r.outcome_category === 'sale_completed').length;
     const quotesIssued = reviews.filter((r) => r.quote_issued).length;

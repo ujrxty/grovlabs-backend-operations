@@ -66,7 +66,7 @@ export class NonConversionQaController {
     @Body() body: { date?: string; cap?: number; notify?: boolean },
   ) {
     this.assertApiKey(apiKey);
-    const dateStr = this.service.resolveDate(body?.date);
+    const dateStr = await this.service.resolveDate(body?.date);
     const cap = typeof body?.cap === 'number' ? body.cap : undefined;
     const notify = typeof body?.notify === 'boolean' ? body.notify : true;
 
@@ -111,7 +111,7 @@ export class NonConversionQaController {
     @Body() body: { date?: string; limit?: number; store?: boolean },
   ) {
     this.assertApiKey(apiKey);
-    const dateStr = this.service.resolveDate(body?.date);
+    const dateStr = await this.service.resolveDate(body?.date);
     const limit = typeof body?.limit === 'number' ? body.limit : 5;
 
     const nonConverted = await this.service.fetchNonConvertedCalls(dateStr);
@@ -139,7 +139,7 @@ export class NonConversionQaController {
   })
   @ApiQuery({ name: 'date', required: false, example: '2026-07-06', description: "PST date (YYYY-MM-DD) or 'yesterday'. Defaults to today." })
   async getReviews(@Query('date') date?: string) {
-    const dateStr = this.service.resolveDate(date);
+    const dateStr = await this.service.resolveDate(date);
     const reviews = await this.service.getReviews(dateStr);
     const buyerFault = reviews.filter((r) => r.fault_side === 'buyer').length;
     const vendorFault = reviews.filter((r) => r.fault_side === 'vendor').length;
@@ -178,7 +178,7 @@ export class NonConversionQaController {
   ) {
     this.assertApiKey(apiKey);
     const from = body.from;
-    const to = body.to || this.service.resolveDate();
+    const to = body.to || await this.service.resolveDate();
     const maxCallsPerDay = body.maxCallsPerDay ?? 100;
     const maxDays = body.maxDays ?? 3;
 

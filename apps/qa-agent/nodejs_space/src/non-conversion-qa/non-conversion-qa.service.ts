@@ -38,28 +38,44 @@ export class NonConversionQaService {
     private readonly td: TrackDriveService,
   ) {}
 
-  /** PST date helpers */
-  private pstDateString(d: Date = new Date()): string {
-    // en-CA gives YYYY-MM-DD
+  /** Get timezone from scheduler settings, default to America/New_York */
+  private async getTimezone(): Promise<string> {
+    const settings = await this.prisma.scheduler_settings.findUnique({ where: { id: 'singleton' } });
+    return settings?.timezone || 'America/New_York';
+  }
+
+  /** Date string in configured timezone */
+  private dateStringInTz(tz: string, d: Date = new Date()): string {
     return new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Phoenix',
+      timeZone: tz,
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
     }).format(d);
   }
 
-  /** Build ISO range (with -07:00 offset) for a given PST date string YYYY-MM-DD */
-  private pstRange(dateStr: string): { from: string; to: string } {
+  /** Build ISO range for a given date string YYYY-MM-DD in configured timezone */
+  private tzRange(dateStr: string, tz: string): { from: string; to: string } {
+    // Get UTC offset for the timezone on that date
+    const testDate = new Date(`${dateStr}T12:00:00`);
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      timeZoneName: 'shortOffset',
+    });
+    const parts = formatter.formatToParts(testDate);
+    const offsetPart = parts.find(p => p.type === 'timeZoneName')?.value || '-05:00';
+    const offset = offsetPart.replace('GMT', '').replace(/(\d)$/, '$1:00').replace(/(\d{2})$/, ':$1') || '-05:00';
+
     return {
-      from: `${dateStr}T00:00:00-07:00`,
-      to: `${dateStr}T23:59:59-07:00`,
+      from: `${dateStr}T00:00:00${offset}`,
+      to: `${dateStr}T23:59:59${offset}`,
     };
   }
 
-  /** Fetch all non-converted calls (that have a recording) for a PST date. */
+  /** Fetch all non-converted calls (that have a recording) for a date in configured timezone. */
   async fetchNonConvertedCalls(dateStr: string): Promise<any[]> {
-    const { from, to } = this.pstRange(dateStr);
+    const tz = await this.getTimezone();
+    const { from, to } = this.tzRange(dateStr, tz);
     const all = await this.td.fetchAllCallsForRange(from, to, 100);
     const nonConverted = all.filter(
       (c) => String(c.buyer_converted) !== 'Converted' && !!c.recording_url,
@@ -349,15 +365,16 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
     });
   }
 
-  /** Resolve the target date string (defaults to today PST). */
-  resolveDate(input?: string): string {
+  /** Resolve the target date string (defaults to today in configured timezone). */
+  async resolveDate(input?: string): Promise<string> {
     if (input && /^\d{4}-\d{2}-\d{2}$/.test(input)) return input;
+    const tz = await this.getTimezone();
     if (input === 'yesterday') {
       const d = new Date();
       d.setDate(d.getDate() - 1);
-      return this.pstDateString(d);
+      return this.dateStringInTz(tz, d);
     }
-    return this.pstDateString();
+    return this.dateStringInTz(tz);
   }
 
   // ---------------------------------------------------------------------------

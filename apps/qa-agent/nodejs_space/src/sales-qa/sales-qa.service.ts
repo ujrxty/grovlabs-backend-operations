@@ -58,32 +58,46 @@ export class SalesQaService {
   ) {}
 
   // ---------------------------------------------------------------------------
-  // Date helpers (PST / America/Phoenix)
+  // Date helpers - uses timezone from scheduler settings
   // ---------------------------------------------------------------------------
-  private pstDateString(d: Date = new Date()): string {
+  private async getTimezone(): Promise<string> {
+    const settings = await this.prisma.scheduler_settings.findUnique({ where: { id: 'singleton' } });
+    return settings?.timezone || 'America/New_York';
+  }
+
+  private dateStringInTz(tz: string, d: Date = new Date()): string {
     return new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Phoenix',
+      timeZone: tz,
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
     }).format(d);
   }
 
-  private pstRange(dateStr: string): { from: string; to: string } {
+  private tzRange(dateStr: string, tz: string): { from: string; to: string } {
+    const testDate = new Date(`${dateStr}T12:00:00`);
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      timeZoneName: 'shortOffset',
+    });
+    const parts = formatter.formatToParts(testDate);
+    const offsetPart = parts.find(p => p.type === 'timeZoneName')?.value || '-05:00';
+    const offset = offsetPart.replace('GMT', '').replace(/(\d)$/, '$1:00').replace(/(\d{2})$/, ':$1') || '-05:00';
     return {
-      from: `${dateStr}T00:00:00-07:00`,
-      to: `${dateStr}T23:59:59-07:00`,
+      from: `${dateStr}T00:00:00${offset}`,
+      to: `${dateStr}T23:59:59${offset}`,
     };
   }
 
-  resolveDate(input?: string): string {
+  async resolveDate(input?: string): Promise<string> {
     if (input && /^\d{4}-\d{2}-\d{2}$/.test(input)) return input;
+    const tz = await this.getTimezone();
     if (input === 'yesterday') {
       const d = new Date();
       d.setDate(d.getDate() - 1);
-      return this.pstDateString(d);
+      return this.dateStringInTz(tz, d);
     }
-    return this.pstDateString();
+    return this.dateStringInTz(tz);
   }
 
   /** Inclusive list of YYYY-MM-DD date strings from `from` to `to`. */
@@ -133,7 +147,8 @@ export class SalesQaService {
   // Fetch: only CONNECTED + CONVERTED (billable) calls that have a recording
   // ---------------------------------------------------------------------------
   async fetchConvertedCalls(dateStr: string): Promise<any[]> {
-    const { from, to } = this.pstRange(dateStr);
+    const tz = await this.getTimezone();
+    const { from, to } = this.tzRange(dateStr, tz);
     const all = await this.td.fetchAllCallsForRange(from, to, 100);
     const converted = all.filter(
       (c) =>
