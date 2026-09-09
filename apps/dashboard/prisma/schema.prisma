@@ -630,3 +630,31 @@ model network_io {
   @@index([status])
   @@index([sign_token])
 }
+
+// ============================================
+// Scheduler Settings (shared with QA Agent)
+// ============================================
+
+model scheduler_settings {
+  id                        String   @id @default("singleton")
+  enabled                   Boolean  @default(false)
+  timezone                  String   @default("America/New_York")
+  vendor_stats_enabled      Boolean  @default(true)
+  vendor_stats_hour         Int      @default(18)
+  vendor_stats_minute       Int      @default(0)
+  non_conversion_qa_enabled Boolean  @default(true)
+  non_conversion_qa_hour    Int      @default(19)
+  non_conversion_qa_minute  Int      @default(0)
+  sales_qa_enabled          Boolean  @default(true)
+  sales_qa_hour             Int      @default(20)
+  sales_qa_minute           Int      @default(0)
+  discord_enabled           Boolean  @default(true)
+  discord_webhook_url       String?
+  email_enabled             Boolean  @default(true)
+  email_recipients          String   @default("uj@grovlabs.com")
+  telegram_enabled          Boolean  @default(true)
+  last_vendor_stats_run     DateTime?
+  last_non_conversion_run   DateTime?
+  last_sales_qa_run         DateTime?
+  updated_at                DateTime @default(now()) @updatedAt
+}
