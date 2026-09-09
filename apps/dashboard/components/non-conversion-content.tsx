@@ -254,11 +254,11 @@ export function NonConversionContent() {
       {/* Date range */}
       <div className="flex flex-wrap items-end gap-3">
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">From (PST)</Label>
+          <Label className="text-xs text-muted-foreground">From {schedule?.tzLabel ? `(${schedule.tzLabel})` : ''}</Label>
           <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1) }} className="w-[170px]" />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">To (PST)</Label>
+          <Label className="text-xs text-muted-foreground">To {schedule?.tzLabel ? `(${schedule.tzLabel})` : ''}</Label>
           <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1) }} className="w-[170px]" />
         </div>
         <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={() => { const t = todayPST(); setDateFrom(t); setDateTo(t); setPage(1) }}>

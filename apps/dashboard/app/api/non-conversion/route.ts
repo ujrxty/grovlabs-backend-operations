@@ -6,13 +6,18 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { buildNonConversionWhere } from '@/lib/non-conversion-query'
 import { enrichReviews } from '@/lib/non-conversion-enrich'
-import { nextQaRun, isQaActiveNow, QA_START_HOUR, QA_END_HOUR, QA_TZ_LABEL } from '@/lib/non-conversion-schedule'
+import { nextQaRunDynamic, isQaActiveNowDynamic, tzLabelFromIana } from '@/lib/non-conversion-schedule'
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
+    // Fetch scheduler settings for timezone and schedule
+    const schedulerSettings = await prisma.scheduler_settings.findUnique({ where: { id: 'singleton' } })
+    const tz = schedulerSettings?.timezone || 'America/New_York'
+    const startHour = schedulerSettings?.non_conversion_qa_hour ?? 8
+    const endHour = 18 // We don't have an end hour in settings, default to 6pm
     const url = new URL(req.url)
     const where = buildNonConversionWhere(url.searchParams)
     const page = parseInt(url.searchParams.get('page') ?? '1')
@@ -84,11 +89,11 @@ export async function GET(req: Request) {
     const lastDataAt = lastWrite?._max?.created_at ?? null
     const schedule = {
       lastDataAt: lastDataAt ? lastDataAt.toISOString() : null,
-      nextRunAt: nextQaRun().toISOString(),
-      activeNow: isQaActiveNow(),
-      startHour: QA_START_HOUR,
-      endHour: QA_END_HOUR,
-      tzLabel: QA_TZ_LABEL,
+      nextRunAt: nextQaRunDynamic(tz, startHour, endHour).toISOString(),
+      activeNow: isQaActiveNowDynamic(tz, startHour, endHour),
+      startHour,
+      endHour,
+      tzLabel: tzLabelFromIana(tz),
     }
 
     return NextResponse.json({
