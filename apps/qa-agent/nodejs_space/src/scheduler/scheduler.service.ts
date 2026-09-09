@@ -172,10 +172,11 @@ export class SchedulerService implements OnModuleInit {
   }
 
   private isTimeToRun(targetHour: number, targetMinute: number, currentHour: number, currentMinute: number): boolean {
-    // Check if we're within the 15-minute window of the target time
+    // Run if current time is AT or PAST the scheduled time
+    // The isSameDay check in checkAndRunTasks prevents multiple runs per day
     const targetMins = targetHour * 60 + targetMinute;
     const currentMins = currentHour * 60 + currentMinute;
-    return currentMins >= targetMins && currentMins < targetMins + 15;
+    return currentMins >= targetMins;
   }
 
   private async checkAndRunTasks(): Promise<void> {
