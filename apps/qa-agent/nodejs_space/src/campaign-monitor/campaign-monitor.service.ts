@@ -486,7 +486,7 @@ export class CampaignMonitorService {
   }
 
   /**
-   * Send alerts via Telegram - batched into one message if possible
+   * Send alerts via Telegram and Discord
    */
   private async sendAlerts(alerts: MonitorAlert[]): Promise<void> {
     // Group by severity
@@ -497,12 +497,66 @@ export class CampaignMonitorService {
       const header = `CAMPAIGN MONITOR - ${critical.length} CRITICAL ALERT${critical.length > 1 ? 'S' : ''}\n${'='.repeat(40)}\n\n`;
       const body = critical.map(a => a.message).join('\n\n---\n\n');
       await this.sendLongMessage(header + body);
+      await this.sendDiscordAlert(critical, 'critical');
     }
 
     if (warnings.length > 0) {
       const header = `CAMPAIGN MONITOR - ${warnings.length} WARNING${warnings.length > 1 ? 'S' : ''}\n${'='.repeat(40)}\n\n`;
       const body = warnings.map(a => a.message).join('\n\n---\n\n');
       await this.sendLongMessage(header + body);
+      await this.sendDiscordAlert(warnings, 'warning');
+    }
+  }
+
+  /**
+   * Send alerts to Discord webhook
+   */
+  private async sendDiscordAlert(alerts: MonitorAlert[], severity: 'critical' | 'warning'): Promise<void> {
+    try {
+      const settings = await this.prisma.scheduler_settings.findUnique({ where: { id: 'singleton' } });
+      const webhookUrl = settings?.discord_enabled && settings?.discord_webhook_url
+        ? settings.discord_webhook_url
+        : this.config.get<string>('DISCORD_WEBHOOK_URL', '');
+
+      if (!webhookUrl) {
+        this.logger.warn('Discord webhook not configured for campaign monitor');
+        return;
+      }
+
+      const color = severity === 'critical' ? 0xdc2626 : 0xf59e0b; // Red for critical, amber for warning
+      const title = severity === 'critical'
+        ? `🚨 ${alerts.length} Critical Campaign Alert${alerts.length > 1 ? 's' : ''}`
+        : `⚠️ ${alerts.length} Campaign Warning${alerts.length > 1 ? 's' : ''}`;
+
+      const fields = alerts.slice(0, 10).map(a => ({
+        name: a.offerName,
+        value: a.message.slice(0, 200) + (a.message.length > 200 ? '...' : ''),
+        inline: false,
+      }));
+
+      if (alerts.length > 10) {
+        fields.push({ name: '...', value: `+${alerts.length - 10} more alerts`, inline: false });
+      }
+
+      const embed = {
+        title,
+        color,
+        fields,
+        footer: { text: 'GrovLabs Campaign Monitor' },
+        timestamp: new Date().toISOString(),
+      };
+
+      const res = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ embeds: [embed] }),
+      });
+
+      if (!res.ok) {
+        this.logger.error(`Discord webhook failed: ${res.status}`);
+      }
+    } catch (err: any) {
+      this.logger.error(`Discord alert failed: ${err.message}`);
     }
   }
 
