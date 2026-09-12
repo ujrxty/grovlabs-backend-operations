@@ -355,25 +355,29 @@ export class PingRelayService {
 
   /**
    * Check if this caller+buyer combo was seen recently
+   * Queries ping_response table since it tracks all pings sent to buyers (not just accepted)
    */
   private async checkDuplicate(callerPhone: string, buyerId: string): Promise<{ isDuplicate: boolean; originalPingId?: string }> {
     if (!callerPhone) return { isDuplicate: false };
 
     const windowStart = new Date(Date.now() - this.DUPLICATE_WINDOW_MINUTES * 60 * 1000);
 
-    const existing = await this.prisma.inbound_ping.findFirst({
+    // Check ping_response for any ping sent to this buyer for this caller
+    const existing = await this.prisma.ping_response.findFirst({
       where: {
-        caller_phone: callerPhone,
-        winning_buyer_id: buyerId,
-        received_at: { gte: windowStart },
+        buyer_id: buyerId,
+        ping: {
+          caller_phone: callerPhone,
+          received_at: { gte: windowStart },
+        },
       },
-      orderBy: { received_at: 'desc' },
-      select: { id: true },
+      orderBy: { created_at: 'desc' },
+      select: { ping_id: true },
     });
 
     return {
       isDuplicate: !!existing,
-      originalPingId: existing?.id,
+      originalPingId: existing?.ping_id,
     };
   }
 
