@@ -409,12 +409,21 @@ export class PingRelayService {
     };
   }
 
+  private isValidUUID(str: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+  }
+
   async handleRelayPing(
     relayKey: string,
     payload: any,
     headers: Record<string, string>,
   ): Promise<any> {
     const startTime = Date.now();
+
+    // Validate relay key format (must be UUID)
+    if (!this.isValidUUID(relayKey)) {
+      throw new Error(`Invalid relay key format: ${relayKey}`);
+    }
 
     // Find relay config (cached)
     const config = await this.getConfigCached(relayKey);
