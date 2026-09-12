@@ -417,7 +417,7 @@ export class PingAnalysisService {
   }
 
   async getRejectReasons(options: { start?: Date; end?: Date; limit?: number }): Promise<RejectReasonBreakdown[]> {
-    const where: any = { status: 'rejected', rejection_category: { not: null } };
+    const where: any = { status: 'rejected' };
     if (options.start || options.end) {
       where.received_at = {};
       if (options.start) where.received_at.gte = options.start;
@@ -426,13 +426,13 @@ export class PingAnalysisService {
 
     const responses = await this.prisma.ping_response.findMany({
       where,
-      select: { rejection_category: true },
+      select: { rejection_reason: true },
     });
 
     const counts = new Map<string, number>();
     for (const r of responses) {
-      const cat = r.rejection_category || 'unknown';
-      counts.set(cat, (counts.get(cat) || 0) + 1);
+      const reason = r.rejection_reason || 'unknown';
+      counts.set(reason, (counts.get(reason) || 0) + 1);
     }
 
     const total = responses.length;
