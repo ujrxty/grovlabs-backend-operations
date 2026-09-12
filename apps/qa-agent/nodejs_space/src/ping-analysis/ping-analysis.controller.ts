@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Body, Param, Query, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { PingAnalysisService, InboundPingPayload } from './ping-analysis.service.js';
+import { PingAnalysisService, InboundPingPayload, TrendDataPoint, HourlyBreakdown, StateCoverage, BidAnalysis } from './ping-analysis.service.js';
 
 @ApiTags('Ping Intelligence')
 @Controller('pings')
@@ -174,6 +174,101 @@ export class PingAnalysisController {
   @ApiQuery({ name: 'limit', required: false })
   async getLiveFeed(@Query('limit') limit?: string) {
     return this.pingService.getLiveFeed(limit ? parseInt(limit, 10) : 20);
+  }
+
+  @Get('stats/trends')
+  @ApiOperation({ summary: 'Get ping trends over time' })
+  @ApiQuery({ name: 'start', required: false })
+  @ApiQuery({ name: 'end', required: false })
+  @ApiQuery({ name: 'offer_name', required: false })
+  @ApiQuery({ name: 'traffic_source', required: false })
+  @ApiQuery({ name: 'state', required: false })
+  @ApiQuery({ name: 'granularity', required: false, enum: ['hour', 'day'] })
+  async getTrends(
+    @Query('start') start?: string,
+    @Query('end') end?: string,
+    @Query('offer_name') offerName?: string,
+    @Query('traffic_source') trafficSource?: string,
+    @Query('state') state?: string,
+    @Query('granularity') granularity?: 'hour' | 'day',
+  ): Promise<TrendDataPoint[]> {
+    return this.pingService.getTrends({
+      start: start ? new Date(start) : undefined,
+      end: end ? new Date(end) : undefined,
+      offer_name: offerName,
+      traffic_source: trafficSource,
+      state,
+      granularity,
+    });
+  }
+
+  @Get('stats/hourly')
+  @ApiOperation({ summary: 'Get hourly breakdown (heatmap data)' })
+  @ApiQuery({ name: 'start', required: false })
+  @ApiQuery({ name: 'end', required: false })
+  @ApiQuery({ name: 'offer_name', required: false })
+  @ApiQuery({ name: 'traffic_source', required: false })
+  async getHourlyBreakdown(
+    @Query('start') start?: string,
+    @Query('end') end?: string,
+    @Query('offer_name') offerName?: string,
+    @Query('traffic_source') trafficSource?: string,
+  ): Promise<HourlyBreakdown[]> {
+    return this.pingService.getHourlyBreakdown({
+      start: start ? new Date(start) : undefined,
+      end: end ? new Date(end) : undefined,
+      offer_name: offerName,
+      traffic_source: trafficSource,
+    });
+  }
+
+  @Get('stats/coverage')
+  @ApiOperation({ summary: 'Get state coverage map data' })
+  @ApiQuery({ name: 'start', required: false })
+  @ApiQuery({ name: 'end', required: false })
+  @ApiQuery({ name: 'offer_name', required: false })
+  @ApiQuery({ name: 'traffic_source', required: false })
+  async getCoverageMap(
+    @Query('start') start?: string,
+    @Query('end') end?: string,
+    @Query('offer_name') offerName?: string,
+    @Query('traffic_source') trafficSource?: string,
+  ): Promise<StateCoverage[]> {
+    return this.pingService.getCoverageMap({
+      start: start ? new Date(start) : undefined,
+      end: end ? new Date(end) : undefined,
+      offer_name: offerName,
+      traffic_source: trafficSource,
+    });
+  }
+
+  @Get('stats/bids')
+  @ApiOperation({ summary: 'Get bid analysis and distribution' })
+  @ApiQuery({ name: 'start', required: false })
+  @ApiQuery({ name: 'end', required: false })
+  @ApiQuery({ name: 'offer_name', required: false })
+  @ApiQuery({ name: 'traffic_source', required: false })
+  @ApiQuery({ name: 'state', required: false })
+  async getBidAnalysis(
+    @Query('start') start?: string,
+    @Query('end') end?: string,
+    @Query('offer_name') offerName?: string,
+    @Query('traffic_source') trafficSource?: string,
+    @Query('state') state?: string,
+  ): Promise<BidAnalysis> {
+    return this.pingService.getBidAnalysis({
+      start: start ? new Date(start) : undefined,
+      end: end ? new Date(end) : undefined,
+      offer_name: offerName,
+      traffic_source: trafficSource,
+      state,
+    });
+  }
+
+  @Get('filters')
+  @ApiOperation({ summary: 'Get available filter options' })
+  async getFilterOptions() {
+    return this.pingService.getFilterOptions();
   }
 
   @Get(':pingId')

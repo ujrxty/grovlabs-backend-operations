@@ -53,6 +53,50 @@ export interface RejectReasonBreakdown {
   pct: number;
 }
 
+export interface TrendDataPoint {
+  timestamp: string;
+  pings: number;
+  accepted: number;
+  rejected: number;
+  accept_rate: number;
+  total_bid: number;
+  avg_bid: number;
+  duplicates: number;
+}
+
+export interface HourlyBreakdown {
+  hour: number;
+  day_of_week: number;
+  pings: number;
+  accepted: number;
+  accept_rate: number;
+  avg_bid: number;
+}
+
+export interface StateCoverage {
+  state: string;
+  pings: number;
+  accepted: number;
+  rejected: number;
+  accept_rate: number;
+  total_bid: number;
+  avg_bid: number;
+  coverage_score: number;
+}
+
+export interface BidAnalysis {
+  total_bids: number;
+  avg_bid: number;
+  min_bid: number;
+  max_bid: number;
+  median_bid: number;
+  p25_bid: number;
+  p75_bid: number;
+  suggested_floor: number;
+  distribution: { range: string; count: number; pct: number }[];
+  by_buyer: { buyer: string; avg_bid: number; win_rate: number; total_bids: number }[];
+}
+
 @Injectable()
 export class PingAnalysisService {
   private readonly logger = new Logger(PingAnalysisService.name);
@@ -564,6 +608,367 @@ export class PingAnalysisService {
         lowest_bid: accepts.length > 0 ? Math.min(...accepts.map((r) => r.bid_amount || 0)) : 0,
         avg_response_ms: ping.processing_time_ms || 0,
       },
+    };
+  }
+
+  async getTrends(options: {
+    start?: Date;
+    end?: Date;
+    offer_name?: string;
+    traffic_source?: string;
+    state?: string;
+    granularity?: 'hour' | 'day';
+  }): Promise<TrendDataPoint[]> {
+    const where: any = {};
+
+    const now = new Date();
+    const defaultStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    where.received_at = {
+      gte: options.start || defaultStart,
+      lte: options.end || now,
+    };
+
+    if (options.offer_name) where.offer_name = options.offer_name;
+    if (options.traffic_source) where.traffic_source = options.traffic_source;
+    if (options.state) where.caller_state = options.state;
+
+    const pings = await this.prisma.inbound_ping.findMany({
+      where,
+      select: {
+        received_at: true,
+        status: true,
+        winning_bid: true,
+        is_duplicate: true,
+      },
+      orderBy: { received_at: 'asc' },
+    });
+
+    const granularity = options.granularity || 'hour';
+    const groups = new Map<string, any[]>();
+
+    for (const p of pings) {
+      const date = new Date(p.received_at);
+      let key: string;
+
+      if (granularity === 'hour') {
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T${String(date.getHours()).padStart(2, '0')}:00`;
+      } else {
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      }
+
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(p);
+    }
+
+    const trends: TrendDataPoint[] = [];
+
+    for (const [timestamp, group] of groups) {
+      const total = group.length;
+      const accepted = group.filter(p => p.status === 'accepted').length;
+      const rejected = group.filter(p => p.status === 'rejected').length;
+      const duplicates = group.filter(p => p.is_duplicate).length;
+      const acceptedWithBid = group.filter(p => p.status === 'accepted' && p.winning_bid);
+      const totalBid = acceptedWithBid.reduce((sum, p) => sum + (p.winning_bid || 0), 0);
+
+      trends.push({
+        timestamp,
+        pings: total,
+        accepted,
+        rejected,
+        accept_rate: total > 0 ? Math.round((accepted / total) * 100) : 0,
+        total_bid: Math.round(totalBid * 100) / 100,
+        avg_bid: acceptedWithBid.length > 0 ? Math.round((totalBid / acceptedWithBid.length) * 100) / 100 : 0,
+        duplicates,
+      });
+    }
+
+    return trends;
+  }
+
+  async getHourlyBreakdown(options: {
+    start?: Date;
+    end?: Date;
+    offer_name?: string;
+    traffic_source?: string;
+  }): Promise<HourlyBreakdown[]> {
+    const where: any = {};
+
+    const now = new Date();
+    const defaultStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    where.received_at = {
+      gte: options.start || defaultStart,
+      lte: options.end || now,
+    };
+
+    if (options.offer_name) where.offer_name = options.offer_name;
+    if (options.traffic_source) where.traffic_source = options.traffic_source;
+
+    const pings = await this.prisma.inbound_ping.findMany({
+      where,
+      select: {
+        received_at: true,
+        status: true,
+        winning_bid: true,
+      },
+    });
+
+    const grid = new Map<string, any[]>();
+
+    for (const p of pings) {
+      const date = new Date(p.received_at);
+      const hour = date.getHours();
+      const dow = date.getDay();
+      const key = `${dow}-${hour}`;
+
+      if (!grid.has(key)) grid.set(key, []);
+      grid.get(key)!.push(p);
+    }
+
+    const result: HourlyBreakdown[] = [];
+
+    for (let dow = 0; dow < 7; dow++) {
+      for (let hour = 0; hour < 24; hour++) {
+        const key = `${dow}-${hour}`;
+        const group = grid.get(key) || [];
+        const total = group.length;
+        const accepted = group.filter(p => p.status === 'accepted').length;
+        const acceptedWithBid = group.filter(p => p.status === 'accepted' && p.winning_bid);
+        const totalBid = acceptedWithBid.reduce((sum, p) => sum + (p.winning_bid || 0), 0);
+
+        result.push({
+          hour,
+          day_of_week: dow,
+          pings: total,
+          accepted,
+          accept_rate: total > 0 ? Math.round((accepted / total) * 100) : 0,
+          avg_bid: acceptedWithBid.length > 0 ? Math.round((totalBid / acceptedWithBid.length) * 100) / 100 : 0,
+        });
+      }
+    }
+
+    return result;
+  }
+
+  async getCoverageMap(options: {
+    start?: Date;
+    end?: Date;
+    offer_name?: string;
+    traffic_source?: string;
+  }): Promise<StateCoverage[]> {
+    const where: any = {};
+
+    const now = new Date();
+    const defaultStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    where.received_at = {
+      gte: options.start || defaultStart,
+      lte: options.end || now,
+    };
+
+    if (options.offer_name) where.offer_name = options.offer_name;
+    if (options.traffic_source) where.traffic_source = options.traffic_source;
+
+    const pings = await this.prisma.inbound_ping.findMany({
+      where,
+      select: {
+        caller_state: true,
+        status: true,
+        winning_bid: true,
+      },
+    });
+
+    const states = new Map<string, any[]>();
+
+    for (const p of pings) {
+      const state = (p.caller_state || '').toUpperCase();
+      if (!state || state.length !== 2) continue;
+
+      if (!states.has(state)) states.set(state, []);
+      states.get(state)!.push(p);
+    }
+
+    const totalPings = pings.length;
+    const result: StateCoverage[] = [];
+
+    for (const [state, group] of states) {
+      const total = group.length;
+      const accepted = group.filter(p => p.status === 'accepted').length;
+      const rejected = group.filter(p => p.status === 'rejected').length;
+      const acceptedWithBid = group.filter(p => p.status === 'accepted' && p.winning_bid);
+      const totalBid = acceptedWithBid.reduce((sum, p) => sum + (p.winning_bid || 0), 0);
+      const acceptRate = total > 0 ? Math.round((accepted / total) * 100) : 0;
+
+      result.push({
+        state,
+        pings: total,
+        accepted,
+        rejected,
+        accept_rate: acceptRate,
+        total_bid: Math.round(totalBid * 100) / 100,
+        avg_bid: acceptedWithBid.length > 0 ? Math.round((totalBid / acceptedWithBid.length) * 100) / 100 : 0,
+        coverage_score: Math.round((acceptRate * (total / (totalPings || 1))) * 100) / 100,
+      });
+    }
+
+    return result.sort((a, b) => b.pings - a.pings);
+  }
+
+  async getBidAnalysis(options: {
+    start?: Date;
+    end?: Date;
+    offer_name?: string;
+    traffic_source?: string;
+    state?: string;
+  }): Promise<BidAnalysis> {
+    const where: any = {};
+
+    const now = new Date();
+    const defaultStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    where.received_at = {
+      gte: options.start || defaultStart,
+      lte: options.end || now,
+    };
+
+    if (options.offer_name) where.offer_name = options.offer_name;
+    if (options.traffic_source) where.traffic_source = options.traffic_source;
+    if (options.state) where.caller_state = options.state;
+
+    const pings = await this.prisma.inbound_ping.findMany({
+      where,
+      select: {
+        status: true,
+        winning_bid: true,
+        winning_buyer_name: true,
+      },
+    });
+
+    const bids = pings
+      .filter(p => p.status === 'accepted' && p.winning_bid && p.winning_bid > 0)
+      .map(p => ({ bid: p.winning_bid!, buyer: p.winning_buyer_name || 'Unknown' }));
+
+    if (bids.length === 0) {
+      return {
+        total_bids: 0,
+        avg_bid: 0,
+        min_bid: 0,
+        max_bid: 0,
+        median_bid: 0,
+        p25_bid: 0,
+        p75_bid: 0,
+        suggested_floor: 0,
+        distribution: [],
+        by_buyer: [],
+      };
+    }
+
+    const sortedBids = bids.map(b => b.bid).sort((a, b) => a - b);
+    const total = sortedBids.length;
+    const sum = sortedBids.reduce((a, b) => a + b, 0);
+
+    const percentile = (arr: number[], p: number) => {
+      const idx = Math.ceil((p / 100) * arr.length) - 1;
+      return arr[Math.max(0, idx)];
+    };
+
+    const minBid = sortedBids[0];
+    const maxBid = sortedBids[total - 1];
+    const avgBid = sum / total;
+    const medianBid = percentile(sortedBids, 50);
+    const p25 = percentile(sortedBids, 25);
+    const p75 = percentile(sortedBids, 75);
+
+    const suggestedFloor = Math.round(p25 * 0.9 * 100) / 100;
+
+    const ranges = [
+      { min: 0, max: 10, label: '$0-10' },
+      { min: 10, max: 20, label: '$10-20' },
+      { min: 20, max: 30, label: '$20-30' },
+      { min: 30, max: 50, label: '$30-50' },
+      { min: 50, max: 75, label: '$50-75' },
+      { min: 75, max: 100, label: '$75-100' },
+      { min: 100, max: Infinity, label: '$100+' },
+    ];
+
+    const distribution = ranges.map(r => {
+      const count = sortedBids.filter(b => b >= r.min && b < r.max).length;
+      return {
+        range: r.label,
+        count,
+        pct: total > 0 ? Math.round((count / total) * 100) : 0,
+      };
+    });
+
+    const buyerStats = new Map<string, { bids: number[]; wins: number }>();
+
+    for (const b of bids) {
+      if (!buyerStats.has(b.buyer)) {
+        buyerStats.set(b.buyer, { bids: [], wins: 0 });
+      }
+      buyerStats.get(b.buyer)!.bids.push(b.bid);
+      buyerStats.get(b.buyer)!.wins++;
+    }
+
+    const byBuyer = [...buyerStats.entries()]
+      .map(([buyer, data]) => ({
+        buyer,
+        avg_bid: Math.round((data.bids.reduce((a, b) => a + b, 0) / data.bids.length) * 100) / 100,
+        win_rate: Math.round((data.wins / total) * 100),
+        total_bids: data.wins,
+      }))
+      .sort((a, b) => b.total_bids - a.total_bids)
+      .slice(0, 10);
+
+    return {
+      total_bids: total,
+      avg_bid: Math.round(avgBid * 100) / 100,
+      min_bid: Math.round(minBid * 100) / 100,
+      max_bid: Math.round(maxBid * 100) / 100,
+      median_bid: Math.round(medianBid * 100) / 100,
+      p25_bid: Math.round(p25 * 100) / 100,
+      p75_bid: Math.round(p75 * 100) / 100,
+      suggested_floor: suggestedFloor,
+      distribution,
+      by_buyer: byBuyer,
+    };
+  }
+
+  async getFilterOptions(): Promise<{
+    offers: string[];
+    traffic_sources: string[];
+    states: string[];
+    buyers: string[];
+  }> {
+    const [offers, sources, states, buyers] = await Promise.all([
+      this.prisma.inbound_ping.findMany({
+        select: { offer_name: true },
+        distinct: ['offer_name'],
+        where: { offer_name: { not: null } },
+      }),
+      this.prisma.inbound_ping.findMany({
+        select: { traffic_source: true },
+        distinct: ['traffic_source'],
+        where: { traffic_source: { not: null } },
+      }),
+      this.prisma.inbound_ping.findMany({
+        select: { caller_state: true },
+        distinct: ['caller_state'],
+        where: { caller_state: { not: null } },
+      }),
+      this.prisma.inbound_ping.findMany({
+        select: { winning_buyer_name: true },
+        distinct: ['winning_buyer_name'],
+        where: { winning_buyer_name: { not: null } },
+      }),
+    ]);
+
+    return {
+      offers: offers.map(o => o.offer_name!).filter(Boolean).sort(),
+      traffic_sources: sources.map(s => s.traffic_source!).filter(Boolean).sort(),
+      states: states.map(s => s.caller_state!).filter(Boolean).sort(),
+      buyers: buyers.map(b => b.winning_buyer_name!).filter(Boolean).sort(),
     };
   }
 }

@@ -38,7 +38,7 @@ const navItems = [
   { href: '/non-conversion-qa', label: 'Non-Conversion QA', icon: PhoneOff },
   { href: '/sales-monitoring', label: 'Sales Monitoring', icon: ClipboardCheck },
   { href: '/loss-monitor', label: 'Loss Monitor', icon: Siren },
-  { href: '/ping-intelligence', label: 'Ping Intelligence', icon: Radio },
+  { href: '/rtb-intelligence', label: 'RTB Intelligence', icon: Radio },
   { href: '/billing', label: 'Billing', icon: Receipt },
   { href: '/settings', label: 'Settings', icon: Settings },
   { href: '/settings/team', label: 'Team', icon: UsersRound },
