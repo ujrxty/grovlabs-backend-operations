@@ -29,15 +29,93 @@ export interface RelayResponse {
   latency_ms: number;
 }
 
+interface PayoutConfig {
+  offer_id: string;
+  offer_name: string;
+  payout_type: 'usd' | 'buyer_conversion_percent';
+  payout: number;
+  revenue_percentage: number;
+}
+
 @Injectable()
 export class PingRelayService {
   private readonly logger = new Logger(PingRelayService.name);
+  private payoutConfigCache: Map<string, PayoutConfig> = new Map();
+  private payoutCacheLastRefresh: Date | null = null;
+  private readonly PAYOUT_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly trackdrive: TrackDriveService,
     private readonly config: ConfigService,
   ) {}
+
+  private async refreshPayoutConfigs(): Promise<void> {
+    if (
+      this.payoutCacheLastRefresh &&
+      Date.now() - this.payoutCacheLastRefresh.getTime() < this.PAYOUT_CACHE_TTL_MS
+    ) {
+      return;
+    }
+
+    try {
+      const response = await this.trackdrive.listOfferConversions({ per_page: 200 });
+      const conversions = response?.offer_conversions || response || [];
+
+      // Also fetch offers to get offer names
+      const offersResponse = await this.trackdrive.listOffers({ per_page: 200 });
+      const offers = offersResponse?.offers || [];
+      const offerNameMap = new Map(offers.map((o: any) => [String(o.id), o.name || o.title || '']));
+
+      this.payoutConfigCache.clear();
+      for (const conv of conversions) {
+        if (conv.offer_id) {
+          const offerId = String(conv.offer_id);
+          const offerName = offerNameMap.get(offerId) || '';
+          this.payoutConfigCache.set(offerId, {
+            offer_id: offerId,
+            offer_name: offerName,
+            payout_type: conv.payout_type || 'usd',
+            payout: Number(conv.payout) || 0,
+            revenue_percentage: Number(conv.revenue_percentage) || 0,
+          });
+          // Also index by name for lookup
+          if (offerName) {
+            this.payoutConfigCache.set(offerName.toLowerCase(), {
+              offer_id: offerId,
+              offer_name: offerName,
+              payout_type: conv.payout_type || 'usd',
+              payout: Number(conv.payout) || 0,
+              revenue_percentage: Number(conv.revenue_percentage) || 0,
+            });
+          }
+        }
+      }
+
+      this.payoutCacheLastRefresh = new Date();
+      this.logger.log(`Refreshed payout configs: ${this.payoutConfigCache.size} entries`);
+    } catch (err: any) {
+      this.logger.warn(`Failed to refresh payout configs: ${err.message}`);
+    }
+  }
+
+  private calculatePublisherPayout(offerName: string, winningBid: number): { payout: number; margin: number } | null {
+    // Try to find config by offer name (case insensitive)
+    const config = this.payoutConfigCache.get(offerName.toLowerCase());
+    if (!config) return null;
+
+    let payout: number;
+    if (config.payout_type === 'buyer_conversion_percent') {
+      payout = winningBid * (config.revenue_percentage / 100);
+    } else {
+      payout = config.payout;
+    }
+
+    return {
+      payout: Math.round(payout * 100) / 100,
+      margin: Math.round((winningBid - payout) * 100) / 100,
+    };
+  }
 
   private getBaseUrl(): string {
     return this.config.get<string>('API_BASE_URL', 'https://api.grovlabs.com');
@@ -326,6 +404,19 @@ export class PingRelayService {
     const offer = payload.OFFER || payload.offer || payload.offer_name || payload.campaign;
     const source = payload.SOURCE || payload.PUBLISHER || payload.traffic_source || payload.publisher;
 
+    // Calculate publisher payout if bid was accepted
+    let publisherPayout: number | null = null;
+    let margin: number | null = null;
+    if (response.accepted && response.bid_amount && offer) {
+      await this.refreshPayoutConfigs();
+      const payoutCalc = this.calculatePublisherPayout(offer, response.bid_amount);
+      if (payoutCalc) {
+        publisherPayout = payoutCalc.payout;
+        margin = payoutCalc.margin;
+        this.logger.debug(`Payout calc for ${offer}: bid=$${response.bid_amount}, payout=$${publisherPayout}, margin=$${margin}`);
+      }
+    }
+
     const ping = await this.prisma.inbound_ping.create({
       data: {
         caller_phone: callerId,
@@ -339,6 +430,8 @@ export class PingRelayService {
         winning_buyer_id: response.accepted ? config.td_buyer_id : null,
         winning_buyer_name: response.accepted ? config.buyer_name : null,
         winning_bid: response.bid_amount,
+        publisher_payout: publisherPayout,
+        margin: margin,
         processing_time_ms: latency,
         total_buyers_pinged: 1,
         total_accepts: response.accepted ? 1 : 0,
