@@ -118,6 +118,19 @@ export class PingRelayService {
     const buyer = await this.trackdrive.getBuyer(tdBuyerId);
     const buyerName = buyer?.buyer?.name || buyer?.name || `Buyer ${tdBuyerId}`;
 
+    // Auto-fetch the original URL from TrackDrive conversion (more reliable than user input)
+    let actualOriginalUrl = originalPingUrl;
+    try {
+      const conversion = await this.trackdrive.getBuyerConversion(tdConversionId);
+      const conversionData = conversion?.buyer_conversion || conversion;
+      if (conversionData?.webhook_remote_url && !conversionData.webhook_remote_url.includes('api.grovlabs.com')) {
+        actualOriginalUrl = conversionData.webhook_remote_url;
+        this.logger.log(`Fetched original URL from TrackDrive: ${actualOriginalUrl}`);
+      }
+    } catch (err: any) {
+      this.logger.warn(`Could not fetch conversion, using provided URL: ${err.message}`);
+    }
+
     // Create or update relay config
     let config = await this.prisma.buyer_relay_config.findUnique({
       where: { td_buyer_id: tdBuyerId },
@@ -129,7 +142,7 @@ export class PingRelayService {
           td_buyer_id: tdBuyerId,
           buyer_name: buyerName,
           platform,
-          original_ping_url: originalPingUrl,
+          original_ping_url: actualOriginalUrl,
           td_conversion_id: tdConversionId,
           relay_enabled: true,
         },
@@ -139,7 +152,7 @@ export class PingRelayService {
         where: { td_buyer_id: tdBuyerId },
         data: {
           platform,
-          original_ping_url: originalPingUrl,
+          original_ping_url: actualOriginalUrl,
           td_conversion_id: tdConversionId,
           relay_enabled: true,
         },
