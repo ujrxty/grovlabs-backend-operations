@@ -298,46 +298,66 @@ Key endpoints:
 - `POST /n2n/applications/:id/approve` — approve application
 - `POST /n2n/ios/:id/send-sign-request` — send IO signing email
 
-## Ping Intelligence (WIP - Not Committed)
+## RTB Intelligence (Ping Relay)
 
-Real-time ping/post tracking system similar to Kaliper RTB Intelligence. **Status: Built locally, not committed. Needs TrackDrive integration.**
+Real-time ping/post tracking via relay proxy. TrackDrive pings go through our system to buyers, capturing all bid data.
 
-### What's Built
+### How It Works
 
-Backend (`apps/qa-agent/nodejs_space/src/ping-analysis/`):
-- `ping-analysis.module.ts` — NestJS module
-- `ping-analysis.service.ts` — Core service with duplicate detection, stats aggregation
-- `ping-analysis.controller.ts` — REST endpoints
+1. Enable relay for a buyer in dashboard (`/rtb-intelligence/relay`)
+2. System generates a relay URL and updates TrackDrive buyer conversion
+3. TrackDrive pings our relay → we forward to buyer → log response → return to TrackDrive
+4. All ping data captured: caller, offer, source, bid amount, accept/reject, latency
 
-Prisma models (in schema.prisma, not migrated to prod):
-- `inbound_ping` — Stores ping data with duplicate tracking
-- `ping_response` — Buyer responses with bid amounts, rejection reasons
-- `ping_alert_rule` / `ping_alert_event` — Alert system
-- `ping_daily_stats` — Aggregated daily statistics
+### Backend (`apps/qa-agent/nodejs_space/src/ping-analysis/`)
 
-Dashboard (`apps/dashboard/`):
-- `/ping-intelligence` page with KPI cards, tabs (Live Feed, By Offer, By Source, By State, Duplicates, Rejections)
-- Auto-refresh every 5 seconds
-- Sidebar nav link added (Radio icon)
+- `ping-relay.service.ts` — Core relay logic with:
+  - Duplicate detection (30 min window per caller+buyer)
+  - Bid floor enforcement (per-buyer minimum bid)
+  - Payout calculation from TrackDrive offer configs
+  - Response parsing for CallGrid, Retreaver, custom platforms
+- `ping-relay.controller.ts` — Relay endpoints
+- `ping-analysis.service.ts` — Stats aggregation
+- `ping-analysis.controller.ts` — Analytics endpoints
 
-### API Endpoints
+### Key Endpoints
 
-- `POST /pings/inbound` — Receive ping from TrackDrive
-- `POST /pings/:id/response` — Record buyer response
-- `POST /pings/:id/finalize` — Determine winner
+Relay:
+- `GET /ping-relay/buyers` — List buyers with relay status
+- `POST /ping-relay/relay/enable` — Enable relay for buyer
+- `POST /ping-relay/relay/disable` — Disable relay
+- `POST /ping-relay/relay/bid-floor` — Set minimum bid
+- `GET|POST /ping-relay/relay/:relayKey` — Relay endpoint (TrackDrive hits this)
+
+Analytics:
+- `GET /pings/live` — Live feed with pagination
 - `GET /pings/stats` — Aggregate statistics
 - `GET /pings/stats/by-offer|by-source|by-state|by-buyer` — Segmented stats
-- `GET /pings/reject-reasons` — Rejection breakdown
-- `GET /pings/duplicates` — Duplicate ping stats
-- `GET /pings/live` — Live feed (last 20 pings)
-- `GET /pings/:id` — Ping detail with timeline
 
-### Integration Needed
+### Dashboard Pages
 
-TrackDrive doesn't expose ping history via API. Options:
-1. **Add our endpoint as a "buyer"** in TrackDrive — receives all pings, logs them, responds no-bid
-2. **Parse call data** — Extract buyer/bid info from call webhooks
-3. **CSV imports** — Periodic import from TrackDrive ping logs
+- `/rtb-intelligence/relay` — Enable/disable relay per buyer, set bid floors
+- `/rtb-intelligence/live` — Live ping feed with caller, offer, source, bid, payout, margin
+
+### Prisma Models
+
+- `buyer_relay_config` — Relay settings per buyer (relay_key, original_ping_url, platform, bid_floor)
+- `inbound_ping` — Ping data (caller, offer, source, state, zip)
+- `ping_response` — Buyer response (accepted, bid_amount, reject_reason, latency)
+
+### Platform Parsers
+
+CallGrid: `code: 1000` = accept, `dynamicBid` = bid amount
+Retreaver: `bid: true`, `bid_amount`
+Custom: configurable response parsing
+
+### Payout Calculation
+
+Pulls `offer_conversions` from TrackDrive API to get payout config per offer:
+- `usd` type: static payout amount
+- `buyer_conversion_percent` type: percentage of buyer bid
+
+Margin = Bid - Payout
 - `GET /n2n/io/sign/:token/html` — view IO document (token-based)
 - `POST /n2n/io/sign/:token` — sign IO
 
