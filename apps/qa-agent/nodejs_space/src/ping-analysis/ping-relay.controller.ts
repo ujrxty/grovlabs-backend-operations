@@ -58,6 +58,13 @@ export class PingRelayController {
     return this.relayService.disableRelay(body.td_buyer_id);
   }
 
+  @Post('relay/bid-floor')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Set bid floor for a buyer relay' })
+  async setBidFloor(@Body() body: { td_buyer_id: string; bid_floor: number | null }) {
+    return this.relayService.setBidFloor(body.td_buyer_id, body.bid_floor);
+  }
+
   @Post('relay/:relayKey')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Relay endpoint (POST) - receives ping from TrackDrive and forwards to buyer' })
@@ -94,12 +101,5 @@ export class PingRelayController {
   @ApiOperation({ summary: 'Debug: Get cached payout configs from TrackDrive' })
   async getPayoutConfigs() {
     return this.relayService.getPayoutConfigs();
-  }
-
-  @Post('relay/bid-floor')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Set bid floor for a buyer relay' })
-  async setBidFloor(@Body() body: { td_buyer_id: string; bid_floor: number | null }) {
-    return this.relayService.setBidFloor(body.td_buyer_id, body.bid_floor);
   }
 }
