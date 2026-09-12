@@ -273,12 +273,18 @@ export class PingRelayService {
   }
 
   private async logFailedPing(config: any, payload: any, errorMessage: string, latency: number): Promise<void> {
+    // Handle both TrackDrive uppercase (CALLER_ID, CALLER_STATE) and lowercase formats
+    const callerId = payload.CALLER_ID || payload.caller_id || payload.caller_phone || payload.phone;
+    const state = payload.CALLER_STATE || payload.state || payload.caller_state || '';
+    const zip = payload.ZIP_CODE || payload.zip || payload.zipcode || payload.caller_zip || '';
+    const city = payload.CALLER_CITY || payload.city || payload.caller_city;
+
     const ping = await this.prisma.inbound_ping.create({
       data: {
-        caller_phone: payload.caller_id || payload.caller_phone || payload.phone,
-        caller_state: (payload.state || payload.caller_state || '').toUpperCase().slice(0, 2),
-        caller_zip: (payload.zip || payload.zipcode || payload.caller_zip || '').slice(0, 5),
-        caller_city: payload.city || payload.caller_city,
+        caller_phone: callerId,
+        caller_state: state.toUpperCase().slice(0, 2),
+        caller_zip: zip.slice(0, 5),
+        caller_city: city,
         traffic_source: payload.traffic_source || payload.publisher,
         offer_name: payload.offer || payload.offer_name || payload.campaign,
         raw_payload: payload,
@@ -302,12 +308,18 @@ export class PingRelayService {
   }
 
   private async logSuccessfulPing(config: any, payload: any, response: RelayResponse, latency: number): Promise<void> {
+    // Handle both TrackDrive uppercase (CALLER_ID, CALLER_STATE) and lowercase formats
+    const callerId = payload.CALLER_ID || payload.caller_id || payload.caller_phone || payload.phone;
+    const state = payload.CALLER_STATE || payload.state || payload.caller_state || '';
+    const zip = payload.ZIP_CODE || payload.zip || payload.zipcode || payload.caller_zip || '';
+    const city = payload.CALLER_CITY || payload.city || payload.caller_city;
+
     const ping = await this.prisma.inbound_ping.create({
       data: {
-        caller_phone: payload.caller_id || payload.caller_phone || payload.phone,
-        caller_state: (payload.state || payload.caller_state || '').toUpperCase().slice(0, 2),
-        caller_zip: (payload.zip || payload.zipcode || payload.caller_zip || '').slice(0, 5),
-        caller_city: payload.city || payload.caller_city,
+        caller_phone: callerId,
+        caller_state: state.toUpperCase().slice(0, 2),
+        caller_zip: zip.slice(0, 5),
+        caller_city: city,
         traffic_source: payload.traffic_source || payload.publisher,
         offer_name: payload.offer || payload.offer_name || payload.campaign,
         raw_payload: payload,
@@ -347,30 +359,31 @@ export class PingRelayService {
     const startTime = Date.now();
     let url = config.original_ping_url;
 
-    // Build request based on platform
-    const method = config.method || 'POST';
+    // Detect method from config or URL pattern
+    // URLs with placeholders like [caller_id] typically use GET
+    const hasPlaceholders = url.includes('[caller_id]') || url.includes('[state]') || url.includes('[zip]');
+    const method = config.method || (hasPlaceholders ? 'GET' : 'POST');
+
+    this.logger.debug(`Forwarding ping to ${url}, method=${method}, payload=${JSON.stringify(payload)}`);
+
     let requestBody: any = undefined;
     let requestUrl = url;
 
-    if (config.platform === 'retreaver') {
-      // Retreaver uses GET with query params
+    if (method === 'GET' || config.platform === 'retreaver' || hasPlaceholders) {
+      // GET request - replace placeholders in URL
       requestUrl = this.buildUrlWithParams(url, payload);
+      requestBody = undefined;
     } else if (config.platform === 'ringba') {
-      // Ringba typically uses POST with JSON
       requestBody = payload;
     } else if (config.platform === 'callgrid') {
-      // CallGrid uses POST
       requestBody = payload;
     } else if (config.platform === 'trackdrive') {
-      // TrackDrive ping format
       requestBody = payload;
     } else {
-      // Custom/generic - pass through
-      requestBody = method === 'POST' ? payload : undefined;
-      if (method === 'GET') {
-        requestUrl = this.buildUrlWithParams(url, payload);
-      }
+      requestBody = payload;
     }
+
+    this.logger.debug(`Final request: ${method} ${requestUrl}`);
 
     // Forward headers (but strip some internal ones)
     const forwardHeaders: Record<string, string> = {
@@ -419,17 +432,22 @@ export class PingRelayService {
   }
 
   private buildUrlWithParams(baseUrl: string, payload: any): string {
-    const url = new URL(baseUrl);
-
     // Replace placeholders like [caller_id], [state], etc.
+    // TrackDrive sends CALLER_ID, ZIP_CODE, CALLER_STATE (uppercase)
     let urlStr = baseUrl;
+
+    const callerId = payload.CALLER_ID || payload.caller_id || payload.caller_phone || payload.phone || '';
+    const state = payload.CALLER_STATE || payload.state || payload.caller_state || '';
+    const zip = payload.ZIP_CODE || payload.zip || payload.zipcode || payload.caller_zip || '';
+    const city = payload.CALLER_CITY || payload.city || payload.caller_city || '';
+
     const placeholders: Record<string, string> = {
-      '[caller_id]': payload.caller_id || payload.caller_phone || payload.phone || '',
-      '[caller_id_short]': (payload.caller_id || payload.caller_phone || payload.phone || '').replace(/\D/g, ''),
-      '[state]': payload.state || payload.caller_state || '',
-      '[zip]': payload.zip || payload.zipcode || payload.caller_zip || '',
-      '[zipcode]': payload.zip || payload.zipcode || payload.caller_zip || '',
-      '[city]': payload.city || payload.caller_city || '',
+      '[caller_id]': callerId,
+      '[caller_id_short]': callerId.replace(/\D/g, ''),
+      '[state]': state,
+      '[zip]': zip,
+      '[zipcode]': zip,
+      '[city]': city,
       '[offer]': payload.offer || payload.offer_name || '',
       '[campaign]': payload.campaign || payload.offer || '',
     };

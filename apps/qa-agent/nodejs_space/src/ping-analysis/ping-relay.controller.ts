@@ -60,14 +60,26 @@ export class PingRelayController {
 
   @Post('relay/:relayKey')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Relay endpoint - receives ping from TrackDrive and forwards to buyer' })
-  async handleRelay(
+  @ApiOperation({ summary: 'Relay endpoint (POST) - receives ping from TrackDrive and forwards to buyer' })
+  async handleRelayPost(
     @Param('relayKey') relayKey: string,
     @Body() payload: any,
     @Headers() headers: Record<string, string>,
     @Req() req: Request,
   ) {
     // Forward the ping through the relay
+    return this.relayService.handleRelayPing(relayKey, payload, headers);
+  }
+
+  @Get('relay/:relayKey')
+  @ApiOperation({ summary: 'Relay endpoint (GET) - receives ping from TrackDrive and forwards to buyer' })
+  async handleRelayGet(
+    @Param('relayKey') relayKey: string,
+    @Headers() headers: Record<string, string>,
+    @Req() req: Request,
+  ) {
+    // For GET requests, query params are the payload
+    const payload = req.query as Record<string, any>;
     return this.relayService.handleRelayPing(relayKey, payload, headers);
   }
 
