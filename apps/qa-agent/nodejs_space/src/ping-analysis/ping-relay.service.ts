@@ -420,7 +420,8 @@ export class PingRelayService {
     const config = await this.getConfigCached(relayKey);
 
     if (!config || !config.relay_enabled) {
-      throw new Error('Relay not found or disabled');
+      this.logger.warn(`Relay lookup failed: key=${relayKey}, found=${!!config}, enabled=${config?.relay_enabled}`);
+      throw new Error(`Relay not found or disabled: ${relayKey}`);
     }
 
     // Extract caller ID for duplicate check

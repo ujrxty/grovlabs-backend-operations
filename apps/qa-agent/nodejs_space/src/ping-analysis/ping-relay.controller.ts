@@ -71,6 +71,12 @@ export class PingRelayController {
     return this.relayService.handleRelayPing(relayKey, payload, headers);
   }
 
+  @Get('relay/stats')
+  @ApiOperation({ summary: 'Get overall relay statistics' })
+  async getStats() {
+    return this.relayService.getRelayStats();
+  }
+
   @Get('relay/:relayKey')
   @ApiOperation({ summary: 'Relay endpoint (GET) - receives ping from TrackDrive and forwards to buyer' })
   async handleRelayGet(
@@ -82,12 +88,6 @@ export class PingRelayController {
     const payload = { ...req.query } as Record<string, any>;
     console.log(`[Relay GET] relayKey=${relayKey}, query=${JSON.stringify(req.query)}, url=${req.url}`);
     return this.relayService.handleRelayPing(relayKey, payload, headers);
-  }
-
-  @Get('relay/stats')
-  @ApiOperation({ summary: 'Get overall relay statistics' })
-  async getStats() {
-    return this.relayService.getRelayStats();
   }
 
   @Get('payout-configs')
