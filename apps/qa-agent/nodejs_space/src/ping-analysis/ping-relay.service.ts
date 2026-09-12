@@ -43,6 +43,7 @@ export class PingRelayService {
   private payoutConfigCache: Map<string, PayoutConfig> = new Map();
   private payoutCacheLastRefresh: Date | null = null;
   private readonly PAYOUT_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  private readonly DUPLICATE_WINDOW_MINUTES = 30; // Block same caller+buyer for 30 mins
 
   constructor(
     private readonly prisma: PrismaService,
@@ -352,6 +353,30 @@ export class PingRelayService {
     return config;
   }
 
+  /**
+   * Check if this caller+buyer combo was seen recently
+   */
+  private async checkDuplicate(callerPhone: string, buyerId: string): Promise<{ isDuplicate: boolean; originalPingId?: string }> {
+    if (!callerPhone) return { isDuplicate: false };
+
+    const windowStart = new Date(Date.now() - this.DUPLICATE_WINDOW_MINUTES * 60 * 1000);
+
+    const existing = await this.prisma.inbound_ping.findFirst({
+      where: {
+        caller_phone: callerPhone,
+        winning_buyer_id: buyerId,
+        received_at: { gte: windowStart },
+      },
+      orderBy: { received_at: 'desc' },
+      select: { id: true },
+    });
+
+    return {
+      isDuplicate: !!existing,
+      originalPingId: existing?.id,
+    };
+  }
+
   async handleRelayPing(
     relayKey: string,
     payload: any,
@@ -366,7 +391,30 @@ export class PingRelayService {
       throw new Error('Relay not found or disabled');
     }
 
-    // FORWARD FIRST - this is the critical path for latency
+    // Extract caller ID for duplicate check
+    const callerPhone = payload.CALLER_ID || payload.caller_id || payload.caller_phone || payload.phone || '';
+
+    // Check for duplicate before forwarding
+    const dupCheck = await this.checkDuplicate(callerPhone, config.td_buyer_id);
+    if (dupCheck.isDuplicate) {
+      const latency = Date.now() - startTime;
+      this.logger.debug(`Duplicate blocked: ${callerPhone} -> ${config.buyer_name} (original: ${dupCheck.originalPingId})`);
+
+      // Log as duplicate ping
+      this.logDuplicatePing(config, payload, dupCheck.originalPingId!, latency).catch(e =>
+        this.logger.error(`Failed to log duplicate: ${e.message}`)
+      );
+
+      // Return rejection to TrackDrive
+      return {
+        accepted: false,
+        rejected: true,
+        reason: 'Duplicate caller',
+        duplicate_of: dupCheck.originalPingId,
+      };
+    }
+
+    // FORWARD - this is the critical path for latency
     let response: RelayResponse;
     try {
       response = await this.forwardPing(config, payload, headers);
@@ -428,6 +476,36 @@ export class PingRelayService {
     });
 
     await this.updateConfigStats(config.id, latency, false, false);
+  }
+
+  private async logDuplicatePing(config: any, payload: any, originalPingId: string, latency: number): Promise<void> {
+    const callerId = payload.CALLER_ID || payload.caller_id || payload.caller_phone || payload.phone;
+    const state = payload.CALLER_STATE || payload.state || payload.caller_state || '';
+    const zip = payload.ZIP_CODE || payload.zip || payload.zipcode || payload.caller_zip || '';
+    const city = payload.CALLER_CITY || payload.city || payload.caller_city;
+    const offer = payload.OFFER || payload.offer || payload.offer_name || payload.campaign;
+    const source = payload.SOURCE || payload.PUBLISHER || payload.traffic_source || payload.publisher;
+
+    await this.prisma.inbound_ping.create({
+      data: {
+        caller_phone: callerId,
+        caller_state: state.toUpperCase().slice(0, 2),
+        caller_zip: zip.slice(0, 5),
+        caller_city: city,
+        traffic_source: source,
+        offer_name: offer,
+        raw_payload: payload,
+        status: 'rejected',
+        is_duplicate: true,
+        duplicate_of_id: originalPingId,
+        winning_buyer_id: config.td_buyer_id,
+        winning_buyer_name: config.buyer_name,
+        processing_time_ms: latency,
+        total_buyers_pinged: 0, // Not forwarded
+        total_accepts: 0,
+        total_rejects: 1,
+      },
+    });
   }
 
   private async logSuccessfulPing(config: any, payload: any, response: RelayResponse, latency: number): Promise<void> {
