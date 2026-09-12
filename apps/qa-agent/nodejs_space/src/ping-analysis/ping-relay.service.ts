@@ -371,7 +371,7 @@ export class PingRelayService {
           received_at: { gte: windowStart },
         },
       },
-      orderBy: { created_at: 'desc' },
+      orderBy: { ping: { received_at: 'desc' } },
       select: { ping_id: true },
     });
 
