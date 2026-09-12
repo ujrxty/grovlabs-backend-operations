@@ -203,6 +203,59 @@ export class TrackDriveService {
     }
   }
 
+  async updateBuyer(buyerId: string, data: Record<string, any>): Promise<any> {
+    try {
+      const response = await this.getClient().put(`/buyers/${buyerId}`, {
+        buyer: data,
+      });
+      return response.data;
+    } catch (error: any) {
+      this.logger.error(`Failed to update buyer ${buyerId}: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async createBuyerConversion(data: {
+    owner_id: number;
+    owner_type: string;
+    name: string;
+    conversion_type: string;
+    webhook_type: string;
+    webhook_remote_url: string;
+    webhook_remote_method: string;
+    webhook_read_timeout?: number;
+    duration?: number;
+    revenue?: number;
+  }): Promise<any> {
+    try {
+      const response = await this.getClient().post('/buyer_conversions', data);
+      return response.data;
+    } catch (error: any) {
+      this.logger.error(`Failed to create buyer conversion: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateBuyerConversion(conversionId: string, data: Record<string, any>): Promise<any> {
+    try {
+      const response = await this.getClient().put(`/buyer_conversions/${conversionId}`, data);
+      return response.data;
+    } catch (error: any) {
+      this.logger.error(`Failed to update buyer conversion ${conversionId}: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteBuyerConversion(conversionId: string): Promise<any> {
+    try {
+      const response = await this.getClient().delete(`/buyer_conversions/${conversionId}`);
+      return response.data;
+    } catch (error: any) {
+      this.logger.error(`Failed to delete buyer conversion ${conversionId}: ${error.message}`);
+      throw error;
+    }
+  }
+
   /**
    * Fetch all calls for a date range, paginating through all pages.
    */

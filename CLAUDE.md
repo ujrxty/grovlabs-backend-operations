@@ -297,6 +297,47 @@ Key endpoints:
 - `GET /n2n/applications` — list applications
 - `POST /n2n/applications/:id/approve` — approve application
 - `POST /n2n/ios/:id/send-sign-request` — send IO signing email
+
+## Ping Intelligence (WIP - Not Committed)
+
+Real-time ping/post tracking system similar to Kaliper RTB Intelligence. **Status: Built locally, not committed. Needs TrackDrive integration.**
+
+### What's Built
+
+Backend (`apps/qa-agent/nodejs_space/src/ping-analysis/`):
+- `ping-analysis.module.ts` — NestJS module
+- `ping-analysis.service.ts` — Core service with duplicate detection, stats aggregation
+- `ping-analysis.controller.ts` — REST endpoints
+
+Prisma models (in schema.prisma, not migrated to prod):
+- `inbound_ping` — Stores ping data with duplicate tracking
+- `ping_response` — Buyer responses with bid amounts, rejection reasons
+- `ping_alert_rule` / `ping_alert_event` — Alert system
+- `ping_daily_stats` — Aggregated daily statistics
+
+Dashboard (`apps/dashboard/`):
+- `/ping-intelligence` page with KPI cards, tabs (Live Feed, By Offer, By Source, By State, Duplicates, Rejections)
+- Auto-refresh every 5 seconds
+- Sidebar nav link added (Radio icon)
+
+### API Endpoints
+
+- `POST /pings/inbound` — Receive ping from TrackDrive
+- `POST /pings/:id/response` — Record buyer response
+- `POST /pings/:id/finalize` — Determine winner
+- `GET /pings/stats` — Aggregate statistics
+- `GET /pings/stats/by-offer|by-source|by-state|by-buyer` — Segmented stats
+- `GET /pings/reject-reasons` — Rejection breakdown
+- `GET /pings/duplicates` — Duplicate ping stats
+- `GET /pings/live` — Live feed (last 20 pings)
+- `GET /pings/:id` — Ping detail with timeline
+
+### Integration Needed
+
+TrackDrive doesn't expose ping history via API. Options:
+1. **Add our endpoint as a "buyer"** in TrackDrive — receives all pings, logs them, responds no-bid
+2. **Parse call data** — Extract buyer/bid info from call webhooks
+3. **CSV imports** — Periodic import from TrackDrive ping logs
 - `GET /n2n/io/sign/:token/html` — view IO document (token-based)
 - `POST /n2n/io/sign/:token` — sign IO
 

@@ -703,3 +703,208 @@ model scheduler_settings {
 
   updated_at                DateTime @updatedAt
 }
+
+// ============================================
+// Ping Intelligence (Real-time Ping Relay)
+// ============================================
+
+model inbound_ping {
+  id                 String    @id @default(uuid())
+  trackdrive_call_id String?
+  received_at        DateTime  @default(now())
+
+  // Caller info
+  caller_phone       String?
+  caller_state       String?
+  caller_zip         String?
+  caller_city        String?
+  caller_area_code   String?
+
+  // Traffic source
+  traffic_source_id  String?
+  traffic_source     String?
+  publisher_name     String?
+  sub_id             String?
+
+  // Offer/Campaign
+  offer_id           String?
+  offer_name         String?
+
+  // Ping result
+  status             String    @default("pending") // pending, accepted, rejected, no_bid, failed
+  winning_buyer_id   String?
+  winning_buyer_name String?
+  winning_bid        Float?
+  total_buyers_pinged Int      @default(0)
+  total_accepts      Int       @default(0)
+  total_rejects      Int       @default(0)
+  processing_time_ms Int?
+
+  // Deduplication
+  is_duplicate       Boolean   @default(false)
+  duplicate_of_id    String?
+
+  // Raw data
+  raw_payload        Json?
+
+  responses          ping_response[]
+
+  @@index([received_at])
+  @@index([caller_phone])
+  @@index([caller_state])
+  @@index([traffic_source])
+  @@index([offer_name])
+  @@index([status])
+  @@index([is_duplicate])
+}
+
+model ping_response {
+  id                 String    @id @default(uuid())
+  ping_id            String
+  buyer_id           String?
+  buyer_name         String?
+  buyer_code         String?
+
+  // Response
+  status             String    // accepted, rejected, no_bid, timeout, error
+  bid_amount         Float?
+  rejection_reason   String?
+  rejection_category String?   // cap_reached, state_not_serviced, duplicate, invalid_data, timeout, etc.
+  response_time_ms   Int?
+  is_winner          Boolean   @default(false)
+
+  // Raw
+  raw_response       Json?
+  error_message      String?
+
+  received_at        DateTime  @default(now())
+
+  ping               inbound_ping @relation(fields: [ping_id], references: [id], onDelete: Cascade)
+
+  @@index([ping_id])
+  @@index([buyer_id])
+  @@index([status])
+  @@index([rejection_category])
+  @@index([received_at])
+}
+
+model ping_alert_rule {
+  id                    String    @id @default(uuid())
+  name                  String
+  description           String?
+  enabled               Boolean   @default(true)
+
+  // What to monitor
+  metric                String    // accept_rate, fail_rate, avg_latency_ms, pings_per_minute, duplicate_rate
+  threshold_type        String    // above, below, delta_up, delta_down
+  threshold_value       Float
+  window_minutes        Int       @default(15)
+
+  // Filters
+  offer_ids             String[]  @default([])
+  traffic_source_ids    String[]  @default([])
+  buyer_ids             String[]  @default([])
+  states                String[]  @default([])
+
+  // Notifications
+  notify_discord        Boolean   @default(true)
+  notify_telegram       Boolean   @default(false)
+  notify_email          Boolean   @default(false)
+  cooldown_minutes      Int       @default(60)
+
+  last_fired_at         DateTime?
+  created_by            String?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  events                ping_alert_event[]
+
+  @@index([enabled])
+}
+
+model ping_alert_event {
+  id              String    @id @default(uuid())
+  rule_id         String
+  fired_at        DateTime  @default(now())
+  metric_value    Float?
+  threshold_value Float?
+  message         String?
+  context         Json?
+  acked_at        DateTime?
+  acked_by        String?
+
+  rule            ping_alert_rule @relation(fields: [rule_id], references: [id], onDelete: Cascade)
+
+  @@index([rule_id])
+  @@index([fired_at])
+  @@index([acked_at])
+}
+
+model ping_daily_stats {
+  id                 String    @id @default(uuid())
+  stat_date          DateTime  @db.Date
+  offer_name         String?
+  traffic_source     String?
+  buyer_name         String?
+  state              String?
+
+  total_pings        Int       @default(0)
+  accepted           Int       @default(0)
+  rejected           Int       @default(0)
+  no_bid             Int       @default(0)
+  failed             Int       @default(0)
+  duplicates         Int       @default(0)
+
+  total_bid_amount   Float     @default(0)
+  avg_bid            Float     @default(0)
+  avg_latency_ms     Float     @default(0)
+  unique_callers     Int       @default(0)
+
+  created_at         DateTime  @default(now())
+
+  @@unique([stat_date, offer_name, traffic_source, buyer_name, state])
+  @@index([stat_date])
+  @@index([offer_name])
+  @@index([traffic_source])
+}
+
+model buyer_relay_config {
+  id                 String    @id @default(uuid())
+
+  // TrackDrive buyer info
+  td_buyer_id        String    @unique
+  buyer_name         String
+
+  // Platform & endpoint
+  platform           String    @default("custom") // trackdrive, callgrid, retreaver, ringba, custom
+  original_ping_url  String
+
+  // Relay settings
+  relay_enabled      Boolean   @default(false)
+  relay_key          String    @unique @default(uuid()) // Used in relay URL
+  td_conversion_id   String?   // TrackDrive buyer_conversion ID for API updates
+
+  // Request transformation (placeholders: [caller_id], [state], [zip], [city], etc.)
+  method             String    @default("POST") // GET or POST
+  headers            Json?     // Custom headers to send
+  body_template      Json?     // For POST requests
+  query_template     String?   // For GET requests with placeholders
+
+  // Response parsing
+  accept_field       String?   // JSON path to accepted boolean
+  bid_field          String?   // JSON path to bid amount
+  reject_reason_field String?  // JSON path to rejection reason
+
+  // Stats
+  total_pings        Int       @default(0)
+  total_accepts      Int       @default(0)
+  total_rejects      Int       @default(0)
+  last_ping_at       DateTime?
+  avg_latency_ms     Float     @default(0)
+
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+
+  @@index([relay_enabled])
+  @@index([platform])
+}
