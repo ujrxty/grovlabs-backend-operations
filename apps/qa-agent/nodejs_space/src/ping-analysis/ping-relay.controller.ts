@@ -89,4 +89,10 @@ export class PingRelayController {
   async getStats() {
     return this.relayService.getRelayStats();
   }
+
+  @Get('payout-configs')
+  @ApiOperation({ summary: 'Debug: Get cached payout configs from TrackDrive' })
+  async getPayoutConfigs() {
+    return this.relayService.getPayoutConfigs();
+  }
 }

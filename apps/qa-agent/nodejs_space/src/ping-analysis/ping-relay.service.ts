@@ -120,6 +120,20 @@ export class PingRelayService {
     };
   }
 
+  async getPayoutConfigs(): Promise<{ configs: any[]; cacheAge: number | null }> {
+    await this.refreshPayoutConfigs();
+    const configs: any[] = [];
+    this.payoutConfigCache.forEach((value, key) => {
+      configs.push({ key, ...value });
+    });
+    return {
+      configs,
+      cacheAge: this.payoutCacheLastRefresh
+        ? Date.now() - this.payoutCacheLastRefresh.getTime()
+        : null,
+    };
+  }
+
   private getBaseUrl(): string {
     return this.config.get<string>('API_BASE_URL', 'https://api.grovlabs.com');
   }
