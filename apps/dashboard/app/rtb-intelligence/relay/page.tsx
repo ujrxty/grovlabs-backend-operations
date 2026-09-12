@@ -22,6 +22,7 @@ interface BuyerRelay {
   relay_url?: string
   original_ping_url?: string
   platform?: string
+  bid_floor?: number | null
   stats?: {
     total_pings: number
     total_accepts: number
@@ -63,6 +64,9 @@ export default function RelayPage() {
     saving: boolean
     loading: boolean
   }>({ open: false, buyer: null, platform: 'trackdrive', pingUrl: '', conversionId: '', saving: false, loading: false })
+
+  const [bidFloorEdit, setBidFloorEdit] = useState<{ buyerId: string; value: string } | null>(null)
+  const [savingBidFloor, setSavingBidFloor] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
@@ -161,6 +165,34 @@ export default function RelayPage() {
     }
   }
 
+  const handleSaveBidFloor = async (buyerId: string, value: string) => {
+    const bidFloor = value.trim() === '' ? null : parseFloat(value)
+    if (value.trim() !== '' && (isNaN(bidFloor!) || bidFloor! < 0)) {
+      toast.error('Invalid bid floor value')
+      return
+    }
+
+    setSavingBidFloor(buyerId)
+    try {
+      const res = await fetch(`${QA_AGENT_URL}/ping-relay/relay/bid-floor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ td_buyer_id: buyerId, bid_floor: bidFloor }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(data.message)
+        setBidFloorEdit(null)
+        fetchData()
+      } else {
+        toast.error(data.message || 'Failed to set bid floor')
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to set bid floor')
+    }
+    setSavingBidFloor(null)
+  }
+
   return (
     <div className="p-6 space-y-6">
       {loading ? (
@@ -210,6 +242,7 @@ export default function RelayPage() {
                     <TableHead>Buyer</TableHead>
                     <TableHead>Platform</TableHead>
                     <TableHead>Relay Status</TableHead>
+                    <TableHead className="text-right">Bid Floor</TableHead>
                     <TableHead className="text-right">Pings</TableHead>
                     <TableHead className="text-right">Accept Rate</TableHead>
                     <TableHead className="text-right">Latency</TableHead>
@@ -237,6 +270,52 @@ export default function RelayPage() {
                           <Badge variant="outline" className="text-muted-foreground">
                             Disabled
                           </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {buyer.relay_enabled ? (
+                          bidFloorEdit?.buyerId === buyer.td_buyer_id ? (
+                            <div className="flex items-center justify-end gap-1">
+                              <span className="text-muted-foreground">$</span>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                className="w-20 h-7 text-right text-sm"
+                                value={bidFloorEdit.value}
+                                onChange={(e) => setBidFloorEdit({ buyerId: buyer.td_buyer_id, value: e.target.value })}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveBidFloor(buyer.td_buyer_id, bidFloorEdit.value)
+                                  if (e.key === 'Escape') setBidFloorEdit(null)
+                                }}
+                                autoFocus
+                                disabled={savingBidFloor === buyer.td_buyer_id}
+                              />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 p-0"
+                                onClick={() => handleSaveBidFloor(buyer.td_buyer_id, bidFloorEdit.value)}
+                                disabled={savingBidFloor === buyer.td_buyer_id}
+                              >
+                                {savingBidFloor === buyer.td_buyer_id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : '✓'}
+                              </Button>
+                            </div>
+                          ) : (
+                            <button
+                              className="hover:text-foreground text-muted-foreground cursor-pointer"
+                              onClick={() => setBidFloorEdit({
+                                buyerId: buyer.td_buyer_id,
+                                value: buyer.bid_floor?.toString() || ''
+                              })}
+                            >
+                              {buyer.bid_floor ? `$${buyer.bid_floor.toFixed(2)}` : 'Set'}
+                            </button>
+                          )
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell className="text-right">
@@ -279,7 +358,7 @@ export default function RelayPage() {
                   ))}
                   {buyers.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                         No buyers found. Make sure TrackDrive credentials are configured.
                       </TableCell>
                     </TableRow>
