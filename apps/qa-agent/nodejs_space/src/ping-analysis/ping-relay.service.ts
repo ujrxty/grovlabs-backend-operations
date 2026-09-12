@@ -442,13 +442,18 @@ export class PingRelayService {
     // Calculate publisher payout if bid was accepted
     let publisherPayout: number | null = null;
     let margin: number | null = null;
+
+    this.logger.debug(`logSuccessfulPing: offer=${offer}, accepted=${response.accepted}, bid_amount=${response.bid_amount}`);
+
     if (response.accepted && response.bid_amount && offer) {
       await this.refreshPayoutConfigs();
       const payoutCalc = this.calculatePublisherPayout(offer, response.bid_amount);
       if (payoutCalc) {
         publisherPayout = payoutCalc.payout;
         margin = payoutCalc.margin;
-        this.logger.debug(`Payout calc for ${offer}: bid=$${response.bid_amount}, payout=$${publisherPayout}, margin=$${margin}`);
+        this.logger.log(`Payout calc for ${offer}: bid=$${response.bid_amount}, payout=$${publisherPayout}, margin=$${margin}`);
+      } else {
+        this.logger.warn(`No payout config found for offer: ${offer}`);
       }
     }
 
