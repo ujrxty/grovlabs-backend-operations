@@ -5,11 +5,13 @@ import { PingAnalysisService } from './ping-analysis.service.js';
 import { PingAnalysisController } from './ping-analysis.controller.js';
 import { PingRelayService } from './ping-relay.service.js';
 import { PingRelayController } from './ping-relay.controller.js';
+import { AdvancedAnalyticsService } from './advanced-analytics.service.js';
+import { AdvancedAnalyticsController } from './advanced-analytics.controller.js';
 
 @Module({
   imports: [PrismaModule, TrackDriveModule],
-  controllers: [PingAnalysisController, PingRelayController],
-  providers: [PingAnalysisService, PingRelayService],
-  exports: [PingAnalysisService, PingRelayService],
+  controllers: [PingAnalysisController, PingRelayController, AdvancedAnalyticsController],
+  providers: [PingAnalysisService, PingRelayService, AdvancedAnalyticsService],
+  exports: [PingAnalysisService, PingRelayService, AdvancedAnalyticsService],
 })
 export class PingAnalysisModule {}

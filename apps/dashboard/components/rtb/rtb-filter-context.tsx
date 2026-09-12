@@ -90,6 +90,7 @@ export function RTBFilterProvider({ children }: { children: ReactNode }) {
     if (filters.offer) params.set('offer_name', filters.offer)
     if (filters.trafficSource) params.set('traffic_source', filters.trafficSource)
     if (filters.state) params.set('state', filters.state)
+    if (filters.buyer) params.set('buyer', filters.buyer)
 
     return params.toString()
   }, [filters])
