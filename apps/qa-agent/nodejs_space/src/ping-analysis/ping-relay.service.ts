@@ -186,7 +186,7 @@ export class PingRelayService {
     if (config.td_conversion_id && config.original_ping_url) {
       try {
         await this.trackdrive.updateBuyerConversion(config.td_conversion_id, {
-          remote_url: config.original_ping_url,
+          webhook_remote_url: config.original_ping_url,
         });
         this.logger.log(`Restored original URL for TrackDrive conversion ${config.td_conversion_id}`);
       } catch (err: any) {
