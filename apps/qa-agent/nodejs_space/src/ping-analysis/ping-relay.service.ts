@@ -550,7 +550,13 @@ export class PingRelayService {
       });
 
       const latency = Date.now() - startTime;
+
+      // Debug: log raw response from buyer
+      this.logger.debug(`[${config.platform}] Raw response: ${JSON.stringify(response.data).substring(0, 500)}`);
+
       const parsed = this.parseResponse(config.platform, response.data, config);
+
+      this.logger.debug(`[${config.platform}] Parsed: accepted=${parsed.accepted}, bid=${parsed.bid_amount}, reason=${parsed.rejection_reason}`);
 
       return {
         accepted: parsed.accepted,
