@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { RefreshCw, Zap, Search, Filter, X } from 'lucide-react'
+import { RefreshCw, Zap, Search, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const QA_AGENT_URL = process.env.NEXT_PUBLIC_QA_AGENT_URL || 'http://localhost:3003'
@@ -52,6 +52,8 @@ export default function LiveFeedPage() {
     state: 'all',
     search: '',
   })
+  const [page, setPage] = useState(1)
+  const pageSize = 50
 
   const fetchData = useCallback(async () => {
     try {
@@ -105,6 +107,17 @@ export default function LiveFeedPage() {
       return true
     })
   }, [pings, filters])
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1)
+  }, [filters])
+
+  const totalPages = Math.ceil(filteredPings.length / pageSize)
+  const paginatedPings = useMemo(() => {
+    const start = (page - 1) * pageSize
+    return filteredPings.slice(start, start + pageSize)
+  }, [filteredPings, page, pageSize])
 
   const activeFilterCount = [
     filters.status !== 'all',
@@ -307,7 +320,7 @@ export default function LiveFeedPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPings.map((ping) => (
+              {paginatedPings.map((ping) => (
                 <TableRow key={ping.id} className={cn(
                   ping.is_duplicate && 'opacity-50 bg-orange-500/5',
                   ping.converted && 'bg-emerald-500/5'
@@ -344,7 +357,7 @@ export default function LiveFeedPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {filteredPings.length === 0 && (
+              {paginatedPings.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center text-muted-foreground py-12">
                     {loading ? 'Loading...' : activeFilterCount > 0 ? 'No pings match filters' : 'No pings received yet'}
@@ -356,8 +369,36 @@ export default function LiveFeedPage() {
         </CardContent>
       </Card>
 
-      <div className="text-xs text-muted-foreground text-center">
-        Showing {filteredPings.length} of {pings.length} pings
+      <div className="flex items-center justify-between">
+        <div className="text-xs text-muted-foreground">
+          Showing {((page - 1) * pageSize) + 1}-{Math.min(page * pageSize, filteredPings.length)} of {filteredPings.length} pings
+          {filteredPings.length !== pings.length && ` (${pings.length} total)`}
+        </div>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="h-7 w-7 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="h-7 w-7 p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )
