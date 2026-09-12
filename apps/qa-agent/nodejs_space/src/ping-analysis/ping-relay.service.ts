@@ -146,15 +146,10 @@ export class PingRelayService {
       });
     }
 
-    const relayUrl = `${baseUrl}/ping-relay/relay/${config.relay_key}`;
-
-    // First, fetch the conversion to see its current structure
-    try {
-      const currentConversion = await this.trackdrive.getBuyerConversion(tdConversionId);
-      this.logger.log(`Current conversion ${tdConversionId} structure: ${JSON.stringify(currentConversion)}`);
-    } catch (err: any) {
-      this.logger.warn(`Could not fetch conversion ${tdConversionId}: ${err.message}`);
-    }
+    // Build relay URL with TrackDrive tokens for full data capture
+    const relayUrl = `${baseUrl}/ping-relay/relay/${config.relay_key}?` +
+      `CALLER_ID=[caller_id]&CALLER_STATE=[state]&ZIP_CODE=[zip]&` +
+      `OFFER=[offer_name]&SOURCE=[traffic_source_name]&PUBLISHER=[publisher_name]`;
 
     // Update the EXISTING TrackDrive buyer_conversion to use our relay URL
     try {
@@ -273,11 +268,13 @@ export class PingRelayService {
   }
 
   private async logFailedPing(config: any, payload: any, errorMessage: string, latency: number): Promise<void> {
-    // Handle both TrackDrive uppercase (CALLER_ID, CALLER_STATE) and lowercase formats
+    // Handle both TrackDrive uppercase and lowercase formats
     const callerId = payload.CALLER_ID || payload.caller_id || payload.caller_phone || payload.phone;
     const state = payload.CALLER_STATE || payload.state || payload.caller_state || '';
     const zip = payload.ZIP_CODE || payload.zip || payload.zipcode || payload.caller_zip || '';
     const city = payload.CALLER_CITY || payload.city || payload.caller_city;
+    const offer = payload.OFFER || payload.offer || payload.offer_name || payload.campaign;
+    const source = payload.SOURCE || payload.PUBLISHER || payload.traffic_source || payload.publisher;
 
     const ping = await this.prisma.inbound_ping.create({
       data: {
@@ -285,8 +282,8 @@ export class PingRelayService {
         caller_state: state.toUpperCase().slice(0, 2),
         caller_zip: zip.slice(0, 5),
         caller_city: city,
-        traffic_source: payload.traffic_source || payload.publisher,
-        offer_name: payload.offer || payload.offer_name || payload.campaign,
+        traffic_source: source,
+        offer_name: offer,
         raw_payload: payload,
         status: 'failed',
         processing_time_ms: latency,
@@ -308,11 +305,13 @@ export class PingRelayService {
   }
 
   private async logSuccessfulPing(config: any, payload: any, response: RelayResponse, latency: number): Promise<void> {
-    // Handle both TrackDrive uppercase (CALLER_ID, CALLER_STATE) and lowercase formats
+    // Handle both TrackDrive uppercase and lowercase formats
     const callerId = payload.CALLER_ID || payload.caller_id || payload.caller_phone || payload.phone;
     const state = payload.CALLER_STATE || payload.state || payload.caller_state || '';
     const zip = payload.ZIP_CODE || payload.zip || payload.zipcode || payload.caller_zip || '';
     const city = payload.CALLER_CITY || payload.city || payload.caller_city;
+    const offer = payload.OFFER || payload.offer || payload.offer_name || payload.campaign;
+    const source = payload.SOURCE || payload.PUBLISHER || payload.traffic_source || payload.publisher;
 
     const ping = await this.prisma.inbound_ping.create({
       data: {
@@ -320,8 +319,8 @@ export class PingRelayService {
         caller_state: state.toUpperCase().slice(0, 2),
         caller_zip: zip.slice(0, 5),
         caller_city: city,
-        traffic_source: payload.traffic_source || payload.publisher,
-        offer_name: payload.offer || payload.offer_name || payload.campaign,
+        traffic_source: source,
+        offer_name: offer,
         raw_payload: payload,
         status: response.accepted ? 'accepted' : 'rejected',
         winning_buyer_id: response.accepted ? config.td_buyer_id : null,
