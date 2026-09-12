@@ -55,7 +55,7 @@ export default function LiveFeedPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch(`${QA_AGENT_URL}/pings/live?limit=100`)
+      const res = await fetch(`${QA_AGENT_URL}/pings/live?limit=500`)
       if (res.ok) {
         const data = await res.json()
         setPings(Array.isArray(data) ? data : [])
