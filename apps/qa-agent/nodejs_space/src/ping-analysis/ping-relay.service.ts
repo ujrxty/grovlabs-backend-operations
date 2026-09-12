@@ -65,7 +65,10 @@ export class PingRelayService {
       // Also fetch offers to get offer names
       const offersResponse = await this.trackdrive.listOffers({ per_page: 200 });
       const offers = offersResponse?.offers || [];
-      const offerNameMap = new Map(offers.map((o: any) => [String(o.id), o.name || o.title || '']));
+      const offerNameMap = new Map<string, string>();
+      for (const o of offers) {
+        offerNameMap.set(String(o.id), String(o.name || o.title || ''));
+      }
 
       this.payoutConfigCache.clear();
       for (const conv of conversions) {
