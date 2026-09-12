@@ -21,9 +21,13 @@ interface LivePing {
   status: string
   winning_bid: number | null
   winning_buyer_name: string | null
+  publisher_payout: number | null
+  margin: number | null
   is_duplicate: boolean
   processing_time_ms: number | null
   caller_phone?: string
+  converted?: boolean
+  call_duration?: number | null
 }
 
 interface LiveFilters {
@@ -147,8 +151,11 @@ export default function LiveFeedPage() {
   const stats = useMemo(() => {
     const accepted = pings.filter(p => p.status === 'accepted').length
     const duplicates = pings.filter(p => p.is_duplicate).length
-    const totalBids = pings.filter(p => p.winning_bid).reduce((sum, p) => sum + (p.winning_bid ?? 0), 0)
-    return { total: pings.length, accepted, duplicates, totalBids }
+    const converted = pings.filter(p => p.converted).length
+    const totalRevenue = pings.filter(p => p.winning_bid).reduce((sum, p) => sum + (p.winning_bid ?? 0), 0)
+    const totalPayout = pings.filter(p => p.publisher_payout).reduce((sum, p) => sum + (p.publisher_payout ?? 0), 0)
+    const totalMargin = totalRevenue - totalPayout
+    return { total: pings.length, accepted, duplicates, converted, totalRevenue, totalPayout, totalMargin }
   }, [pings])
 
   return (
@@ -162,8 +169,11 @@ export default function LiveFeedPage() {
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <span>{stats.total} pings</span>
             <span className="text-emerald-500">{stats.accepted} won</span>
+            {stats.converted > 0 && <span className="text-blue-500">{stats.converted} conv</span>}
             {stats.duplicates > 0 && <span className="text-orange-500">{stats.duplicates} dups</span>}
-            <span className="text-lime-500">${stats.totalBids.toFixed(0)}</span>
+            <span className="text-lime-500">${stats.totalRevenue.toFixed(0)} rev</span>
+            <span className="text-amber-500">${stats.totalPayout.toFixed(0)} cost</span>
+            <span className={stats.totalMargin >= 0 ? 'text-emerald-500' : 'text-red-500'}>${stats.totalMargin.toFixed(0)} margin</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -284,34 +294,51 @@ export default function LiveFeedPage() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[90px]">Time</TableHead>
-                <TableHead className="w-[60px]">State</TableHead>
+                <TableHead className="w-[80px]">Time</TableHead>
+                <TableHead className="w-[50px]">State</TableHead>
                 <TableHead>Offer</TableHead>
                 <TableHead>Source</TableHead>
-                <TableHead className="w-[70px]">Status</TableHead>
-                <TableHead className="w-[70px] text-right">Bid</TableHead>
+                <TableHead className="w-[60px]">Status</TableHead>
+                <TableHead className="w-[70px] text-right">Revenue</TableHead>
+                <TableHead className="w-[70px] text-right">Payout</TableHead>
+                <TableHead className="w-[60px] text-right">Margin</TableHead>
                 <TableHead>Buyer</TableHead>
-                <TableHead className="w-[70px] text-right">Latency</TableHead>
+                <TableHead className="w-[50px] text-right">ms</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredPings.map((ping) => (
-                <TableRow key={ping.id} className={cn(ping.is_duplicate && 'opacity-50 bg-orange-500/5')}>
+                <TableRow key={ping.id} className={cn(
+                  ping.is_duplicate && 'opacity-50 bg-orange-500/5',
+                  ping.converted && 'bg-emerald-500/5'
+                )}>
                   <TableCell className="font-mono text-xs py-2">{formatTime(ping.received_at)}</TableCell>
-                  <TableCell className="py-2">{ping.caller_state || '-'}</TableCell>
-                  <TableCell className="max-w-[180px] truncate py-2 text-sm">{ping.offer_name || '-'}</TableCell>
-                  <TableCell className="max-w-[150px] truncate py-2 text-sm">{ping.traffic_source || '-'}</TableCell>
+                  <TableCell className="py-2 text-xs">{ping.caller_state || '-'}</TableCell>
+                  <TableCell className="max-w-[150px] truncate py-2 text-sm">{ping.offer_name || '-'}</TableCell>
+                  <TableCell className="max-w-[120px] truncate py-2 text-sm">{ping.traffic_source || '-'}</TableCell>
                   <TableCell className="py-2">{statusBadge(ping.status, ping.is_duplicate)}</TableCell>
-                  <TableCell className="font-mono text-right py-2">
+                  <TableCell className="font-mono text-xs text-right py-2">
                     {ping.winning_bid ? (
                       <span className="text-emerald-500">${ping.winning_bid.toFixed(2)}</span>
                     ) : '-'}
                   </TableCell>
-                  <TableCell className="max-w-[120px] truncate py-2 text-sm">{ping.winning_buyer_name || '-'}</TableCell>
+                  <TableCell className="font-mono text-xs text-right py-2">
+                    {ping.publisher_payout ? (
+                      <span className="text-amber-500">${ping.publisher_payout.toFixed(2)}</span>
+                    ) : '-'}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-right py-2">
+                    {ping.margin != null ? (
+                      <span className={ping.margin >= 0 ? 'text-emerald-500' : 'text-red-500'}>
+                        ${ping.margin.toFixed(2)}
+                      </span>
+                    ) : '-'}
+                  </TableCell>
+                  <TableCell className="max-w-[100px] truncate py-2 text-xs">{ping.winning_buyer_name || '-'}</TableCell>
                   <TableCell className="font-mono text-xs text-right py-2">
                     {ping.processing_time_ms ? (
-                      <span className={ping.processing_time_ms > 500 ? 'text-amber-500' : ''}>
-                        {ping.processing_time_ms}ms
+                      <span className={ping.processing_time_ms > 500 ? 'text-amber-500' : 'text-muted-foreground'}>
+                        {ping.processing_time_ms}
                       </span>
                     ) : '-'}
                   </TableCell>
@@ -319,7 +346,7 @@ export default function LiveFeedPage() {
               ))}
               {filteredPings.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
+                  <TableCell colSpan={10} className="text-center text-muted-foreground py-12">
                     {loading ? 'Loading...' : activeFilterCount > 0 ? 'No pings match filters' : 'No pings received yet'}
                   </TableCell>
                 </TableRow>
