@@ -35,6 +35,12 @@ export interface PingStats {
   avg_bid: number;
   avg_latency_ms: number;
   unique_callers: number;
+  // Conversion tracking
+  calls_connected: number;
+  calls_converted: number;
+  conversion_rate: number;
+  total_payout: number;
+  avg_call_duration: number;
 }
 
 export interface SegmentStats {
@@ -322,6 +328,10 @@ export class PingAnalysisService {
         processing_time_ms: true,
         is_duplicate: true,
         caller_phone: true,
+        converted: true,
+        call_connected: true,
+        call_duration: true,
+        actual_payout: true,
       },
     });
 
@@ -341,6 +351,12 @@ export class PingAnalysisService {
 
     const uniqueCallers = new Set(pings.map((p) => p.caller_phone).filter(Boolean)).size;
 
+    // Conversion stats
+    const connected = pings.filter((p) => p.call_connected).length;
+    const converted = pings.filter((p) => p.converted).length;
+    const totalPayout = pings.filter((p) => p.actual_payout).reduce((sum, p) => sum + (p.actual_payout || 0), 0);
+    const avgDuration = pings.filter((p) => p.call_duration).reduce((sum, p) => sum + (p.call_duration || 0), 0) / (connected || 1);
+
     return {
       total_pings: total,
       accepted,
@@ -353,6 +369,12 @@ export class PingAnalysisService {
       avg_bid: Math.round(avgBid * 100) / 100,
       avg_latency_ms: Math.round(avgLatency),
       unique_callers: uniqueCallers,
+      // Conversion stats
+      calls_connected: connected,
+      calls_converted: converted,
+      conversion_rate: accepted > 0 ? Math.round((converted / accepted) * 10000) / 100 : 0,
+      total_payout: Math.round(totalPayout * 100) / 100,
+      avg_call_duration: Math.round(avgDuration),
     };
   }
 
@@ -528,16 +550,24 @@ export class PingAnalysisService {
         id: true,
         received_at: true,
         caller_state: true,
+        caller_phone: true,
         offer_name: true,
         traffic_source: true,
         status: true,
         winning_bid: true,
         winning_buyer_name: true,
+        publisher_payout: true,
+        margin: true,
         total_buyers_pinged: true,
         total_accepts: true,
         total_rejects: true,
         processing_time_ms: true,
         is_duplicate: true,
+        // Conversion data
+        converted: true,
+        call_connected: true,
+        call_duration: true,
+        actual_payout: true,
       },
     });
 

@@ -81,6 +81,9 @@ export class WebhooksController {
         payload,
       );
 
+      // Link call to ping for conversion tracking
+      await this.linkCallToPing(payload);
+
       return {
         status: 'accepted',
         call_id: callId,
@@ -93,6 +96,58 @@ export class WebhooksController {
         status: 'error',
         message: 'Failed to queue call for processing',
       };
+    }
+  }
+
+  /**
+   * Link incoming call to a ping record for conversion tracking
+   */
+  private async linkCallToPing(payload: any) {
+    try {
+      const callerPhone = payload.caller_number || payload.caller_id || payload.caller_phone;
+      const callId = payload.id || payload.call_id;
+      const duration = Number(payload.total_duration) || Number(payload.answered_duration) || 0;
+      const payout = Number(payload.payout) || Number(payload.revenue) || Number(payload.buyer_payout) || null;
+      const buyerId = payload.buyer_id || payload.buyer?.id;
+
+      if (!callerPhone && !callId) {
+        return;
+      }
+
+      // Find matching ping - look for recent pings with same caller or trackdrive_call_id
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+
+      const ping = await this.prisma.inbound_ping.findFirst({
+        where: {
+          OR: [
+            { trackdrive_call_id: callId ? String(callId) : undefined },
+            { caller_phone: callerPhone },
+          ],
+          received_at: { gte: fiveMinutesAgo },
+          status: 'accepted',
+        },
+        orderBy: { received_at: 'desc' },
+      });
+
+      if (ping) {
+        const isConverted = duration >= 90; // Standard conversion threshold
+
+        await this.prisma.inbound_ping.update({
+          where: { id: ping.id },
+          data: {
+            trackdrive_call_id: callId ? String(callId) : ping.trackdrive_call_id,
+            call_connected: duration > 0,
+            call_duration: duration,
+            converted: isConverted,
+            actual_payout: payout,
+            conversion_time: isConverted ? new Date() : null,
+          },
+        });
+
+        this.logger.log(`Linked call ${callId} to ping ${ping.id}: duration=${duration}s, converted=${isConverted}, payout=${payout}`);
+      }
+    } catch (err: any) {
+      this.logger.warn(`Failed to link call to ping: ${err.message}`);
     }
   }
 

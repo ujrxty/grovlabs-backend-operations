@@ -734,7 +734,9 @@ model inbound_ping {
   status             String    @default("pending") // pending, accepted, rejected, no_bid, failed
   winning_buyer_id   String?
   winning_buyer_name String?
-  winning_bid        Float?
+  winning_bid        Float?    // What buyer pays us
+  publisher_payout   Float?    // What we pay traffic source
+  margin             Float?    // winning_bid - publisher_payout
   total_buyers_pinged Int      @default(0)
   total_accepts      Int       @default(0)
   total_rejects      Int       @default(0)
@@ -743,6 +745,13 @@ model inbound_ping {
   // Deduplication
   is_duplicate       Boolean   @default(false)
   duplicate_of_id    String?
+
+  // Conversion tracking (updated when call webhook fires)
+  converted          Boolean   @default(false)
+  call_connected     Boolean   @default(false)
+  call_duration      Int?
+  actual_payout      Float?
+  conversion_time    DateTime?
 
   // Raw data
   raw_payload        Json?
