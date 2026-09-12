@@ -95,4 +95,11 @@ export class PingRelayController {
   async getPayoutConfigs() {
     return this.relayService.getPayoutConfigs();
   }
+
+  @Post('relay/bid-floor')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Set bid floor for a buyer relay' })
+  async setBidFloor(@Body() body: { td_buyer_id: string; bid_floor: number | null }) {
+    return this.relayService.setBidFloor(body.td_buyer_id, body.bid_floor);
+  }
 }

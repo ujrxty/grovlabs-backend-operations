@@ -904,6 +904,9 @@ model buyer_relay_config {
   bid_field          String?   // JSON path to bid amount
   reject_reason_field String?  // JSON path to rejection reason
 
+  // Bid controls
+  bid_floor          Float?    // Minimum bid to accept (reject if lower)
+
   // Stats
   total_pings        Int       @default(0)
   total_accepts      Int       @default(0)

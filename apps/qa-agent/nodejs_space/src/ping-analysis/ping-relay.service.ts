@@ -11,6 +11,7 @@ export interface BuyerWithRelay {
   relay_url?: string;
   original_ping_url?: string;
   platform?: string;
+  bid_floor?: number | null;
   stats?: {
     total_pings: number;
     total_accepts: number;
@@ -177,6 +178,7 @@ export class PingRelayService {
         relay_url: config ? `${baseUrl}/ping-relay/relay/${config.relay_key}` : undefined,
         original_ping_url: config?.original_ping_url,
         platform: config?.platform || 'unknown',
+        bid_floor: config?.bid_floor ?? null,
         stats: config ? {
           total_pings: config.total_pings,
           total_accepts: config.total_accepts,
@@ -335,6 +337,32 @@ export class PingRelayService {
     return { success: true, message: 'Relay disabled and original URL restored' };
   }
 
+  async setBidFloor(tdBuyerId: string, bidFloor: number | null): Promise<{ success: boolean; message: string; bid_floor: number | null }> {
+    const config = await this.prisma.buyer_relay_config.findUnique({
+      where: { td_buyer_id: tdBuyerId },
+    });
+
+    if (!config) {
+      return { success: false, message: 'Relay config not found', bid_floor: null };
+    }
+
+    await this.prisma.buyer_relay_config.update({
+      where: { td_buyer_id: tdBuyerId },
+      data: { bid_floor: bidFloor },
+    });
+
+    // Clear cache so new floor takes effect immediately
+    this.configCache.clear();
+
+    this.logger.log(`Set bid floor for ${config.buyer_name}: $${bidFloor ?? 'none'}`);
+
+    return {
+      success: true,
+      message: bidFloor ? `Bid floor set to $${bidFloor}` : 'Bid floor removed',
+      bid_floor: bidFloor,
+    };
+  }
+
   // Cache for relay configs to avoid DB lookup on every ping
   private configCache = new Map<string, { config: any; expiry: number }>();
   private readonly CACHE_TTL = 60000; // 1 minute
@@ -435,6 +463,24 @@ export class PingRelayService {
     }
 
     const latency = Date.now() - startTime;
+
+    // Check bid floor - reject if bid is below minimum
+    if (response.accepted && config.bid_floor && response.bid_amount) {
+      if (response.bid_amount < config.bid_floor) {
+        this.logger.debug(`Bid $${response.bid_amount} below floor $${config.bid_floor} for ${config.buyer_name}`);
+        response = {
+          ...response,
+          accepted: false,
+          rejection_reason: `Bid below floor ($${response.bid_amount} < $${config.bid_floor})`,
+          raw_response: {
+            accepted: false,
+            rejected: true,
+            reason: `Bid below minimum ($${config.bid_floor})`,
+            original_bid: response.bid_amount,
+          },
+        };
+      }
+    }
 
     // Log everything in background - don't block response
     this.logSuccessfulPing(config, payload, response, latency).catch(e =>
