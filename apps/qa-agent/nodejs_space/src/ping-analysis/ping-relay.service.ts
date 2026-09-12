@@ -732,11 +732,15 @@ export class PingRelayService {
       }
 
       if (platform === 'callgrid') {
-        // CallGrid format: { bid: true/false, amount: X }
+        // CallGrid format:
+        // Success: { code: 1000, dynamicBid: "29.92", ... }
+        // Reject: { code: 4004/4008, message: "..." }
+        const isAccepted = data.code === 1000 || data.bid === true || data.accepted === true;
+        const bidAmount = parseFloat(data.dynamicBid) || data.amount || data.payout || data.bid_amount;
         return {
-          accepted: data.bid === true || data.accepted === true,
-          bid_amount: data.amount || data.payout || data.bid_amount,
-          rejection_reason: data.rejection_reason || data.reason,
+          accepted: isAccepted,
+          bid_amount: isAccepted && bidAmount ? bidAmount : undefined,
+          rejection_reason: !isAccepted ? (data.message || data.rejection_reason || data.reason) : undefined,
         };
       }
 
