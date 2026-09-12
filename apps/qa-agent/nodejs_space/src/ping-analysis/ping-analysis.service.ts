@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ConfigService } from '@nestjs/config';
+import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
 
 export interface InboundPingPayload {
   trackdrive_call_id?: string;
@@ -103,15 +104,80 @@ export interface BidAnalysis {
   by_buyer: { buyer: string; avg_bid: number; win_rate: number; total_bids: number }[];
 }
 
+interface PayoutConfig {
+  offer_id: string;
+  payout_type: 'usd' | 'buyer_conversion_percent';
+  payout: number;
+  revenue_percentage: number;
+}
+
 @Injectable()
 export class PingAnalysisService {
   private readonly logger = new Logger(PingAnalysisService.name);
   private readonly DUPLICATE_WINDOW_SECONDS = 300; // 5 minutes
+  private payoutConfigCache: Map<string, PayoutConfig> = new Map();
+  private payoutCacheLastRefresh: Date | null = null;
+  private readonly PAYOUT_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly trackdrive: TrackDriveService,
   ) {}
+
+  /**
+   * Refresh payout configs from TrackDrive (cached for 5 min)
+   */
+  async refreshPayoutConfigs(): Promise<void> {
+    if (
+      this.payoutCacheLastRefresh &&
+      Date.now() - this.payoutCacheLastRefresh.getTime() < this.PAYOUT_CACHE_TTL_MS
+    ) {
+      return; // Cache still valid
+    }
+
+    try {
+      const response = await this.trackdrive.listOfferConversions({ per_page: 200 });
+      const conversions = response?.offer_conversions || response || [];
+
+      this.payoutConfigCache.clear();
+      for (const conv of conversions) {
+        if (conv.offer_id) {
+          this.payoutConfigCache.set(String(conv.offer_id), {
+            offer_id: String(conv.offer_id),
+            payout_type: conv.payout_type || 'usd',
+            payout: Number(conv.payout) || 0,
+            revenue_percentage: Number(conv.revenue_percentage) || 0,
+          });
+        }
+      }
+
+      this.payoutCacheLastRefresh = new Date();
+      this.logger.log(`Refreshed payout configs: ${this.payoutConfigCache.size} offers`);
+    } catch (err: any) {
+      this.logger.warn(`Failed to refresh payout configs: ${err.message}`);
+    }
+  }
+
+  /**
+   * Calculate publisher payout based on offer config
+   */
+  calculatePublisherPayout(offerId: string, winningBid: number): { payout: number; margin: number } | null {
+    const config = this.payoutConfigCache.get(offerId);
+    if (!config) return null;
+
+    let payout: number;
+    if (config.payout_type === 'buyer_conversion_percent') {
+      payout = winningBid * (config.revenue_percentage / 100);
+    } else {
+      payout = config.payout;
+    }
+
+    return {
+      payout: Math.round(payout * 100) / 100,
+      margin: Math.round((winningBid - payout) * 100) / 100,
+    };
+  }
 
   async receivePing(payload: InboundPingPayload): Promise<{
     ping_id: string;
@@ -229,6 +295,12 @@ export class PingAnalysisService {
   }
 
   async finalizePing(pingId: string): Promise<void> {
+    // Get ping to access offer_id for payout calculation
+    const ping = await this.prisma.inbound_ping.findUnique({
+      where: { id: pingId },
+      select: { offer_id: true },
+    });
+
     const responses = await this.prisma.ping_response.findMany({
       where: { ping_id: pingId },
     });
@@ -240,6 +312,8 @@ export class PingAnalysisService {
     let winningBuyerId: string | null = null;
     let winningBuyerName: string | null = null;
     let winningBid: number | null = null;
+    let publisherPayout: number | null = null;
+    let margin: number | null = null;
 
     if (accepts.length > 0) {
       const winner = accepts.reduce((best, r) => (r.bid_amount! > (best.bid_amount || 0) ? r : best));
@@ -247,6 +321,16 @@ export class PingAnalysisService {
       winningBuyerId = winner.buyer_id;
       winningBuyerName = winner.buyer_name;
       winningBid = winner.bid_amount;
+
+      // Calculate publisher payout based on offer config
+      if (winningBid && ping?.offer_id) {
+        await this.refreshPayoutConfigs();
+        const payoutCalc = this.calculatePublisherPayout(ping.offer_id, winningBid);
+        if (payoutCalc) {
+          publisherPayout = payoutCalc.payout;
+          margin = payoutCalc.margin;
+        }
+      }
 
       await this.prisma.ping_response.update({
         where: { id: winner.id },
@@ -267,6 +351,8 @@ export class PingAnalysisService {
         winning_buyer_id: winningBuyerId,
         winning_buyer_name: winningBuyerName,
         winning_bid: winningBid,
+        publisher_payout: publisherPayout,
+        margin: margin,
         total_buyers_pinged: responses.length,
         total_accepts: accepts.length,
         total_rejects: rejects.length,

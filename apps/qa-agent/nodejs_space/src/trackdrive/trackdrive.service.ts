@@ -304,4 +304,28 @@ export class TrackDriveService {
 
     return allCalls;
   }
+
+  /**
+   * Fetch traffic source payout configurations (offer_conversions)
+   * These define how much to pay traffic sources per offer
+   */
+  async listOfferConversions(params?: Record<string, any>): Promise<any> {
+    try {
+      const response = await this.getClient().get('/offer_conversions', { params });
+      return response.data;
+    } catch (error: any) {
+      this.logger.error(`Failed to list offer conversions: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getOfferConversion(id: string): Promise<any> {
+    try {
+      const response = await this.getClient().get(`/offer_conversions/${id}`);
+      return response.data;
+    } catch (error: any) {
+      this.logger.error(`Failed to get offer conversion ${id}: ${error.message}`);
+      throw error;
+    }
+  }
 }
