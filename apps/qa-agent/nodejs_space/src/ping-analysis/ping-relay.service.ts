@@ -103,8 +103,26 @@ export class PingRelayService {
   }
 
   private calculatePublisherPayout(offerName: string, winningBid: number): { payout: number; margin: number } | null {
-    // Try to find config by offer name (case insensitive)
-    const config = this.payoutConfigCache.get(offerName.toLowerCase());
+    const searchName = offerName.toLowerCase().trim();
+
+    // Try exact match first
+    let config = this.payoutConfigCache.get(searchName);
+
+    // Try "name - name" format (TrackDrive often uses this)
+    if (!config) {
+      config = this.payoutConfigCache.get(`${searchName} - ${searchName}`);
+    }
+
+    // Try partial match - find any key that starts with the search name
+    if (!config) {
+      for (const [key, value] of this.payoutConfigCache.entries()) {
+        if (key.startsWith(searchName) || key.includes(searchName)) {
+          config = value;
+          break;
+        }
+      }
+    }
+
     if (!config) return null;
 
     let payout: number;
