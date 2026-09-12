@@ -236,12 +236,27 @@ export class TrackDriveService {
     }
   }
 
+  async getBuyerConversion(conversionId: string): Promise<any> {
+    try {
+      const response = await this.getClient().get(`/buyer_conversions/${conversionId}`);
+      return response.data;
+    } catch (error: any) {
+      this.logger.error(`Failed to get buyer conversion ${conversionId}: ${error.message}`);
+      throw error;
+    }
+  }
+
   async updateBuyerConversion(conversionId: string, data: Record<string, any>): Promise<any> {
     try {
+      this.logger.debug(`Updating buyer conversion ${conversionId} with: ${JSON.stringify(data)}`);
       const response = await this.getClient().put(`/buyer_conversions/${conversionId}`, data);
+      this.logger.debug(`Update response: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error: any) {
       this.logger.error(`Failed to update buyer conversion ${conversionId}: ${error.message}`);
+      if (error.response?.data) {
+        this.logger.error(`TrackDrive error details: ${JSON.stringify(error.response.data)}`);
+      }
       throw error;
     }
   }

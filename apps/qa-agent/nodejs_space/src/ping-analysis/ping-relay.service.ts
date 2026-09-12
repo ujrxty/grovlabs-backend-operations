@@ -148,10 +148,18 @@ export class PingRelayService {
 
     const relayUrl = `${baseUrl}/ping-relay/relay/${config.relay_key}`;
 
+    // First, fetch the conversion to see its current structure
+    try {
+      const currentConversion = await this.trackdrive.getBuyerConversion(tdConversionId);
+      this.logger.log(`Current conversion ${tdConversionId} structure: ${JSON.stringify(currentConversion)}`);
+    } catch (err: any) {
+      this.logger.warn(`Could not fetch conversion ${tdConversionId}: ${err.message}`);
+    }
+
     // Update the EXISTING TrackDrive buyer_conversion to use our relay URL
     try {
       await this.trackdrive.updateBuyerConversion(tdConversionId, {
-        remote_url: relayUrl,
+        webhook_remote_url: relayUrl,
       });
       this.logger.log(`Enabled relay for buyer ${tdBuyerId}, updated conversion ${tdConversionId}, URL: ${relayUrl}`);
     } catch (err: any) {
