@@ -308,15 +308,16 @@ export default function LiveFeedPage() {
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-[80px]">Time</TableHead>
-                <TableHead className="w-[50px]">State</TableHead>
+                <TableHead className="w-[100px]">Caller</TableHead>
+                <TableHead className="w-[40px]">ST</TableHead>
                 <TableHead>Offer</TableHead>
                 <TableHead>Source</TableHead>
-                <TableHead className="w-[60px]">Status</TableHead>
-                <TableHead className="w-[70px] text-right">Revenue</TableHead>
-                <TableHead className="w-[70px] text-right">Payout</TableHead>
-                <TableHead className="w-[60px] text-right">Margin</TableHead>
+                <TableHead className="w-[55px]">Status</TableHead>
+                <TableHead className="w-[65px] text-right">Rev</TableHead>
+                <TableHead className="w-[65px] text-right">Pay</TableHead>
+                <TableHead className="w-[55px] text-right">Margin</TableHead>
                 <TableHead>Buyer</TableHead>
-                <TableHead className="w-[50px] text-right">ms</TableHead>
+                <TableHead className="w-[45px] text-right">ms</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -326,9 +327,10 @@ export default function LiveFeedPage() {
                   ping.converted && 'bg-emerald-500/5'
                 )}>
                   <TableCell className="font-mono text-xs py-2">{formatTime(ping.received_at)}</TableCell>
+                  <TableCell className="font-mono text-xs py-2">{ping.caller_phone?.replace(/^\+1/, '') || '-'}</TableCell>
                   <TableCell className="py-2 text-xs">{ping.caller_state || '-'}</TableCell>
-                  <TableCell className="max-w-[150px] truncate py-2 text-sm">{ping.offer_name || '-'}</TableCell>
-                  <TableCell className="max-w-[120px] truncate py-2 text-sm">{ping.traffic_source || '-'}</TableCell>
+                  <TableCell className="max-w-[130px] truncate py-2 text-sm">{ping.offer_name || '-'}</TableCell>
+                  <TableCell className="max-w-[100px] truncate py-2 text-sm">{ping.traffic_source || '-'}</TableCell>
                   <TableCell className="py-2">{statusBadge(ping.status, ping.is_duplicate)}</TableCell>
                   <TableCell className="font-mono text-xs text-right py-2">
                     {ping.winning_bid ? (
@@ -359,7 +361,7 @@ export default function LiveFeedPage() {
               ))}
               {paginatedPings.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center text-muted-foreground py-12">
+                  <TableCell colSpan={11} className="text-center text-muted-foreground py-12">
                     {loading ? 'Loading...' : activeFilterCount > 0 ? 'No pings match filters' : 'No pings received yet'}
                   </TableCell>
                 </TableRow>
