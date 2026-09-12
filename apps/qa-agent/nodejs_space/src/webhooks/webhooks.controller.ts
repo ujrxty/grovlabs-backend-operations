@@ -107,8 +107,11 @@ export class WebhooksController {
       const callerPhone = payload.caller_number || payload.caller_id || payload.caller_phone;
       const callId = payload.id || payload.call_id;
       const duration = Number(payload.total_duration) || Number(payload.answered_duration) || 0;
-      const payout = Number(payload.payout) || Number(payload.revenue) || Number(payload.buyer_payout) || null;
-      const buyerId = payload.buyer_id || payload.buyer?.id;
+
+      // Revenue fields from TrackDrive
+      const buyerRevenue = Number(payload.buyer_revenue) || Number(payload.revenue) || null;
+      const trafficSourcePayout = Number(payload.traffic_source_payout) || Number(payload.payout) || null;
+      const margin = (buyerRevenue && trafficSourcePayout) ? buyerRevenue - trafficSourcePayout : null;
 
       if (!callerPhone && !callId) {
         return;
@@ -139,12 +142,14 @@ export class WebhooksController {
             call_connected: duration > 0,
             call_duration: duration,
             converted: isConverted,
-            actual_payout: payout,
+            actual_payout: buyerRevenue,
+            publisher_payout: trafficSourcePayout,
+            margin: margin,
             conversion_time: isConverted ? new Date() : null,
           },
         });
 
-        this.logger.log(`Linked call ${callId} to ping ${ping.id}: duration=${duration}s, converted=${isConverted}, payout=${payout}`);
+        this.logger.log(`Linked call ${callId} to ping ${ping.id}: duration=${duration}s, converted=${isConverted}, buyer_revenue=${buyerRevenue}, publisher_payout=${trafficSourcePayout}, margin=${margin}`);
       }
     } catch (err: any) {
       this.logger.warn(`Failed to link call to ping: ${err.message}`);
