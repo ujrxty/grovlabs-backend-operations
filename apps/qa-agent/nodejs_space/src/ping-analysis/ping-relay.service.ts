@@ -511,6 +511,23 @@ export class PingRelayService {
         };
       }
 
+      // Check for Moja/RTB style response with eligible_routes
+      if (data.eligible_routes !== undefined) {
+        const routes = data.eligible_routes || [];
+        if (routes.length === 0) {
+          return {
+            accepted: false,
+            rejection_reason: 'No eligible routes',
+          };
+        }
+        const topRoute = routes[0];
+        return {
+          accepted: true,
+          bid_amount: topRoute.payout || topRoute.revenue || topRoute.bid,
+          rejection_reason: undefined,
+        };
+      }
+
       // Generic/custom - use config field mappings or defaults
       let accepted = false;
       if (config.accept_field) {

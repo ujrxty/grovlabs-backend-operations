@@ -79,7 +79,8 @@ export class PingRelayController {
     @Req() req: Request,
   ) {
     // For GET requests, query params are the payload
-    const payload = req.query as Record<string, any>;
+    const payload = { ...req.query } as Record<string, any>;
+    console.log(`[Relay GET] relayKey=${relayKey}, query=${JSON.stringify(req.query)}, url=${req.url}`);
     return this.relayService.handleRelayPing(relayKey, payload, headers);
   }
 
