@@ -358,6 +358,25 @@ Pulls `offer_conversions` from TrackDrive API to get payout config per offer:
 - `buyer_conversion_percent` type: percentage of buyer bid
 
 Margin = Bid - Payout
+
+### Route Ordering (Important)
+
+Static routes MUST come before dynamic `:relayKey` routes in controller:
+- `POST relay/bid-floor` before `POST relay/:relayKey`
+- `GET relay/stats` before `GET relay/:relayKey`
+
+Otherwise NestJS matches "bid-floor" as a relayKey and fails.
+
+### Current Stats (Sep 2026)
+
+- 2,400+ pings tracked
+- $12,900+ total bid value
+- 100+ duplicates blocked
+- ~800ms average latency
+- ~16% accept rate
+- ~$35 average bid
+
+Margin = Bid - Payout
 - `GET /n2n/io/sign/:token/html` — view IO document (token-based)
 - `POST /n2n/io/sign/:token` — sign IO
 
