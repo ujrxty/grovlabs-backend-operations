@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=1080, height=1080">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: white;
+      padding: 8%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo {
+      width: 56px;
+      height: 56px;
+      background: #84cc16;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 28px;
+      color: #0a0a0a;
+    }
+    .brand {
+      font-size: 24px;
+      font-weight: 600;
+      color: #888;
+    }
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5vh;
+    }
+    .big-stat {
+      font-size: 18vw;
+      font-weight: 800;
+      color: #84cc16;
+      line-height: 1;
+    }
+    .big-stat span {
+      font-size: 10vw;
+      color: #84cc16;
+    }
+    .label {
+      font-size: 4.5vw;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+    }
+    .subtitle {
+      font-size: 4vw;
+      color: white;
+      line-height: 1.4;
+    }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .tag {
+      font-size: 1.8vw;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .highlight {
+      color: #84cc16;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">G</div>
+    <div class="brand">GROVLABS</div>
+  </div>
+
+  <div class="main">
+    <div>
+      <div class="big-stat">&lt;500<span>ms</span></div>
+      <div class="label">Average Response Time</div>
+    </div>
+    <div class="subtitle">
+      Real-time ping relay with <span class="highlight">zero latency overhead</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="tag">RTB Intelligence</div>
+    <div class="tag">#PayPerCall</div>
+  </div>
+</body>
+</html>

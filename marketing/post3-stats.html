@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100vw; height: 100vh; overflow: hidden; }
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: white;
+      padding: 8%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .header { display: flex; align-items: center; gap: 16px; }
+    .logo {
+      width: 56px; height: 56px; background: #84cc16; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 28px; color: #0a0a0a;
+    }
+    .brand { font-size: 24px; font-weight: 600; color: #888; }
+    .main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4vh; }
+    .title { font-size: 5vw; font-weight: 700; color: white; margin-bottom: 2vh; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3vw; }
+    .stat-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px; padding: 4vh 3vw;
+    }
+    .stat-value { font-size: 7vw; font-weight: 800; line-height: 1; margin-bottom: 1vh; }
+    .stat-value.green { color: #84cc16; }
+    .stat-value.yellow { color: #eab308; }
+    .stat-value.blue { color: #3b82f6; }
+    .stat-value.orange { color: #f97316; }
+    .stat-label { font-size: 2vw; color: #666; text-transform: uppercase; letter-spacing: 2px; }
+    .footer { display: flex; justify-content: space-between; align-items: flex-end; }
+    .tag { font-size: 1.8vw; color: #555; text-transform: uppercase; letter-spacing: 2px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">G</div>
+    <div class="brand">GROVLABS</div>
+  </div>
+  <div class="main">
+    <div class="title">Week 1 Results</div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-value green">1,633</div>
+        <div class="stat-label">Pings Tracked</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value yellow">$10.1K</div>
+        <div class="stat-label">Bid Value</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value blue">$32.37</div>
+        <div class="stat-label">Avg Bid</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value orange">19.6%</div>
+        <div class="stat-label">Accept Rate</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    <div class="tag">RTB Intelligence</div>
+    <div class="tag">#PayPerCall</div>
+  </div>
+</body>
+</html>

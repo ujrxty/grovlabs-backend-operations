@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100vw; height: 100vh; overflow: hidden; }
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: white;
+      padding: 8%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .header { display: flex; align-items: center; gap: 16px; }
+    .logo {
+      width: 56px; height: 56px; background: #84cc16; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 28px; color: #0a0a0a;
+    }
+    .brand { font-size: 24px; font-weight: 600; color: #888; }
+    .main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 5vh; }
+    .quote { font-size: 4.5vw; font-weight: 600; color: #888; font-style: italic; }
+    .floor-label { font-size: 3vw; color: #666; text-transform: uppercase; letter-spacing: 3px; }
+    .floor-value { font-size: 16vw; font-weight: 800; color: #84cc16; line-height: 1; }
+    .result {
+      background: rgba(132, 204, 22, 0.1);
+      border: 1px solid rgba(132, 204, 22, 0.3);
+      border-radius: 16px; padding: 3vh 4vw;
+      display: flex; align-items: center; gap: 3vw;
+    }
+    .result-text { font-size: 3vw; color: white; }
+    .result-stat { font-size: 5vw; font-weight: 700; color: #84cc16; }
+    .footer { display: flex; justify-content: space-between; align-items: flex-end; }
+    .tag { font-size: 1.8vw; color: #555; text-transform: uppercase; letter-spacing: 2px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">G</div>
+    <div class="brand">GROVLABS</div>
+  </div>
+  <div class="main">
+    <div class="quote">"Only accept bids above $30"</div>
+    <div>
+      <div class="floor-label">Bid Floor</div>
+      <div class="floor-value">$30</div>
+    </div>
+    <div class="result">
+      <div class="result-text">Accept rate jumped to</div>
+      <div class="result-stat">62%</div>
+    </div>
+  </div>
+  <div class="footer">
+    <div class="tag">Bid Floor Enforcement</div>
+    <div class="tag">#PayPerCall</div>
+  </div>
+</body>
+</html>

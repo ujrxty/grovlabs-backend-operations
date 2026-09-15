@@ -232,7 +232,30 @@ export class PingRelayService {
 
     // Get buyer info from TrackDrive
     const buyer = await this.trackdrive.getBuyer(tdBuyerId);
-    const buyerName = buyer?.buyer?.name || buyer?.name || `Buyer ${tdBuyerId}`;
+    const buyerData = buyer?.buyer || buyer;
+    const buyerName = buyerData?.name || `Buyer ${tdBuyerId}`;
+    this.logger.debug(`Buyer ${tdBuyerId} data: ${JSON.stringify(buyerData)}`);
+
+    // Extract extra tokens from buyer (e.g., buyer_td_subdomain, buyer_td_vanity_url)
+    const extraTokens: Record<string, string> = {};
+    if (buyerData?.token_values && Array.isArray(buyerData.token_values)) {
+      for (const tv of buyerData.token_values) {
+        // Format: "key:==value" or "key:=~value"
+        const match = tv.match(/^(buyer_[^:]+):==(.+)$/);
+        if (match) {
+          extraTokens[match[1]] = match[2];
+        }
+      }
+    }
+    // Also check token_values_hash for extra tokens
+    if (buyerData?.token_values_hash) {
+      for (const [key, data] of Object.entries(buyerData.token_values_hash)) {
+        if (key.startsWith('buyer_') && typeof data === 'object' && (data as any).value) {
+          extraTokens[key] = (data as any).value;
+        }
+      }
+    }
+    this.logger.debug(`Extracted extra tokens: ${JSON.stringify(extraTokens)}`);
 
     // Auto-fetch the original URL from TrackDrive conversion (more reliable than user input)
     let actualOriginalUrl = originalPingUrl;
@@ -245,6 +268,25 @@ export class PingRelayService {
       }
     } catch (err: any) {
       this.logger.warn(`Could not fetch conversion, using provided URL: ${err.message}`);
+    }
+
+    // Resolve extra tokens in the URL (e.g., [buyer_td_subdomain] -> apfeifer)
+    for (const [key, value] of Object.entries(extraTokens)) {
+      const placeholder = `[${key}]`;
+      if (actualOriginalUrl.includes(placeholder)) {
+        actualOriginalUrl = actualOriginalUrl.replace(new RegExp(`\\[${key}\\]`, 'g'), value);
+        this.logger.log(`Resolved ${placeholder} -> ${value}`);
+      }
+    }
+
+    // Check for any remaining unresolved buyer placeholders
+    const unresolvedMatch = actualOriginalUrl.match(/\[buyer_[^\]]+\]/g);
+    if (unresolvedMatch) {
+      return {
+        success: false,
+        relay_url: '',
+        message: `Cannot enable relay: URL contains unresolved placeholders: ${unresolvedMatch.join(', ')}. Configure these as Extra Tokens on the buyer in TrackDrive.`,
+      };
     }
 
     // Create or update relay config

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100vw; height: 100vh; overflow: hidden; }
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: white;
+      padding: 8%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .header { display: flex; align-items: center; gap: 16px; }
+    .logo {
+      width: 56px; height: 56px; background: #84cc16; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 28px; color: #0a0a0a;
+    }
+    .brand { font-size: 24px; font-weight: 600; color: #888; }
+    .main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4vh; }
+    .title { font-size: 5vw; font-weight: 700; color: white; }
+    .steps { display: flex; flex-direction: column; gap: 2.5vh; }
+    .step { display: flex; align-items: center; gap: 3vw; }
+    .step-num {
+      width: 5vw; height: 5vw; min-width: 40px; min-height: 40px;
+      background: rgba(132, 204, 22, 0.2); border: 2px solid #84cc16;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 2.2vw; font-weight: 700; color: #84cc16; flex-shrink: 0;
+    }
+    .step-text { font-size: 3vw; color: #ccc; }
+    .step-text span { color: #84cc16; }
+    .time {
+      background: rgba(132, 204, 22, 0.1);
+      border: 1px solid rgba(132, 204, 22, 0.3);
+      border-radius: 12px; padding: 2.5vh 4vw; text-align: center;
+    }
+    .time-label { font-size: 1.8vw; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1vh; }
+    .time-value { font-size: 5vw; font-weight: 700; color: #84cc16; }
+    .footer { display: flex; justify-content: space-between; align-items: flex-end; }
+    .tag { font-size: 1.8vw; color: #555; text-transform: uppercase; letter-spacing: 2px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">G</div>
+    <div class="brand">GROVLABS</div>
+  </div>
+  <div class="main">
+    <div class="title">How Ping Relay Works</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">TrackDrive pings <span>our relay</span></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">Log caller, offer, source, state</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">Forward to <span>real buyer</span></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">Parse response, calculate margin</div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-text">Return to TrackDrive</div>
+      </div>
+    </div>
+    <div class="time">
+      <div class="time-label">Total Time</div>
+      <div class="time-value">&lt; 500ms</div>
+    </div>
+  </div>
+  <div class="footer">
+    <div class="tag">Architecture</div>
+    <div class="tag">#PayPerCall</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1080px;
+      height: 1350px;
+      background: linear-gradient(160deg, #0a0a0a 0%, #111111 50%, #0d1a0d 100%);
+      font-family: 'Inter', sans-serif;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Background G watermark */
+    .bg-g {
+      position: absolute;
+      right: -100px;
+      top: 200px;
+      font-size: 600px;
+      font-weight: 900;
+      color: rgba(132, 204, 22, 0.06);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    /* Glow effects */
+    .glow-1 {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(132, 204, 22, 0.15) 0%, transparent 70%);
+      top: -100px;
+      left: -100px;
+      pointer-events: none;
+    }
+    .glow-2 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(132, 204, 22, 0.1) 0%, transparent 70%);
+      bottom: -200px;
+      right: -200px;
+      pointer-events: none;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      padding: 60px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 50px;
+    }
+    .logo-section {}
+    .logo-text {
+      font-size: 42px;
+      font-weight: 700;
+      color: white;
+    }
+    .logo-text span { color: #84cc16; }
+    .tagline {
+      font-size: 14px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-top: 8px;
+    }
+    .slogan {
+      text-align: right;
+      border-left: 2px solid #84cc16;
+      padding-left: 16px;
+    }
+    .slogan-line {
+      font-size: 13px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      line-height: 1.8;
+    }
+
+    /* Main title */
+    .main-title {
+      margin-bottom: 30px;
+    }
+    .pre-title {
+      font-size: 18px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 8px;
+      margin-bottom: 10px;
+    }
+    .title {
+      font-size: 82px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+    .title-green { color: #84cc16; }
+    .subtitle {
+      font-size: 20px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 6px;
+    }
+    .subtitle span { color: #84cc16; }
+
+    /* Description */
+    .description {
+      font-size: 26px;
+      color: #ccc;
+      line-height: 1.6;
+      max-width: 700px;
+      margin-bottom: 50px;
+    }
+    .description strong { color: white; font-weight: 600; }
+
+    /* Stats grid */
+    .stats-grid {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 50px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 30px 0;
+    }
+    .stat-item {
+      flex: 1;
+      text-align: center;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-icon {
+      font-size: 28px;
+      color: #84cc16;
+      margin-bottom: 12px;
+    }
+    .stat-value {
+      font-size: 36px;
+      font-weight: 700;
+      color: #84cc16;
+      margin-bottom: 6px;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    /* Features */
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 50px;
+    }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 20px;
+      color: #aaa;
+    }
+    .feature-dot {
+      width: 8px;
+      height: 8px;
+      background: #84cc16;
+      border-radius: 50%;
+    }
+    .feature span { color: #84cc16; font-weight: 600; }
+
+    /* Footer */
+    .footer {
+      margin-top: auto;
+    }
+    .signature {
+      font-size: 48px;
+      font-style: italic;
+      font-weight: 300;
+      color: #84cc16;
+      margin-bottom: 8px;
+    }
+    .team {
+      font-size: 14px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-g">G</div>
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+
+  <div class="content">
+    <div class="header">
+      <div class="logo-section">
+        <div class="logo-text">Grov<span>Labs.</span></div>
+        <div class="tagline">Pay Per Call / Digital Marketing</div>
+      </div>
+      <div class="slogan">
+        <div class="slogan-line">More Calls.</div>
+        <div class="slogan-line">More Business.</div>
+        <div class="slogan-line">Together.</div>
+      </div>
+    </div>
+
+    <div class="main-title">
+      <div class="pre-title">Introducing</div>
+      <div class="title">RTB <span class="title-green">INTELLIGENCE</span></div>
+      <div class="subtitle">Built by <span>GrovLabs</span></div>
+    </div>
+
+    <div class="description">
+      Real-time visibility into every ping, every bid, every margin. <strong>Built in-house because the platforms couldn't give us what we needed.</strong>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-icon">&#9201;</div>
+        <div class="stat-value">&lt;500ms</div>
+        <div class="stat-label">Avg Latency</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">&#128200;</div>
+        <div class="stat-value">$10.1K</div>
+        <div class="stat-label">Bid Value Tracked</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">&#128279;</div>
+        <div class="stat-value">1,633</div>
+        <div class="stat-label">Pings Processed</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">&#128683;</div>
+        <div class="stat-value">37</div>
+        <div class="stat-label">Duplicates Blocked</div>
+      </div>
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-dot"></div>
+        Real-time <span>margin tracking</span> on every single ping
+      </div>
+      <div class="feature">
+        <div class="feature-dot"></div>
+        <span>Duplicate detection</span> before it hits the buyer
+      </div>
+      <div class="feature">
+        <div class="feature-dot"></div>
+        Per-buyer <span>bid floor</span> enforcement
+      </div>
+      <div class="feature">
+        <div class="feature-dot"></div>
+        Sub-500ms via <span>in-memory caching</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="signature">Built Different</div>
+      <div class="team">The GrovLabs Team</div>
+    </div>
+  </div>
+</body>
+</html>

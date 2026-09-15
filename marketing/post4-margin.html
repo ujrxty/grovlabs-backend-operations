@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100vw; height: 100vh; overflow: hidden; }
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: white;
+      padding: 8%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .header { display: flex; align-items: center; gap: 16px; }
+    .logo {
+      width: 56px; height: 56px; background: #84cc16; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 28px; color: #0a0a0a;
+    }
+    .brand { font-size: 24px; font-weight: 600; color: #888; }
+    .main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 5vh; }
+    .title { font-size: 5.5vw; font-weight: 700; color: white; line-height: 1.2; }
+    .breakdown { display: flex; flex-direction: column; gap: 3vh; }
+    .row { display: flex; align-items: center; gap: 4vw; }
+    .row-label { font-size: 3vw; color: #666; width: 20vw; }
+    .row-value { font-size: 6vw; font-weight: 700; }
+    .row-value.green { color: #84cc16; }
+    .row-value.red { color: #ef4444; }
+    .row-value.yellow { color: #eab308; }
+    .divider { width: 100%; height: 2px; background: rgba(255,255,255,0.1); }
+    .subtitle { font-size: 3vw; color: #888; }
+    .footer { display: flex; justify-content: space-between; align-items: flex-end; }
+    .tag { font-size: 1.8vw; color: #555; text-transform: uppercase; letter-spacing: 2px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">G</div>
+    <div class="brand">GROVLABS</div>
+  </div>
+  <div class="main">
+    <div class="title">Real-Time Margin<br>On Every Ping</div>
+    <div class="breakdown">
+      <div class="row">
+        <div class="row-label">Revenue</div>
+        <div class="row-value green">$57.15</div>
+      </div>
+      <div class="row">
+        <div class="row-label">Payout</div>
+        <div class="row-value red">$45.72</div>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="row-label">Margin</div>
+        <div class="row-value yellow">$11.43</div>
+      </div>
+    </div>
+    <div class="subtitle">Calculated live, per ping, automatically</div>
+  </div>
+  <div class="footer">
+    <div class="tag">Margin Tracking</div>
+    <div class="tag">#PayPerCall</div>
+  </div>
+</body>
+</html>

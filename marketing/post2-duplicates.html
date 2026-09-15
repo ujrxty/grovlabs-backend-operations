@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100vw; height: 100vh; overflow: hidden; }
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: white;
+      padding: 8%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .header { display: flex; align-items: center; gap: 16px; }
+    .logo {
+      width: 56px; height: 56px; background: #84cc16; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 28px; color: #0a0a0a;
+    }
+    .brand { font-size: 24px; font-weight: 600; color: #888; }
+    .main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 5vh; }
+    .big-stat { font-size: 22vw; font-weight: 800; color: #f97316; line-height: 1; }
+    .label { font-size: 4vw; color: #666; text-transform: uppercase; letter-spacing: 4px; }
+    .points { display: flex; flex-direction: column; gap: 2.5vh; }
+    .point {
+      font-size: 3.5vw; color: #aaa;
+      display: flex; align-items: center; gap: 20px;
+    }
+    .point::before {
+      content: ""; width: 12px; height: 12px;
+      background: #f97316; border-radius: 50%;
+    }
+    .footer { display: flex; justify-content: space-between; align-items: flex-end; }
+    .tag { font-size: 1.8vw; color: #555; text-transform: uppercase; letter-spacing: 2px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">G</div>
+    <div class="brand">GROVLABS</div>
+  </div>
+  <div class="main">
+    <div>
+      <div class="big-stat">37</div>
+      <div class="label">Duplicates Blocked</div>
+    </div>
+    <div class="points">
+      <div class="point">30 min detection window</div>
+      <div class="point">Blocked before hitting buyer</div>
+      <div class="point">Protecting accept rates</div>
+    </div>
+  </div>
+  <div class="footer">
+    <div class="tag">Duplicate Detection</div>
+    <div class="tag">#PayPerCall</div>
+  </div>
+</body>
+</html>

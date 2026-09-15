@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100vw; height: 100vh; overflow: hidden; }
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: white;
+      padding: 6%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .header { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 48px; height: 48px; background: #84cc16; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 24px; color: #0a0a0a;
+    }
+    .brand { font-size: 20px; font-weight: 600; color: #888; }
+    .main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4vh; }
+    .title { font-size: 5vw; font-weight: 800; color: white; line-height: 1.1; }
+    .title span { color: #84cc16; }
+    .stats-row { display: flex; gap: 2vw; flex-wrap: wrap; }
+    .stat {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 2vh 2vw; flex: 1; min-width: 20%;
+    }
+    .stat-value { font-size: 4vw; font-weight: 800; line-height: 1; }
+    .stat-value.green { color: #84cc16; }
+    .stat-value.yellow { color: #eab308; }
+    .stat-value.orange { color: #f97316; }
+    .stat-value.blue { color: #3b82f6; }
+    .stat-label { font-size: 1.4vw; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-top: 0.5vh; }
+    .features { display: flex; flex-direction: column; gap: 1.5vh; }
+    .feature { display: flex; align-items: center; gap: 1.5vw; font-size: 2.2vw; color: #aaa; }
+    .feature::before { content: ""; width: 8px; height: 8px; background: #84cc16; border-radius: 50%; }
+    .feature span { color: #84cc16; font-weight: 600; }
+    .footer { display: flex; justify-content: space-between; align-items: flex-end; }
+    .tag { font-size: 1.5vw; color: #555; text-transform: uppercase; letter-spacing: 2px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">G</div>
+    <div class="brand">GROVLABS</div>
+  </div>
+  <div class="main">
+    <div class="title">Built Our Own<br><span>RTB Intelligence</span></div>
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-value green">1,633</div>
+        <div class="stat-label">Pings Tracked</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value yellow">$10.1K</div>
+        <div class="stat-label">Bid Value</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value orange">&lt;500ms</div>
+        <div class="stat-label">Avg Latency</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value blue">37</div>
+        <div class="stat-label">Dups Blocked</div>
+      </div>
+    </div>
+    <div class="features">
+      <div class="feature">Real-time <span>margin tracking</span> on every ping</div>
+      <div class="feature"><span>Duplicate detection</span> before hitting buyers</div>
+      <div class="feature">Per-buyer <span>bid floor</span> enforcement</div>
+      <div class="feature">Sub-500ms response via <span>in-memory caching</span></div>
+    </div>
+  </div>
+  <div class="footer">
+    <div class="tag">Pay Per Call Infrastructure</div>
+    <div class="tag">#PayPerCall #RTB</div>
+  </div>
+</body>
+</html>
