@@ -72,7 +72,20 @@ export class WebhooksController {
 
       if (!callId) {
         this.logger.warn('Webhook received without call ID');
-        return { status: 'ignored', reason: 'No call ID found in payload' };
+
+        // Still send ntfy for live call alert even without call ID
+        this.ntfy.sendLiveCallAlert({
+          callId: 'live',
+          callerNumber: payload.caller_number || payload.caller_id,
+          callerState: payload.caller_state || payload.state,
+          offer: payload.offer || payload.offer_name,
+          trafficSource: payload.traffic_source || payload.publisher,
+          buyer: payload.buyer || payload.buyer_name,
+          duration: 0,
+          revenue: 0,
+        }).catch(() => {});
+
+        return { status: 'notified', reason: 'No call ID but ntfy sent' };
       }
 
       this.logger.log(`Processing webhook event: ${event} for call: ${callId}`);
