@@ -689,6 +689,9 @@ model scheduler_settings {
   sales_qa_hour             Int      @default(20)  // 8 PM
   sales_qa_minute           Int      @default(0)
 
+  // Campaign Monitor (hourly health checks during business hours)
+  campaign_monitor_enabled  Boolean  @default(true)
+
   // Notification channels
   discord_enabled           Boolean  @default(true)
   discord_webhook_url       String?
@@ -700,6 +703,7 @@ model scheduler_settings {
   last_vendor_stats_run     DateTime?
   last_non_conversion_run   DateTime?
   last_sales_qa_run         DateTime?
+  last_campaign_monitor_run DateTime?
 
   updated_at                DateTime @updatedAt
 }

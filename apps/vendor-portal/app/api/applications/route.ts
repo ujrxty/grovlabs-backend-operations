@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
       notificationId: process.env.NOTIF_ID_NEW_APPLICATION_ADMIN_ALERT ?? '',
       subject: `New Vendor Application: ${company_name?.trim?.() ?? 'Unknown'} — ${subjectCampaigns} (${campaignCount} campaign${campaignCount !== 1 ? 's' : ''})`,
       body: emailTemplate('New Vendor Application', adminContent),
-      recipientEmail: 'sammyabdel@thebrokenwood.com',
+      recipientEmail: 'uj@grovlabs.com',
     })
     console.log('Admin notification email result:', JSON.stringify(adminEmailResult))
 

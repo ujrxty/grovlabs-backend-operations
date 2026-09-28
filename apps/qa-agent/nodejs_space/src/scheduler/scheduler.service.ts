@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { VendorStatsService } from '../vendor-stats/vendor-stats.service.js';
 import { NonConversionQaService } from '../non-conversion-qa/non-conversion-qa.service.js';
 import { SalesQaService } from '../sales-qa/sales-qa.service.js';
+import { CampaignMonitorService } from '../campaign-monitor/campaign-monitor.service.js';
+import { ConfigService } from '@nestjs/config';
 
 export interface SchedulerSettings {
   enabled: boolean;
@@ -16,6 +18,7 @@ export interface SchedulerSettings {
   sales_qa_enabled: boolean;
   sales_qa_hour: number;
   sales_qa_minute: number;
+  campaign_monitor_enabled: boolean;
   discord_enabled: boolean;
   discord_webhook_url: string | null;
   email_enabled: boolean;
@@ -24,6 +27,7 @@ export interface SchedulerSettings {
   last_vendor_stats_run: Date | null;
   last_non_conversion_run: Date | null;
   last_sales_qa_run: Date | null;
+  last_campaign_monitor_run: Date | null;
 }
 
 const DEFAULT_SETTINGS: SchedulerSettings = {
@@ -38,6 +42,7 @@ const DEFAULT_SETTINGS: SchedulerSettings = {
   sales_qa_enabled: true,
   sales_qa_hour: 20,
   sales_qa_minute: 0,
+  campaign_monitor_enabled: true,
   discord_enabled: true,
   discord_webhook_url: null,
   email_enabled: true,
@@ -46,6 +51,7 @@ const DEFAULT_SETTINGS: SchedulerSettings = {
   last_vendor_stats_run: null,
   last_non_conversion_run: null,
   last_sales_qa_run: null,
+  last_campaign_monitor_run: null,
 };
 
 export const TIMEZONE_OPTIONS = [
@@ -70,6 +76,8 @@ export class SchedulerService implements OnModuleInit {
     private readonly vendorStats: VendorStatsService,
     private readonly nonConversionQa: NonConversionQaService,
     private readonly salesQa: SalesQaService,
+    private readonly campaignMonitor: CampaignMonitorService,
+    private readonly config: ConfigService,
   ) {}
 
   async onModuleInit() {
@@ -108,6 +116,7 @@ export class SchedulerService implements OnModuleInit {
         sales_qa_enabled: row.sales_qa_enabled,
         sales_qa_hour: row.sales_qa_hour,
         sales_qa_minute: row.sales_qa_minute,
+        campaign_monitor_enabled: (row as any).campaign_monitor_enabled ?? true,
         discord_enabled: row.discord_enabled,
         discord_webhook_url: row.discord_webhook_url,
         email_enabled: row.email_enabled,
@@ -116,6 +125,7 @@ export class SchedulerService implements OnModuleInit {
         last_vendor_stats_run: row.last_vendor_stats_run,
         last_non_conversion_run: row.last_non_conversion_run,
         last_sales_qa_run: row.last_sales_qa_run,
+        last_campaign_monitor_run: (row as any).last_campaign_monitor_run ?? null,
       };
 
       return this.settings;
@@ -255,6 +265,29 @@ export class SchedulerService implements OnModuleInit {
         this.logger.log(`Sales QA complete: ${result.reviewed} reviewed, ${result.failures} failures, marked done: ${shouldMarkDone}`);
       } catch (err: any) {
         this.logger.error(`Sales QA failed: ${err.message}`);
+      }
+    }
+
+    // Campaign Monitor Health Check (runs every 15 minutes during business hours 9am-5pm)
+    if (this.settings.campaign_monitor_enabled) {
+      const isBusinessHours = hour >= 9 && hour < 17;
+      if (isBusinessHours) {
+        this.logger.log('Triggering campaign monitor health check...');
+        try {
+          const apiKey = this.config.get<string>('MONITOR_API_KEY', '');
+          if (apiKey) {
+            const result = await this.campaignMonitor.runHealthCheck(apiKey);
+            await this.prisma.scheduler_settings.update({
+              where: { id: 'singleton' },
+              data: { last_campaign_monitor_run: now },
+            });
+            this.logger.log(`Campaign monitor complete: ${result.summary?.alertsSent || 0} alerts sent`);
+          } else {
+            this.logger.warn('Campaign monitor skipped: MONITOR_API_KEY not configured');
+          }
+        } catch (err: any) {
+          this.logger.error(`Campaign monitor failed: ${err.message}`);
+        }
       }
     }
   }
