@@ -26,6 +26,7 @@ import { N2NModule } from './n2n/n2n.module.js';
 import { OpenAIUsageModule } from './openai-usage/openai-usage.module.js';
 import { SchedulerModule } from './scheduler/scheduler.module.js';
 import { PingAnalysisModule } from './ping-analysis/ping-analysis.module.js';
+import { NtfyModule } from './ntfy/ntfy.module.js';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { PingAnalysisModule } from './ping-analysis/ping-analysis.module.js';
     OpenAIUsageModule,
     SchedulerModule,
     PingAnalysisModule,
+    NtfyModule,
   ],
 })
 export class AppModule {}

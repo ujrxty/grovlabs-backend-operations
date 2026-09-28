@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery } from '@nestjs/s
 import { CallsService } from '../calls/calls.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { NtfyService } from '../ntfy/ntfy.service.js';
 import { Request } from 'express';
 
 @ApiTags('Webhooks')
@@ -14,6 +15,7 @@ export class WebhooksController {
     private readonly callsService: CallsService,
     private readonly trackdrive: TrackDriveService,
     private readonly prisma: PrismaService,
+    private readonly ntfy: NtfyService,
   ) {}
 
   @Get('trackdrive')
@@ -83,6 +85,18 @@ export class WebhooksController {
 
       // Link call to ping for conversion tracking
       await this.linkCallToPing(payload);
+
+      // Send ntfy notification for live call
+      this.ntfy.sendLiveCallAlert({
+        callId: String(callId),
+        callerNumber: payload.caller_number || payload.caller_id,
+        callerState: payload.caller_state || payload.state,
+        offer: payload.offer || payload.offer_name,
+        trafficSource: payload.traffic_source || payload.publisher,
+        buyer: payload.buyer || payload.buyer_name,
+        duration: Number(payload.total_duration) || Number(payload.answered_duration) || 0,
+        revenue: Number(payload.revenue) || Number(payload.buyer_revenue) || 0,
+      }).catch(() => {}); // Fire and forget
 
       return {
         status: 'accepted',
