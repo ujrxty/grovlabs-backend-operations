@@ -253,6 +253,13 @@ IMPORTANT NUANCES:
 - A buyer rejecting a caller live for being out of their service area is the BUYER's fault, because the buyer saw the caller's state/geo in the ping and chose to bid anyway.
 - Only attribute to the vendor when the CALLER themselves is the problem (hung up instantly, not interested, junk lead, bad audio on the caller side, wrong intent).
 
+CRITICAL - SUCCESSFUL CALLS THAT DIDN'T TECHNICALLY CONVERT:
+- If a LIVE AGENT answered and had a REAL CONVERSATION with the caller (not just IVR), this is NOT a failure.
+- If an appointment was scheduled, information was collected, or the caller got what they needed, mark as "neutral" with outcome_reason "successful_interaction" or "appointment_booked".
+- Long calls (>2 minutes) with back-and-forth dialogue between agent and caller are almost always successful interactions, NOT failures.
+- "ivr_no_live_agent" means ONLY IVR/hold music with NO human agent ever speaking. If you see agent names or real conversation, a live agent DID speak.
+- Do NOT mark a call as "buyer fault" if the buyer's agent actually answered and had a substantive conversation.
+
 CALL METADATA (for your reference, verify against what you actually hear):
 - Vendor (traffic source): ${ctx.vendorName}
 - Buyer that received the call: ${ctx.buyerName || 'Unknown'}
@@ -262,7 +269,7 @@ CALL METADATA (for your reference, verify against what you actually hear):
 
 Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
 {
-  "outcome_reason": "<short snake_case reason, one of: dead_air_no_agent, no_carrier_available, buyer_rejected_out_of_area, buyer_rejected_live, buyer_hung_up, excessive_hold_dropped, ivr_no_live_agent, caller_hung_up_early, caller_not_interested, caller_not_qualified, bad_caller_audio, language_barrier, duplicate_repeat_caller, spam_invalid, short_no_billable_duration, other>",
+  "outcome_reason": "<short snake_case reason, one of: successful_interaction, appointment_booked, dead_air_no_agent, no_carrier_available, buyer_rejected_out_of_area, buyer_rejected_live, buyer_hung_up, excessive_hold_dropped, ivr_no_live_agent, caller_hung_up_early, caller_not_interested, caller_not_qualified, bad_caller_audio, language_barrier, duplicate_repeat_caller, spam_invalid, short_no_billable_duration, other>",
   "fault_side": "<buyer|vendor|external|neutral>",
   "what_happened": "<2-3 sentence plain-English description of what actually occurred on the call>",
   "fix_suggestion": "<one concrete, specific suggestion for the at-fault party to prevent this; if neutral/external, give a brief note>"
