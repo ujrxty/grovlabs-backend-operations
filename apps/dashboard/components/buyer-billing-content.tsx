@@ -491,7 +491,7 @@ export function BuyerBillingContent() {
             {/* Custom date range selector */}
             <div className="w-full lg:min-w-[240px]">
               <label className="text-sm font-medium text-muted-foreground mb-2 block">Invoice Period</label>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <div className="relative flex-1">
                   <Calendar className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input
@@ -503,7 +503,7 @@ export function BuyerBillingContent() {
                     className="w-full h-10 rounded-lg border bg-background pl-8 pr-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
                   />
                 </div>
-                <span className="text-muted-foreground text-sm">to</span>
+                <span className="text-muted-foreground text-sm text-center">to</span>
                 <div className="relative flex-1">
                   <Calendar className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input
