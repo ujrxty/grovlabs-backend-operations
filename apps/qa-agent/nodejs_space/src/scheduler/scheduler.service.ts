@@ -221,10 +221,9 @@ export class SchedulerService implements OnModuleInit {
       }
     }
 
-    // Non-Conversion QA
+    // Non-Conversion QA (runs once per day, no time restriction)
     if (
       this.settings.non_conversion_qa_enabled &&
-      this.isTimeToRun(this.settings.non_conversion_qa_hour, this.settings.non_conversion_qa_minute, hour, minute) &&
       !this.isSameDay(this.settings.last_non_conversion_run, now, this.settings.timezone)
     ) {
       this.logger.log('Triggering non-conversion QA review...');
@@ -245,10 +244,9 @@ export class SchedulerService implements OnModuleInit {
       }
     }
 
-    // Sales QA
+    // Sales QA (runs once per day, no time restriction)
     if (
       this.settings.sales_qa_enabled &&
-      this.isTimeToRun(this.settings.sales_qa_hour, this.settings.sales_qa_minute, hour, minute) &&
       !this.isSameDay(this.settings.last_sales_qa_run, now, this.settings.timezone)
     ) {
       this.logger.log('Triggering sales QA review...');
