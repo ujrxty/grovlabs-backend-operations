@@ -423,7 +423,7 @@ export function BuyerBillingContent() {
         <CardContent className="pt-6">
           <div className="flex flex-col lg:flex-row gap-4 items-end">
             {/* Buyer selector (multi-select) */}
-            <div className="flex-1 min-w-[250px]">
+            <div className="flex-1 w-full lg:min-w-[250px]">
               <label className="text-sm font-medium text-muted-foreground mb-2 block">Buyer(s)</label>
               <div className="relative">
                 <Button
@@ -489,7 +489,7 @@ export function BuyerBillingContent() {
             </div>
 
             {/* Custom date range selector */}
-            <div className="min-w-[240px]">
+            <div className="w-full lg:min-w-[240px]">
               <label className="text-sm font-medium text-muted-foreground mb-2 block">Invoice Period</label>
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">

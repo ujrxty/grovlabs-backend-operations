@@ -256,7 +256,7 @@ export default function TemplatesPage() {
         <p className="text-muted-foreground mt-1">View and manage IO/MSA templates for vendor agreements</p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Company Info & Variables */}
         <div className="space-y-6">
           {/* Company Info Card */}

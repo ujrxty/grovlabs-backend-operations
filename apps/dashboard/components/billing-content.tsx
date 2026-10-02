@@ -759,7 +759,7 @@ export function BillingContent() {
         <CardContent className="pt-6">
           <div className="flex flex-col lg:flex-row gap-4 items-end">
             {/* Vendor selector */}
-            <div className="flex-1 min-w-[250px]">
+            <div className="flex-1 w-full lg:min-w-[250px]">
               <label className="text-sm font-medium text-muted-foreground mb-2 block">Vendor / Traffic Source</label>
               <div className="relative">
                 <Button
@@ -806,7 +806,7 @@ export function BillingContent() {
             </div>
 
             {/* Custom date range selector */}
-            <div className="min-w-[240px]">
+            <div className="w-full lg:min-w-[240px]">
               <label className="text-sm font-medium text-muted-foreground mb-2 block">Billing Period</label>
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { RTBFilterProvider } from '@/components/rtb/rtb-filter-context'
 import { DashboardShell } from '@/components/dashboard-shell'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import {
   Radio,
   Zap,
@@ -29,7 +30,9 @@ import {
   ChevronDown,
   BarChart3,
   Shield,
-  Activity
+  Activity,
+  Menu,
+  X
 } from 'lucide-react'
 
 const navGroups = [
@@ -158,6 +161,7 @@ function NavGroup({
 
 export default function RTBLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
@@ -171,16 +175,49 @@ export default function RTBLayout({ children }: { children: ReactNode }) {
     setOpenGroups(prev => ({ ...prev, [label]: !prev[label] }))
   }
 
+  const currentPage = navGroups.flatMap(g => g.items).find(item => pathname === item.href)
+
   return (
     <DashboardShell>
       <RTBFilterProvider>
-        <div className="flex h-full">
-          <aside className="w-56 border-r bg-muted/10 flex flex-col">
-            <div className="p-4 border-b">
+        <div className="flex h-full relative">
+          {/* Mobile nav toggle */}
+          <div className="lg:hidden fixed bottom-4 right-4 z-50">
+            <Button
+              size="icon"
+              className="h-12 w-12 rounded-full shadow-lg bg-lime-500 hover:bg-lime-600 text-black"
+              onClick={() => setMobileNavOpen(!mobileNavOpen)}
+            >
+              {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
+
+          {/* Mobile overlay */}
+          {mobileNavOpen && (
+            <div
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              onClick={() => setMobileNavOpen(false)}
+            />
+          )}
+
+          {/* Sidebar - hidden on mobile, shown on lg+ */}
+          <aside className={cn(
+            "fixed inset-y-0 left-0 z-50 w-64 bg-background border-r flex flex-col transition-transform duration-200 lg:relative lg:translate-x-0 lg:w-56",
+            mobileNavOpen ? "translate-x-0" : "-translate-x-full"
+          )}>
+            <div className="p-4 border-b flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Radio className="h-5 w-5 text-lime-500" />
                 <span className="font-bold">RTB Intelligence</span>
               </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden"
+                onClick={() => setMobileNavOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
             <nav className="flex-1 overflow-y-auto p-3 space-y-1">
               {navGroups.map((group) => (
@@ -194,7 +231,14 @@ export default function RTBLayout({ children }: { children: ReactNode }) {
               ))}
             </nav>
           </aside>
-          <main className="flex-1 overflow-auto">
+
+          {/* Main content */}
+          <main className="flex-1 overflow-auto min-w-0">
+            {/* Mobile breadcrumb header */}
+            <div className="lg:hidden sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-4 py-2 flex items-center gap-2">
+              <Radio className="h-4 w-4 text-lime-500" />
+              <span className="text-sm font-medium truncate">{currentPage?.label || 'RTB Intelligence'}</span>
+            </div>
             {children}
           </main>
         </div>
