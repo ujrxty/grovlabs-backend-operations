@@ -4,6 +4,8 @@ import { CallsService } from '../calls/calls.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { NtfyService } from '../ntfy/ntfy.service.js';
+import { NonConversionQaService } from '../non-conversion-qa/non-conversion-qa.service.js';
+import { DiscordService } from '../discord/discord.service.js';
 import { Request } from 'express';
 
 @ApiTags('Webhooks')
@@ -16,6 +18,8 @@ export class WebhooksController {
     private readonly trackdrive: TrackDriveService,
     private readonly prisma: PrismaService,
     private readonly ntfy: NtfyService,
+    private readonly nonConversionQa: NonConversionQaService,
+    private readonly discord: DiscordService,
   ) {}
 
   @Get('trackdrive')
@@ -111,6 +115,17 @@ export class WebhooksController {
         revenue: Number(payload.revenue) || Number(payload.buyer_revenue) || 0,
       }).catch(() => {}); // Fire and forget
 
+      // Real-time QA: analyze non-converted calls with recordings
+      const isConverted = payload.buyer_converted === 'Converted' || payload.buyer_converted === true;
+      const hasRecording = !!payload.recording_url;
+      const duration = Number(payload.total_duration) || Number(payload.answered_duration) || 0;
+
+      if (!isConverted && hasRecording && duration > 10) {
+        this.runRealtimeQA(payload).catch((err) => {
+          this.logger.error(`Real-time QA failed: ${err.message}`);
+        });
+      }
+
       return {
         status: 'accepted',
         call_id: callId,
@@ -180,6 +195,63 @@ export class WebhooksController {
       }
     } catch (err: any) {
       this.logger.warn(`Failed to link call to ping: ${err.message}`);
+    }
+  }
+
+  /**
+   * Real-time QA: analyze a non-converted call immediately
+   */
+  private async runRealtimeQA(payload: any): Promise<void> {
+    const callId = payload.id || payload.call_id;
+    this.logger.log(`Real-time QA starting for call ${callId}`);
+
+    try {
+      // Review the call
+      const review = await this.nonConversionQa.reviewCall(payload);
+
+      // Store it
+      const today = new Date().toISOString().split('T')[0];
+      await this.nonConversionQa.storeReviews([review], today);
+
+      this.logger.log(`Real-time QA complete for call ${callId}: ${review.fault_side} fault - ${review.outcome_reason}`);
+
+      // Send Discord alert for buyer/vendor faults
+      if (review.fault_side === 'buyer' || review.fault_side === 'vendor') {
+        const settings = await this.prisma.scheduler_settings.findUnique({ where: { id: 'singleton' } });
+        if (settings?.discord_enabled && settings?.discord_webhook_url) {
+          const color = review.fault_side === 'buyer' ? 0xdc2626 : 0xf59e0b;
+          const embed = {
+            title: `QA Alert: ${review.fault_side.toUpperCase()} Fault`,
+            color,
+            fields: [
+              { name: 'Call ID', value: review.trackdrive_call_id, inline: true },
+              { name: 'Offer', value: review.campaign_name || 'Unknown', inline: true },
+              { name: review.fault_side === 'buyer' ? 'Buyer' : 'Vendor', value: review.fault_side === 'buyer' ? (review.buyer_name || 'Unknown') : review.vendor_name, inline: true },
+              { name: 'Reason', value: review.outcome_reason.replace(/_/g, ' '), inline: true },
+              { name: 'Duration', value: `${review.duration}s`, inline: true },
+              { name: 'What Happened', value: (review.what_happened || '').slice(0, 500), inline: false },
+            ],
+            footer: { text: 'GrovLabs Real-time QA' },
+            timestamp: new Date().toISOString(),
+          };
+
+          await fetch(settings.discord_webhook_url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ embeds: [embed] }),
+          });
+        }
+
+        // Also send ntfy alert
+        await this.ntfy.sendNotification({
+          title: `QA: ${review.fault_side.toUpperCase()} fault - ${review.campaign_name || 'Unknown'}`,
+          message: `${review.outcome_reason.replace(/_/g, ' ')}\n${review.what_happened?.slice(0, 200) || ''}`,
+          priority: 'high',
+          tags: ['warning'],
+        });
+      }
+    } catch (err: any) {
+      this.logger.error(`Real-time QA error for call ${callId}: ${err.message}`);
     }
   }
 
