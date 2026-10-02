@@ -131,7 +131,7 @@ export function DashboardContent() {
           <div className="relative">
             <Button
               variant="outline"
-              className="min-w-[200px] justify-between text-sm"
+              className="w-full sm:min-w-[200px] justify-between text-sm"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
               <span className="flex items-center gap-2">

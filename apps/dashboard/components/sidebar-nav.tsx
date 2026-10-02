@@ -83,7 +83,7 @@ export function SidebarNav() {
         })}
       </nav>
 
-      <div className="border-t pt-3 mt-3">
+      <div className="border-t border-white/10 pt-3 mt-3">
         <Button
           variant="ghost"
           className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"

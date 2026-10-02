@@ -56,7 +56,7 @@ export function AppShell({
         </header>
 
         {/* Content */}
-        <main className={cn('p-4 sm:p-6 lg:p-8', className)}>
+        <main className={cn('p-4 sm:p-6 lg:p-8 overflow-x-hidden', className)}>
           {children}
         </main>
       </div>

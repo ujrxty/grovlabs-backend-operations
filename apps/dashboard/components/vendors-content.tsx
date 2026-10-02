@@ -197,7 +197,7 @@ export function VendorsContent() {
         <PageHeader title="Vendor Scorecard" description="Performance analysis & alerts for all traffic sources" />
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Button variant="outline" className="min-w-[190px] justify-between text-sm" onClick={() => setDropdownOpen(!dropdownOpen)}>
+            <Button variant="outline" className="w-full sm:min-w-[190px] justify-between text-sm" onClick={() => setDropdownOpen(!dropdownOpen)}>
               <span className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 {selectedLabel}
@@ -305,12 +305,12 @@ export function VendorsContent() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search vendors..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {([['all', 'All'], ['profitable', 'Profitable'], ['warning', 'Warning'], ['unprofitable', 'Unprofitable']] as [FilterKind, string][]).map(([k, lbl]) => (
             <button
               key={k}
               onClick={() => setFilter(k)}
-              className={cn('rounded-full px-3 py-1.5 text-xs font-medium transition-colors', filter === k ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70')}
+              className={cn('rounded-full px-3 py-1.5 text-xs font-medium transition-colors shrink-0', filter === k ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70')}
             >
               {lbl}
             </button>
