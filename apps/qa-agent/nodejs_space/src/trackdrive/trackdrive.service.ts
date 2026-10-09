@@ -287,6 +287,7 @@ export class TrackDriveService {
         sort_order: 'asc',
         created_at_from: dateFrom,
         created_at_to: dateTo,
+        columns: 'id,uuid,offer,offer_id,buyer,buyer_id,buyer_converted,traffic_source,traffic_source_id,revenue,payout,total_duration,answered_duration,agent_duration,status,disposition_name,caller_number,caller_city,number_called,recording_url,created_at,token-state,token-geo_state',
       };
       if (cursor) params.cursor = cursor;
 
