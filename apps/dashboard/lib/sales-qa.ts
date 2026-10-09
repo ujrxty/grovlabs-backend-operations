@@ -1,13 +1,17 @@
 // Shared constants and helpers for the Sales Monitoring QA feature
 // (reads the sales_qa_review table written by the QA service).
 
-export const CAMPAIGN_CATEGORIES = ['auto_insurance', 'pest_control', 'home_insurance'] as const
-export type CampaignCategory = (typeof CAMPAIGN_CATEGORIES)[number]
-
 export const CATEGORY_LABELS: Record<string, string> = {
   auto_insurance: 'Auto Insurance',
   pest_control: 'Pest Control',
   home_insurance: 'Home Insurance',
+  medicare: 'Medicare',
+  solar: 'Solar',
+  roofing: 'Roofing',
+  final_expense: 'Final Expense',
+  debt: 'Debt',
+  tax: 'Tax',
+  legal: 'Legal',
 }
 
 export function categoryLabel(cat: string | null | undefined): string {

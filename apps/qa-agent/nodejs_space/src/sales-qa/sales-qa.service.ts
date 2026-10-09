@@ -112,18 +112,25 @@ export class SalesQaService {
   }
 
   // ---------------------------------------------------------------------------
-  // Campaign categorization - we ONLY track 3 verticals for this bot:
-  // auto_insurance, pest_control, home_insurance. Everything else is skipped.
+  // Campaign categorization - normalizes campaign name to a slug category.
+  // Tracks ALL verticals now, not just insurance/pest.
   // ---------------------------------------------------------------------------
-  categorizeCampaign(campaignName?: string | null): string | null {
-    const s = String(campaignName || '').toLowerCase();
+  categorizeCampaign(campaignName?: string | null): string {
+    const s = String(campaignName || '').toLowerCase().trim();
+    if (!s) return 'unknown';
     if (s.includes('auto insurance') || s.includes('autoins')) return 'auto_insurance';
     if (s.includes('home insurance') || s.includes('home ins')) return 'home_insurance';
     if (s.includes('pest control') || s.includes('pestcontrol')) return 'pest_control';
-    return null;
+    if (s.includes('medicare')) return 'medicare';
+    if (s.includes('solar')) return 'solar';
+    if (s.includes('roofing')) return 'roofing';
+    if (s.includes('final expense') || s.includes('finalexpense')) return 'final_expense';
+    if (s.includes('debt') || s.includes('credit')) return 'debt';
+    if (s.includes('tax')) return 'tax';
+    if (s.includes('legal') || s.includes('attorney') || s.includes('lawyer')) return 'legal';
+    // Fallback: slugify the campaign name
+    return s.replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'other';
   }
-
-  static readonly TRACKED_CATEGORIES = ['auto_insurance', 'pest_control', 'home_insurance'];
 
   /**
    * Bump this whenever the QA logic/prompt changes so history is re-analyzed.
@@ -155,14 +162,10 @@ export class SalesQaService {
         (String(c.buyer_converted) === 'Converted' || c.buyer_converted === true) &&
         !!c.recording_url,
     );
-    // Restrict to the 3 tracked verticals only (auto/home insurance, pest control).
-    const tracked = converted.filter(
-      (c) => this.categorizeCampaign(c.offer) !== null,
-    );
     this.logger.log(
-      `Date ${dateStr}: ${all.length} total calls, ${converted.length} converted (billable) with recording, ${tracked.length} in tracked campaigns (auto/home ins, pest)`,
+      `Date ${dateStr}: ${all.length} total calls, ${converted.length} converted (billable) with recording`,
     );
-    return tracked;
+    return converted;
   }
 
   private async downloadRecording(url: string): Promise<Buffer> {
@@ -561,7 +564,7 @@ export class SalesQaService {
       quote_amount: { not: null },
       outcome_category: { not: 'no_quote_issued' },
     };
-    if (category && SalesQaService.TRACKED_CATEGORIES.includes(category)) {
+    if (category) {
       where.campaign_category = category;
     }
     const rows = await this.prisma.sales_qa_review.findMany({
@@ -808,7 +811,7 @@ export class SalesQaService {
         payment_mentioned: true,
         outcome_category: { not: 'sale_completed' },
       };
-      if (category && SalesQaService.TRACKED_CATEGORIES.includes(category)) {
+      if (category) {
         where.campaign_category = category;
       }
       const candidates = await this.prisma.sales_qa_review.findMany({

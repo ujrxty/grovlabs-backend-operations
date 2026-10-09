@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { Prisma } from '@prisma/client'
-import { CAMPAIGN_CATEGORIES, todayPhoenix } from '@/lib/sales-qa'
+import { categoryLabel } from '@/lib/sales-qa'
 
 interface VendorAggRow {
   campaign_category: string | null
@@ -79,17 +79,25 @@ export async function GET(req: Request) {
       GROUP BY campaign_category, vendor_name, vendor_td_id
     `)
 
-    // Distinct buyers across the whole table (stable dropdown, order by name).
-    const buyerRows = await prisma.$queryRaw<{ buyer_name: string | null }[]>(Prisma.sql`
-      SELECT DISTINCT buyer_name FROM sales_qa_review
-      WHERE buyer_name IS NOT NULL AND buyer_name <> ''
-      ORDER BY buyer_name
-    `)
+    // Distinct buyers and categories across the whole table (stable dropdowns).
+    const [buyerRows, categoryRows] = await Promise.all([
+      prisma.$queryRaw<{ buyer_name: string | null }[]>(Prisma.sql`
+        SELECT DISTINCT buyer_name FROM sales_qa_review
+        WHERE buyer_name IS NOT NULL AND buyer_name <> ''
+        ORDER BY buyer_name
+      `),
+      prisma.$queryRaw<{ campaign_category: string | null }[]>(Prisma.sql`
+        SELECT DISTINCT campaign_category FROM sales_qa_review
+        WHERE campaign_category IS NOT NULL AND campaign_category <> ''
+        ORDER BY campaign_category
+      `),
+    ])
     const buyers = buyerRows.map((b) => b.buyer_name).filter((b): b is string => !!b)
+    const categories = categoryRows.map((c) => c.campaign_category).filter((c): c is string => !!c)
 
     // Which categories to render as sections. If a specific category was
-    // requested, show only that; otherwise show the three known ones.
-    const cats = category ? [category] : [...CAMPAIGN_CATEGORIES]
+    // requested, show only that; otherwise show all categories found in data.
+    const cats = category ? [category] : categories
 
     const buildOutcomes = (r: VendorAggRow) => ({
       sale_completed: r.sale_completed,
@@ -174,7 +182,7 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({
-      from, to, category: category || 'all', buyer: buyer || 'all', buyers,
+      from, to, category: category || 'all', buyer: buyer || 'all', buyers, categories,
       serverToday, tz,
       headline,
       summary: {

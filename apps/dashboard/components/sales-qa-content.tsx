@@ -20,7 +20,7 @@ import {
   Download, Clock, ThumbsUp, XCircle, History, ArrowUp, ArrowDown,
 } from 'lucide-react'
 import {
-  CATEGORY_LABELS, CAMPAIGN_CATEGORIES, categoryLabel, OUTCOME_ORDER, outcomeLabel,
+  categoryLabel, OUTCOME_ORDER, outcomeLabel,
   outcomeBadgeClass, followThroughBadgeClass,
   todayPhoenix, daysAgoPhoenix, startOfMonthPhoenix,
   SalesQaCampaign, SalesQaCall,
@@ -91,6 +91,7 @@ export function SalesQAContent() {
   const [category, setCategory] = useState('')
   const [buyer, setBuyer] = useState('')
   const [buyers, setBuyers] = useState<string[]>([])
+  const [categories, setCategories] = useState<string[]>([])
 
   const [summary, setSummary] = useState<Summary>({ total: 0, quotesIssued: 0, quoteRate: 0, sales: 0, highFollowThrough: 0, revenue: 0 })
   const [headline, setHeadline] = useState<Headline>(EMPTY_HEADLINE)
@@ -128,6 +129,7 @@ export function SalesQAContent() {
       setHeadline(data?.headline ?? EMPTY_HEADLINE)
       setCampaigns(data?.campaigns ?? [])
       if (Array.isArray(data?.buyers)) setBuyers(data.buyers)
+      if (Array.isArray(data?.categories)) setCategories(data.categories)
       // Collapse any open rows when the query changes
       setExpanded({}); setCallsCache({})
     } catch {
@@ -220,7 +222,7 @@ export function SalesQAContent() {
             <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value={ALL}>All campaigns</SelectItem>
-              {CAMPAIGN_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{CATEGORY_LABELS[c]}</SelectItem>)}
+              {categories.map((c) => <SelectItem key={c} value={c}>{categoryLabel(c)}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
