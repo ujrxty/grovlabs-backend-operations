@@ -687,6 +687,16 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
       .map(([name, count]) => `• ${name}: ${count}`)
       .join('\n') || 'None';
 
+    // Recent call examples with caller ID, buyer, vendor
+    const recentCalls = reviews.slice(0, 5).map((r) => {
+      const caller = r.caller_number || 'Unknown';
+      const buyer = r.buyer_name || 'No buyer';
+      const vendor = r.vendor_name || 'Unknown';
+      const fault = r.fault_side.charAt(0).toUpperCase() + r.fault_side.slice(1);
+      const reason = this.prettyReason(r.outcome_reason);
+      return `• \`${caller}\` → **${buyer}** via ${vendor} [${fault}: ${reason}]`;
+    }).join('\n') || 'None';
+
     const embed = {
       title: `Non-Conversion QA Report — ${dateStr}`,
       color: 0xf59e0b, // Amber
@@ -697,6 +707,7 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
         { name: 'External/Neutral', value: String(externalFault.length + neutral.length), inline: true },
         { name: 'Top Buyers (at fault)', value: buyerBreakdown, inline: false },
         { name: 'Top Vendors (at fault)', value: vendorBreakdown, inline: false },
+        { name: `Recent Calls (${Math.min(5, reviews.length)} of ${reviews.length})`, value: recentCalls, inline: false },
       ],
       footer: { text: 'GrovLabs Non-Conversion QA' },
       timestamp: new Date().toISOString(),
