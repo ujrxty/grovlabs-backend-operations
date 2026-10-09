@@ -87,6 +87,11 @@ export async function GET(req: Request) {
     const enriched = await enrichReviews(reviews)
 
     const lastDataAt = lastWrite?._max?.created_at ?? null
+    // Server-side "today" in the configured timezone - frontend uses this for initial date
+    const serverToday = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date())
+
     const schedule = {
       lastDataAt: lastDataAt ? lastDataAt.toISOString() : null,
       nextRunAt: nextQaRunDynamic(tz, startHour, endHour).toISOString(),
@@ -94,6 +99,8 @@ export async function GET(req: Request) {
       startHour,
       endHour,
       tzLabel: tzLabelFromIana(tz),
+      tz,
+      serverToday,
     }
 
     return NextResponse.json({

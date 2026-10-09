@@ -56,10 +56,13 @@ export function faultSideLabel(side: string): string {
   }
 }
 
-// Today's date in PST (America/Los_Angeles) as YYYY-MM-DD to match the bot's review_date
+// Today's date in configured timezone as YYYY-MM-DD to match the bot's review_date
+// Note: This is a client-side function that uses a default timezone.
+// The actual timezone is fetched from the API and displayed in the UI.
+// For the default, we use America/New_York as that's the scheduler's default.
 export function todayPST(): string {
   return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Los_Angeles',
+    timeZone: 'America/New_York',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

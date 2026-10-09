@@ -32,9 +32,16 @@ export async function GET(req: Request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
+    // Get timezone from scheduler settings (same as backend QA service uses)
+    const schedulerSettings = await prisma.scheduler_settings.findUnique({ where: { id: 'singleton' } })
+    const tz = schedulerSettings?.timezone || 'America/New_York'
+    const serverToday = new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date())
+
     const url = new URL(req.url)
-    const from = url.searchParams.get('from') || todayPhoenix()
-    const to = url.searchParams.get('to') || todayPhoenix()
+    const from = url.searchParams.get('from') || serverToday
+    const to = url.searchParams.get('to') || serverToday
     const category = url.searchParams.get('category') || ''
     const buyer = url.searchParams.get('buyer') || ''
 
@@ -168,6 +175,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       from, to, category: category || 'all', buyer: buyer || 'all', buyers,
+      serverToday, tz,
       headline,
       summary: {
         total: summary.total,

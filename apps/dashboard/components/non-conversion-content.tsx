@@ -129,7 +129,7 @@ export function NonConversionContent() {
     return params
   }, [dateFrom, dateTo, buyer, vendor, campaign, faultSide, outcomeReason, search, page])
 
-  const fetchData = useCallback(async (silent = false) => {
+  const fetchData = useCallback(async (silent = false, isInitialLoad = false) => {
     if (!ready) return
     if (!silent) setLoading(true)
     try {
@@ -143,13 +143,31 @@ export function NonConversionContent() {
       if (data?.schedule) setSchedule(data.schedule)
       setTotal(data?.total ?? 0)
       setTotalPages(data?.pages ?? 1)
+
+      // On initial load, if server's "today" differs from client's guess, re-fetch with correct date
+      if (isInitialLoad && data?.schedule?.serverToday) {
+        const serverToday = data.schedule.serverToday
+        if (serverToday !== dateFrom || serverToday !== dateTo) {
+          setDateFrom(serverToday)
+          setDateTo(serverToday)
+          // The state update will trigger a re-fetch automatically via the useEffect
+        }
+      }
     } catch {
       if (!silent) toast.error('Failed to load reviews')
     }
     if (!silent) setLoading(false)
-  }, [ready, buildParams])
+  }, [ready, buildParams, dateFrom, dateTo])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  // Track if this is the first fetch to handle timezone correction
+  const [initialFetchDone, setInitialFetchDone] = useState(false)
+  useEffect(() => {
+    if (!initialFetchDone) {
+      fetchData(false, true).then(() => setInitialFetchDone(true))
+    } else {
+      fetchData()
+    }
+  }, [fetchData, initialFetchDone])
 
   // The QA bot writes new non-conversion rows hourly (8am–6pm PST). Silently
   // refresh in the background every 10 minutes so intra-day data stays current.
