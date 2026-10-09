@@ -276,6 +276,7 @@ export class WebhooksController {
         traffic_source: c.traffic_source,
         offer: c.offer,
         buyer: c.buyer,
+        buyer_converted: c.buyer_converted,
         caller_number: c.caller_number,
         has_recording: !!c.recording_url,
         category: c.category,
