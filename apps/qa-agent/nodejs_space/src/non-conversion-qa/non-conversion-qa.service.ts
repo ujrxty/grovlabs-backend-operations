@@ -189,8 +189,14 @@ export class NonConversionQaService {
 
     const faultSide = this.normalizeFault(parsed.fault_side);
 
+    // TrackDrive API returns numeric id, but also has uuid field
+    const callId = call.id || call.uuid || call.call_id;
+    if (!callId) {
+      throw new Error('Call missing ID field');
+    }
+
     return {
-      trackdrive_call_id: String(call.id),
+      trackdrive_call_id: String(callId),
       vendor_name: vendorName,
       vendor_td_id: call.traffic_source_id ? String(call.traffic_source_id) : null,
       buyer_name: buyerName,
