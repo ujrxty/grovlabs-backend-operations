@@ -831,14 +831,20 @@ export class PingRelayService {
   ): { accepted: boolean; bid_amount?: number; rejection_reason?: string } {
     try {
       if (platform === 'trackdrive') {
-        // TrackDrive format: { success: true, buyers: [...] } or { accepted: true }
-        const accepted = data.success === true || data.accepted === true ||
-                        (data.buyers && data.buyers.length > 0);
+        // Accept:  { success:true, status:"accepted", buyers:[{ offer_conversion_payout, ... }] }
+        // Reject:  { success:false, status:"duplicate_ping", errors:["Duplicate Ping"], buyers:[] }
+        const accepted = data.success === true || data.status === 'accepted';
         const buyer = data.buyers?.[0];
+        const rawBid =
+          buyer?.offer_conversion_payout ?? buyer?.payout ?? buyer?.bid ??
+          data.offer_conversion_payout ?? data.payout ?? data.bid;
+        const bidNum = rawBid != null && rawBid !== '' ? parseFloat(String(rawBid)) : NaN;
         return {
           accepted,
-          bid_amount: buyer?.payout || buyer?.bid || data.payout || data.bid,
-          rejection_reason: !accepted ? (data.reason || data.message || 'rejected') : undefined,
+          bid_amount: Number.isFinite(bidNum) ? bidNum : undefined,
+          rejection_reason: !accepted
+            ? (data.errors?.[0] || data.status || data.reason || data.message || 'rejected')
+            : undefined,
         };
       }
 
