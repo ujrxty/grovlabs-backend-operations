@@ -160,8 +160,7 @@ export class PingRelayService {
 
   async listBuyersWithRelayStatus(): Promise<BuyerWithRelay[]> {
     // Get buyers from TrackDrive
-    const tdResponse = await this.trackdrive.listBuyers();
-    const tdBuyers = tdResponse?.buyers || [];
+    const tdBuyers = await this.trackdrive.listBuyers();
 
     // Get relay configs from our DB
     const relayConfigs = await this.prisma.buyer_relay_config.findMany();
@@ -236,25 +235,49 @@ export class PingRelayService {
     const buyerName = buyerData?.name || `Buyer ${tdBuyerId}`;
     this.logger.debug(`Buyer ${tdBuyerId} data: ${JSON.stringify(buyerData)}`);
 
-    // Extract extra tokens from buyer (e.g., buyer_td_subdomain, buyer_td_vanity_url)
+    // Extract extra tokens from the buyer (e.g. buyer_td_subdomain, buyer_td_vanity_url).
+    // TrackDrive exposes these under different fields depending on how the buyer is
+    // configured — attribution_token_values(_hash), record_token_additional_data, and
+    // (rarely) token_values(_hash). Collect from all of them so URL placeholders resolve.
     const extraTokens: Record<string, string> = {};
-    if (buyerData?.token_values && Array.isArray(buyerData.token_values)) {
-      for (const tv of buyerData.token_values) {
-        // Format: "key:==value" or "key:=~value"
-        const match = tv.match(/^(buyer_[^:]+):==(.+)$/);
-        if (match) {
-          extraTokens[match[1]] = match[2];
+
+    // Hash shape: { key: { key, value } }  (preferred — clean key/value)
+    const addFromHash = (hash: any) => {
+      if (hash && typeof hash === 'object' && !Array.isArray(hash)) {
+        for (const [key, data] of Object.entries<any>(hash)) {
+          const value = data && typeof data === 'object' ? data.value : data;
+          const name = (data && typeof data === 'object' && data.key) || key;
+          if (value != null && String(value) !== '') extraTokens[name] = String(value);
         }
       }
-    }
-    // Also check token_values_hash for extra tokens
-    if (buyerData?.token_values_hash) {
-      for (const [key, data] of Object.entries(buyerData.token_values_hash)) {
-        if (key.startsWith('buyer_') && typeof data === 'object' && (data as any).value) {
-          extraTokens[key] = (data as any).value;
+    };
+
+    // Array shape: [{ key, value }] OR ["key:value"] / legacy ["key:==value"]
+    const addFromArray = (arr: any) => {
+      if (!Array.isArray(arr)) return;
+      for (const item of arr) {
+        if (item && typeof item === 'object' && item.key) {
+          if (item.value != null && String(item.value) !== '') {
+            extraTokens[item.key] = String(item.value);
+          }
+        } else if (typeof item === 'string') {
+          const idx = item.indexOf(':');
+          if (idx > 0) {
+            const key = item.slice(0, idx);
+            const value = item.slice(idx + 1).replace(/^=[=~]/, ''); // strip legacy == / =~
+            if (value !== '') extraTokens[key] = value;
+          }
         }
       }
-    }
+    };
+
+    addFromHash(buyerData?.attribution_token_values_hash);
+    addFromHash(buyerData?.token_values_hash);
+    addFromArray(buyerData?.record_token_additional_data);
+    addFromArray(buyerData?.record_token_filter_data);
+    addFromArray(buyerData?.attribution_token_values);
+    addFromArray(buyerData?.token_values);
+
     this.logger.debug(`Extracted extra tokens: ${JSON.stringify(extraTokens)}`);
 
     // Auto-fetch the original URL from TrackDrive conversion (more reliable than user input)
