@@ -159,8 +159,10 @@ export class PingRelayService {
   }
 
   async listBuyersWithRelayStatus(): Promise<BuyerWithRelay[]> {
-    // Get buyers from TrackDrive
-    const tdBuyers = await this.trackdrive.listBuyers();
+    // Get buyers from TrackDrive. Tolerate either shape: the service may return
+    // the raw array OR the { buyers: [...] } envelope depending on version.
+    const tdResp: any = await this.trackdrive.listBuyers();
+    const tdBuyers: any[] = Array.isArray(tdResp) ? tdResp : (tdResp?.buyers ?? []);
 
     // Get relay configs from our DB
     const relayConfigs = await this.prisma.buyer_relay_config.findMany();
