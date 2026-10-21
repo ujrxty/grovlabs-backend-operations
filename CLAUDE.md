@@ -1,19 +1,24 @@
 # CLAUDE.md
 
-Full-stack monorepo for **GrovLabs** — a US performance marketing and
+Backend monorepo for **GrovLabs** — a US performance marketing and
 lead generation company. Deployed to Render as a single Blueprint.
+
+> **Repo layout note:** this repo's local folder is `grovlabs-backend`
+> (historically it was misnamed "Landing Page"). This repo is the BACKEND
+> only. The public marketing site (grovlabs.com) is a **separate** repo,
+> `grovlabs-website`, in `../agency-website`, deployed on **Vercel** — it is
+> NOT in this monorepo.
 
 ## Monorepo Structure
 
 ```
 apps/
-  landing/           Next.js 14 — Marketing site (grovlabs.com)
-  dashboard/         Next.js 14 — Admin dashboard (internal)
-  vendor-portal/     Next.js 14 — Vendor self-service portal
+  dashboard/         Next.js — Admin dashboard (internal)
+  vendor-portal/     Next.js — Vendor self-service portal
   qa-agent/
-    nodejs_space/    NestJS — Backend API, Telegram bot, TrackDrive integration
+    nodejs_space/    NestJS — Backend API, Telegram bot, TrackDrive, RTB relay
 
-render.yaml          Render Blueprint — all 4 services + shared PostgreSQL
+render.yaml          Render Blueprint — 3 web services + shared PostgreSQL
 ```
 
 All apps share one PostgreSQL database via Prisma. The schema lives in
@@ -24,10 +29,6 @@ All apps share one PostgreSQL database via Prisma. The schema lives in
 Each app has its own package.json. Run from the app directory:
 
 ```bash
-# Landing Page (apps/landing)
-npm run dev          # dev server :3000
-npm run build        # production build
-
 # Dashboard (apps/dashboard)
 npm run dev          # dev server :3000
 npx prisma db seed   # seed admin users
@@ -59,9 +60,6 @@ Manual deploy: Render Dashboard → select service → Manual Deploy
 **All services:**
 - `DATABASE_URL` — auto-injected from `grovlabs-database`
 - `NODE_ENV=production`
-
-**Landing Page (`grovlabs-landing`):**
-- `NEXT_PUBLIC_DASHBOARD_URL` — URL to dashboard for Login button
 
 **Dashboard (`grovlabs-dashboard`):**
 - `NEXTAUTH_SECRET` — auto-generated
@@ -129,50 +127,13 @@ Telegram callback patterns:
 - `ocs_{shortId}` — Countersign IO
 - `acs_{shortId}` — Countersign Lead Purchase Agreement
 
-## Landing Page (apps/landing)
+## Public marketing site — NOT in this repo
 
-Marketing site for grovlabs.com. Next.js 14 + Tailwind v4.
-
-### Architecture
-
-```
-app/layout.tsx        fonts, metadata, OG tags, favicon
-app/page.tsx          section order
-app/globals.css       Tailwind v4 theme (@theme block)
-lib/content.ts        ALL copy and data — single source of truth
-components/           one per section
-public/logo.png       GrovLabs logo
-public/favicon.svg    SVG favicon
-```
-
-### Branding Assets
-
-- **Logo:** `public/logo.png` — GrovLabs logo
-- **Favicon:** `public/favicon.svg` — Black square with white "G" and lime dot
-- **Header:** `components/Nav.tsx` — logo + "GrovLabs" text in Wordmark component
-
-The favicon (`public/favicon.svg` and `app/icon.svg`) is consistent across all apps:
-dashboard, vendor-portal, and landing. Same as grovlabs.com (agency website).
-
-### OpenGraph Images
-
-Dynamic OG images for link previews in `app/opengraph-image.tsx` (all apps).
-Uses `next/og` ImageResponse with dark theme, GrovLabs branding, and lime accents.
-
-Tailwind v4 — **no `tailwind.config`**. Theme in `@theme` block in globals.css.
-
-### Design System
-
-- Warm paper base (#faf8f5), near-black text (#1a1a1a)
-- **One** copper accent (#b87333) — links, buttons, highlights
-- Fonts: Instrument Sans (body) + IBM Plex Mono (figures/labels)
-- No gradient text, minimal shadows, structure via borders/spacing
-
-### Content Integrity
-
-**Never invent** customers, quotes, case studies, or performance figures.
-Source notes in `lib/content.ts`: `verified`, `derived`, `standard`, `TODO`.
-Unknown values are `null` and render as em-dash or "quoted on request".
+The public site at **grovlabs.com** lives in a separate repo, `grovlabs-website`
+(local folder `../agency-website`), hosted on **Vercel**. Next.js 16, dark theme,
+lime accent `#c4ff00`, Space Grotesk + Inter. Edit the public site there, never
+here. (A dead `apps/landing` once lived in this monorepo; it was removed —
+`render.yaml` never deployed it.)
 
 ## Vendor Portal (apps/vendor-portal)
 
