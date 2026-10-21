@@ -61,6 +61,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=1536
       - key: DATABASE_URL
         fromDatabase:
           name: grovlabs-database

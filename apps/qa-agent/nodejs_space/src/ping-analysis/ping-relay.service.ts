@@ -621,7 +621,8 @@ export class PingRelayService {
         caller_city: city,
         traffic_source: source,
         offer_name: offer,
-        raw_payload: payload,
+        // Duplicates are high-volume and never forwarded — skip the raw blob.
+        raw_payload: undefined,
         status: 'rejected',
         is_duplicate: true,
         duplicate_of_id: originalPingId,
@@ -670,7 +671,9 @@ export class PingRelayService {
         caller_city: city,
         traffic_source: source,
         offer_name: offer,
-        raw_payload: payload,
+        // Only persist the full payload for accepts — rejects are the bulk of
+        // volume and the structured columns above are enough for analytics.
+        raw_payload: response.accepted ? payload : undefined,
         status: response.accepted ? 'accepted' : 'rejected',
         winning_buyer_id: response.accepted ? config.td_buyer_id : null,
         winning_buyer_name: response.accepted ? config.buyer_name : null,
@@ -693,7 +696,7 @@ export class PingRelayService {
         bid_amount: response.bid_amount,
         rejection_reason: response.rejection_reason,
         response_time_ms: response.latency_ms,
-        raw_response: response.raw_response,
+        raw_response: response.accepted ? response.raw_response : undefined,
         is_winner: response.accepted,
       },
     });
@@ -942,31 +945,22 @@ export class PingRelayService {
     accepted: boolean,
     success: boolean,
   ): Promise<void> {
-    const config = await this.prisma.buyer_relay_config.findUnique({
-      where: { id: configId },
-    });
+    const accInc = accepted ? 1 : 0;
+    const rejInc = !accepted && success ? 1 : 0;
 
-    if (!config) return;
-
-    const newTotal = config.total_pings + 1;
-    const newAccepts = config.total_accepts + (accepted ? 1 : 0);
-    const newRejects = config.total_rejects + (!accepted && success ? 1 : 0);
-
-    // Running average for latency
-    const newAvgLatency = config.total_pings > 0
-      ? (config.avg_latency_ms * config.total_pings + latencyMs) / newTotal
-      : latencyMs;
-
-    await this.prisma.buyer_relay_config.update({
-      where: { id: configId },
-      data: {
-        total_pings: newTotal,
-        total_accepts: newAccepts,
-        total_rejects: newRejects,
-        avg_latency_ms: newAvgLatency,
-        last_ping_at: new Date(),
-      },
-    });
+    // Single atomic UPDATE: no read-then-write, no per-ping row-lock contention.
+    // The running average uses the pre-update column values (same statement).
+    await this.prisma.$executeRaw`
+      UPDATE "buyer_relay_config"
+      SET "total_pings"   = "total_pings" + 1,
+          "total_accepts" = "total_accepts" + ${accInc},
+          "total_rejects" = "total_rejects" + ${rejInc},
+          "avg_latency_ms" = CASE WHEN "total_pings" > 0
+            THEN ("avg_latency_ms" * "total_pings" + ${latencyMs}) / ("total_pings" + 1)
+            ELSE ${latencyMs} END,
+          "last_ping_at"  = NOW()
+      WHERE "id" = ${configId}
+    `;
   }
 
   async getRelayStats(): Promise<{

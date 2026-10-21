@@ -4,9 +4,19 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Request, Response, NextFunction, urlencoded, json } from 'express';
 
+// Global BigInt serialization for JSON responses
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: ['log', 'error', 'warn', 'debug'],
+    // Drop 'debug' in production — the ping relay debug-logs full payloads +
+    // raw responses on every ping; at 100k+/day that churns memory and OOMs.
+    logger:
+      process.env.NODE_ENV === 'production'
+        ? ['log', 'error', 'warn']
+        : ['log', 'error', 'warn', 'debug'],
   });
 
   app.enableCors({ origin: '*' });
