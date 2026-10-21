@@ -727,8 +727,17 @@ export class PingRelayService {
       requestBody = payload;
     } else if (config.platform === 'callgrid') {
       requestBody = payload;
-    } else if (config.platform === 'trackdrive') {
-      requestBody = payload;
+    } else if (config.platform === 'trackdrive' || url.includes('trackdrive.com')) {
+      // TrackDrive's inbound_webhooks/ping reads params from the QUERY STRING
+      // (that's how TrackDrive natively pings), not a JSON body. Forward every
+      // param — e.g. the required traffic_source_id — as query params.
+      const qs = new URLSearchParams();
+      for (const [k, v] of Object.entries(payload || {})) {
+        if (v != null) qs.append(k, String(v));
+      }
+      const query = qs.toString();
+      if (query) requestUrl = url + (url.includes('?') ? '&' : '?') + query;
+      requestBody = undefined;
     } else {
       requestBody = payload;
     }

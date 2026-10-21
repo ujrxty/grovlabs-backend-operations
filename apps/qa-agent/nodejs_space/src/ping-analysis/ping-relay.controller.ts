@@ -70,11 +70,13 @@ export class PingRelayController {
   @ApiOperation({ summary: 'Relay endpoint (POST) - receives ping from TrackDrive and forwards to buyer' })
   async handleRelayPost(
     @Param('relayKey') relayKey: string,
-    @Body() payload: any,
+    @Body() body: any,
     @Headers() headers: Record<string, string>,
     @Req() req: Request,
   ) {
-    // Forward the ping through the relay
+    // TrackDrive (and others) send params in the QUERY STRING even on POST,
+    // often with an empty body. Merge query + body so nothing is dropped.
+    const payload = { ...(req.query as Record<string, any>), ...(body || {}) };
     return this.relayService.handleRelayPing(relayKey, payload, headers);
   }
 
