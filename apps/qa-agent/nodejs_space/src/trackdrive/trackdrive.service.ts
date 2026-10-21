@@ -81,12 +81,15 @@ export class TrackDriveService {
     }
   }
 
-  async listBuyers(): Promise<any[]> {
+  // Returns TrackDrive's raw response ({ buyers: [...] }). Type stays `any` so
+  // existing consumers (bot-commands uses `.buyers`) keep compiling; ping-relay
+  // normalises the shape defensively. per_page:500 fetches all buyers.
+  async listBuyers(): Promise<any> {
     try {
       const response = await this.getClient().get('/buyers', {
         params: { per_page: 500 },
       });
-      return response.data?.buyers || response.data || [];
+      return response.data;
     } catch (error: any) {
       this.logger.error(`Failed to list buyers: ${error.message}`);
       throw error;
