@@ -81,10 +81,12 @@ export class TrackDriveService {
     }
   }
 
-  async listBuyers(): Promise<any> {
+  async listBuyers(): Promise<any[]> {
     try {
-      const response = await this.getClient().get('/buyers');
-      return response.data;
+      const response = await this.getClient().get('/buyers', {
+        params: { per_page: 500 },
+      });
+      return response.data?.buyers || response.data || [];
     } catch (error: any) {
       this.logger.error(`Failed to list buyers: ${error.message}`);
       throw error;
