@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ConfigService } from '@nestjs/config';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
@@ -405,43 +406,66 @@ export class PingAnalysisService {
     if (options.traffic_source) where.traffic_source = options.traffic_source;
     if (options.state) where.caller_state = options.state;
 
-    const pings = await this.prisma.inbound_ping.findMany({
-      where,
-      select: {
-        id: true,
-        status: true,
-        winning_bid: true,
-        processing_time_ms: true,
-        is_duplicate: true,
-        caller_phone: true,
-        converted: true,
-        call_connected: true,
-        call_duration: true,
-        actual_payout: true,
-      },
-    });
+    // Raw WHERE for COUNT(DISTINCT caller_phone) — mirrors the Prisma `where`.
+    const conds: Prisma.Sql[] = [Prisma.sql`"caller_phone" IS NOT NULL`];
+    if (options.start) conds.push(Prisma.sql`"received_at" >= ${options.start}`);
+    if (options.end) conds.push(Prisma.sql`"received_at" <= ${options.end}`);
+    if (options.offer_name) conds.push(Prisma.sql`"offer_name" = ${options.offer_name}`);
+    if (options.traffic_source) conds.push(Prisma.sql`"traffic_source" = ${options.traffic_source}`);
+    if (options.state) conds.push(Prisma.sql`"caller_state" = ${options.state}`);
+    const whereSql = Prisma.sql`WHERE ${Prisma.join(conds, ' AND ')}`;
 
-    const total = pings.length;
-    const accepted = pings.filter((p) => p.status === 'accepted').length;
-    const rejected = pings.filter((p) => p.status === 'rejected').length;
-    const noBid = pings.filter((p) => p.status === 'no_bid').length;
-    const failed = pings.filter((p) => p.status === 'failed').length;
-    const duplicates = pings.filter((p) => p.is_duplicate).length;
+    // Aggregate in the DB — never load the (huge) row set into app memory.
+    const [
+      total,
+      duplicates,
+      byStatus,
+      acceptedAgg,
+      latencyAgg,
+      connected,
+      converted,
+      payoutAgg,
+      durationAgg,
+      distinctCallers,
+    ] = await Promise.all([
+      this.prisma.inbound_ping.count({ where }),
+      this.prisma.inbound_ping.count({ where: { ...where, is_duplicate: true } }),
+      this.prisma.inbound_ping.groupBy({ by: ['status'], where, _count: { _all: true } }),
+      this.prisma.inbound_ping.aggregate({
+        where: { ...where, status: 'accepted', winning_bid: { not: null } },
+        _count: { _all: true },
+        _sum: { winning_bid: true },
+      }),
+      this.prisma.inbound_ping.aggregate({ where, _avg: { processing_time_ms: true } }),
+      this.prisma.inbound_ping.count({ where: { ...where, call_connected: true } }),
+      this.prisma.inbound_ping.count({ where: { ...where, converted: true } }),
+      this.prisma.inbound_ping.aggregate({
+        where: { ...where, actual_payout: { not: null } },
+        _sum: { actual_payout: true },
+      }),
+      this.prisma.inbound_ping.aggregate({
+        where: { ...where, call_duration: { not: null } },
+        _sum: { call_duration: true },
+      }),
+      this.prisma.$queryRaw<{ count: bigint }[]>`
+        SELECT COUNT(DISTINCT "caller_phone") AS count FROM "inbound_ping" ${whereSql}`,
+    ]);
 
-    const acceptedPings = pings.filter((p) => p.status === 'accepted' && p.winning_bid);
-    const totalBid = acceptedPings.reduce((sum, p) => sum + (p.winning_bid || 0), 0);
-    const avgBid = acceptedPings.length > 0 ? totalBid / acceptedPings.length : 0;
+    const statusCount = (s: string) =>
+      byStatus.find((x) => x.status === s)?._count._all ?? 0;
+    const accepted = statusCount('accepted');
+    const rejected = statusCount('rejected');
+    const noBid = statusCount('no_bid');
+    const failed = statusCount('failed');
 
-    const latencies = pings.filter((p) => p.processing_time_ms).map((p) => p.processing_time_ms!);
-    const avgLatency = latencies.length > 0 ? latencies.reduce((a, b) => a + b, 0) / latencies.length : 0;
-
-    const uniqueCallers = new Set(pings.map((p) => p.caller_phone).filter(Boolean)).size;
-
-    // Conversion stats
-    const connected = pings.filter((p) => p.call_connected).length;
-    const converted = pings.filter((p) => p.converted).length;
-    const totalPayout = pings.filter((p) => p.actual_payout).reduce((sum, p) => sum + (p.actual_payout || 0), 0);
-    const avgDuration = pings.filter((p) => p.call_duration).reduce((sum, p) => sum + (p.call_duration || 0), 0) / (connected || 1);
+    const acceptedWithBid = acceptedAgg._count._all ?? 0;
+    const totalBid = acceptedAgg._sum.winning_bid ?? 0;
+    const avgBid = acceptedWithBid > 0 ? totalBid / acceptedWithBid : 0;
+    const avgLatency = latencyAgg._avg.processing_time_ms ?? 0;
+    const uniqueCallers = Number(distinctCallers[0]?.count ?? 0);
+    const totalPayout = payoutAgg._sum.actual_payout ?? 0;
+    const avgDuration =
+      connected > 0 ? (durationAgg._sum.call_duration ?? 0) / connected : 0;
 
     return {
       total_pings: total,
@@ -484,40 +508,43 @@ export class PingAnalysisService {
 
     const field = fieldMap[segment] || 'offer_name';
 
-    const pings = await this.prisma.inbound_ping.findMany({
-      where,
-      select: {
-        [field]: true,
-        status: true,
-        winning_bid: true,
-      } as any,
-    });
+    // Aggregate per-segment in the DB. gTotal: pings + accepted-with-bid count
+    // (_count.winning_bid) + totalBid (_sum.winning_bid, nulls ignored).
+    // gAccepted: status-accepted count per segment.
+    const [total, gTotal, gAccepted] = await Promise.all([
+      this.prisma.inbound_ping.count({ where }),
+      (this.prisma.inbound_ping.groupBy as any)({
+        by: [field],
+        where,
+        _count: { _all: true, winning_bid: true },
+        _sum: { winning_bid: true },
+      }) as Promise<any[]>,
+      (this.prisma.inbound_ping.groupBy as any)({
+        by: [field],
+        where: { ...where, status: 'accepted' },
+        _count: { _all: true },
+      }) as Promise<any[]>,
+    ]);
 
-    const groups = new Map<string, any[]>();
-    for (const p of pings) {
-      const key = (p as any)[field] || 'Unknown';
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(p);
-    }
+    const acceptedByName = new Map<string, number>();
+    for (const r of gAccepted) acceptedByName.set(r[field] || 'Unknown', r._count._all);
 
-    const total = pings.length;
-    const stats: SegmentStats[] = [];
-
-    for (const [name, group] of groups) {
-      const accepted = group.filter((p) => p.status === 'accepted').length;
-      const acceptedPings = group.filter((p) => p.status === 'accepted' && p.winning_bid);
-      const totalBid = acceptedPings.reduce((sum, p) => sum + (p.winning_bid || 0), 0);
-
-      stats.push({
+    const stats: SegmentStats[] = gTotal.map((r) => {
+      const name = r[field] || 'Unknown';
+      const pings = r._count._all as number;
+      const acceptedWithBid = (r._count.winning_bid as number) || 0;
+      const totalBid = (r._sum.winning_bid as number) || 0;
+      const acceptedStatus = acceptedByName.get(name) || 0;
+      return {
         name,
-        pings: group.length,
-        accepted,
-        accept_rate: group.length > 0 ? Math.round((accepted / group.length) * 10000) / 100 : 0,
+        pings,
+        accepted: acceptedStatus,
+        accept_rate: pings > 0 ? Math.round((acceptedStatus / pings) * 10000) / 100 : 0,
         total_bid: Math.round(totalBid * 100) / 100,
-        avg_bid: acceptedPings.length > 0 ? Math.round((totalBid / acceptedPings.length) * 100) / 100 : 0,
-        pct_of_total: total > 0 ? Math.round((group.length / total) * 10000) / 100 : 0,
-      });
-    }
+        avg_bid: acceptedWithBid > 0 ? Math.round((totalBid / acceptedWithBid) * 100) / 100 : 0,
+        pct_of_total: total > 0 ? Math.round((pings / total) * 10000) / 100 : 0,
+      };
+    });
 
     return stats
       .sort((a, b) => b.pings - a.pings)
@@ -532,29 +559,20 @@ export class PingAnalysisService {
       if (options.end) where.received_at.lte = options.end;
     }
 
-    const responses = await this.prisma.ping_response.findMany({
+    const grouped = await this.prisma.ping_response.groupBy({
+      by: ['rejection_reason'],
       where,
-      select: { rejection_reason: true },
+      _count: { _all: true },
     });
 
-    const counts = new Map<string, number>();
-    for (const r of responses) {
-      const reason = r.rejection_reason || 'unknown';
-      counts.set(reason, (counts.get(reason) || 0) + 1);
-    }
+    const total = grouped.reduce((s, g) => s + g._count._all, 0);
 
-    const total = responses.length;
-    const result: RejectReasonBreakdown[] = [];
-
-    for (const [reason, count] of counts) {
-      result.push({
-        reason,
-        count,
-        pct: total > 0 ? Math.round((count / total) * 10000) / 100 : 0,
-      });
-    }
-
-    return result
+    return grouped
+      .map((g) => ({
+        reason: g.rejection_reason || 'unknown',
+        count: g._count._all,
+        pct: total > 0 ? Math.round((g._count._all / total) * 10000) / 100 : 0,
+      }))
       .sort((a, b) => b.count - a.count)
       .slice(0, options.limit || 10);
   }
@@ -573,58 +591,43 @@ export class PingAnalysisService {
       if (options.end) where.received_at.lte = options.end;
     }
 
-    const pings = await this.prisma.inbound_ping.findMany({
-      where,
-      select: {
-        traffic_source: true,
-        offer_name: true,
-        is_duplicate: true,
-      },
-    });
+    // DB-side counts + per-segment groupBy (totals and duplicate-only).
+    const dupWhere = { ...where, is_duplicate: true };
+    const [total, duplicates, srcTotal, srcDup, offerTotal, offerDup] = await Promise.all([
+      this.prisma.inbound_ping.count({ where }),
+      this.prisma.inbound_ping.count({ where: dupWhere }),
+      (this.prisma.inbound_ping.groupBy as any)({ by: ['traffic_source'], where, _count: { _all: true } }) as Promise<any[]>,
+      (this.prisma.inbound_ping.groupBy as any)({ by: ['traffic_source'], where: dupWhere, _count: { _all: true } }) as Promise<any[]>,
+      (this.prisma.inbound_ping.groupBy as any)({ by: ['offer_name'], where, _count: { _all: true } }) as Promise<any[]>,
+      (this.prisma.inbound_ping.groupBy as any)({ by: ['offer_name'], where: dupWhere, _count: { _all: true } }) as Promise<any[]>,
+    ]);
 
-    const total = pings.length;
-    const duplicates = pings.filter((p) => p.is_duplicate).length;
-
-    const bySource = new Map<string, { total: number; dups: number }>();
-    const byOffer = new Map<string, { total: number; dups: number }>();
-
-    for (const p of pings) {
-      const source = p.traffic_source || 'Unknown';
-      const offer = p.offer_name || 'Unknown';
-
-      if (!bySource.has(source)) bySource.set(source, { total: 0, dups: 0 });
-      bySource.get(source)!.total++;
-      if (p.is_duplicate) bySource.get(source)!.dups++;
-
-      if (!byOffer.has(offer)) byOffer.set(offer, { total: 0, dups: 0 });
-      byOffer.get(offer)!.total++;
-      if (p.is_duplicate) byOffer.get(offer)!.dups++;
-    }
+    const mergeDup = (totals: any[], dups: any[], key: string) => {
+      const dupMap = new Map<string, number>();
+      for (const d of dups) dupMap.set(d[key] || 'Unknown', d._count._all);
+      return totals
+        .map((t) => {
+          const name = t[key] || 'Unknown';
+          const pings = t._count._all as number;
+          const dcount = dupMap.get(name) || 0;
+          return {
+            name,
+            pings,
+            duplicates: dcount,
+            dup_rate: pings > 0 ? Math.round((dcount / pings) * 10000) / 100 : 0,
+          };
+        })
+        .filter((x) => x.duplicates > 0)
+        .sort((a, b) => b.duplicates - a.duplicates)
+        .slice(0, 15);
+    };
 
     return {
       total_pings: total,
       duplicates,
       duplicate_rate: total > 0 ? Math.round((duplicates / total) * 10000) / 100 : 0,
-      by_traffic_source: [...bySource.entries()]
-        .map(([name, data]) => ({
-          name,
-          pings: data.total,
-          duplicates: data.dups,
-          dup_rate: data.total > 0 ? Math.round((data.dups / data.total) * 10000) / 100 : 0,
-        }))
-        .filter((x) => x.duplicates > 0)
-        .sort((a, b) => b.duplicates - a.duplicates)
-        .slice(0, 15),
-      by_offer: [...byOffer.entries()]
-        .map(([name, data]) => ({
-          name,
-          pings: data.total,
-          duplicates: data.dups,
-          dup_rate: data.total > 0 ? Math.round((data.dups / data.total) * 10000) / 100 : 0,
-        }))
-        .filter((x) => x.duplicates > 0)
-        .sort((a, b) => b.duplicates - a.duplicates)
-        .slice(0, 15),
+      by_traffic_source: mergeDup(srcTotal, srcDup, 'traffic_source'),
+      by_offer: mergeDup(offerTotal, offerDup, 'offer_name'),
     };
   }
 
