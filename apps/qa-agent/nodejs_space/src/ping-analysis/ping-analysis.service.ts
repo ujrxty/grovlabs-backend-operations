@@ -388,7 +388,36 @@ export class PingAnalysisService {
     return 'other';
   }
 
+  private statsCache = new Map<string, { data: PingStats; at: number; refreshing: boolean }>();
+  private readonly STATS_TTL_MS = 60_000;
+
+  // Cached, stale-while-revalidate: the heavy aggregate runs at most once per
+  // TTL per query. Dashboard polls get an instant response; a stale entry is
+  // refreshed in the background so the request never blocks on the slow scan.
   async getStats(options: {
+    start?: Date;
+    end?: Date;
+    offer_name?: string;
+    traffic_source?: string;
+    state?: string;
+  }): Promise<PingStats> {
+    const key = JSON.stringify(options ?? {});
+    const cached = this.statsCache.get(key);
+    if (cached) {
+      if (Date.now() - cached.at > this.STATS_TTL_MS && !cached.refreshing) {
+        cached.refreshing = true;
+        this.computeStats(options)
+          .then((data) => this.statsCache.set(key, { data, at: Date.now(), refreshing: false }))
+          .catch(() => { cached.refreshing = false; });
+      }
+      return cached.data;
+    }
+    const data = await this.computeStats(options);
+    this.statsCache.set(key, { data, at: Date.now(), refreshing: false });
+    return data;
+  }
+
+  private async computeStats(options: {
     start?: Date;
     end?: Date;
     offer_name?: string;
