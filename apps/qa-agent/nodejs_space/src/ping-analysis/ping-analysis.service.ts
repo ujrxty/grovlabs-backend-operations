@@ -395,19 +395,7 @@ export class PingAnalysisService {
     traffic_source?: string;
     state?: string;
   }): Promise<PingStats> {
-    const where: any = {};
-
-    if (options.start || options.end) {
-      where.received_at = {};
-      if (options.start) where.received_at.gte = options.start;
-      if (options.end) where.received_at.lte = options.end;
-    }
-    if (options.offer_name) where.offer_name = options.offer_name;
-    if (options.traffic_source) where.traffic_source = options.traffic_source;
-    if (options.state) where.caller_state = options.state;
-
-    // Raw WHERE for COUNT(DISTINCT caller_phone) — mirrors the Prisma `where`.
-    const conds: Prisma.Sql[] = [Prisma.sql`"caller_phone" IS NOT NULL`];
+    const conds: Prisma.Sql[] = [Prisma.sql`TRUE`];
     if (options.start) conds.push(Prisma.sql`"received_at" >= ${options.start}`);
     if (options.end) conds.push(Prisma.sql`"received_at" <= ${options.end}`);
     if (options.offer_name) conds.push(Prisma.sql`"offer_name" = ${options.offer_name}`);
@@ -415,57 +403,43 @@ export class PingAnalysisService {
     if (options.state) conds.push(Prisma.sql`"caller_state" = ${options.state}`);
     const whereSql = Prisma.sql`WHERE ${Prisma.join(conds, ' AND ')}`;
 
-    // Aggregate in the DB — never load the (huge) row set into app memory.
-    const [
-      total,
-      duplicates,
-      byStatus,
-      acceptedAgg,
-      latencyAgg,
-      connected,
-      converted,
-      payoutAgg,
-      durationAgg,
-      distinctCallers,
-    ] = await Promise.all([
-      this.prisma.inbound_ping.count({ where }),
-      this.prisma.inbound_ping.count({ where: { ...where, is_duplicate: true } }),
-      this.prisma.inbound_ping.groupBy({ by: ['status'], where, _count: { _all: true } }),
-      this.prisma.inbound_ping.aggregate({
-        where: { ...where, status: 'accepted', winning_bid: { not: null } },
-        _count: { _all: true },
-        _sum: { winning_bid: true },
-      }),
-      this.prisma.inbound_ping.aggregate({ where, _avg: { processing_time_ms: true } }),
-      this.prisma.inbound_ping.count({ where: { ...where, call_connected: true } }),
-      this.prisma.inbound_ping.count({ where: { ...where, converted: true } }),
-      this.prisma.inbound_ping.aggregate({
-        where: { ...where, actual_payout: { not: null } },
-        _sum: { actual_payout: true },
-      }),
-      this.prisma.inbound_ping.aggregate({
-        where: { ...where, call_duration: { not: null } },
-        _sum: { call_duration: true },
-      }),
-      this.prisma.$queryRaw<{ count: bigint }[]>`
-        SELECT COUNT(DISTINCT "caller_phone") AS count FROM "inbound_ping" ${whereSql}`,
-    ]);
+    // One table scan with FILTER aggregates instead of ~10 parallel full scans
+    // (was ~24s on 700k+ rows / 1 CPU).
+    const rows = await this.prisma.$queryRaw<any[]>`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE "status" = 'accepted')::int AS accepted,
+        COUNT(*) FILTER (WHERE "status" = 'rejected')::int AS rejected,
+        COUNT(*) FILTER (WHERE "status" = 'no_bid')::int AS no_bid,
+        COUNT(*) FILTER (WHERE "status" = 'failed')::int AS failed,
+        COUNT(*) FILTER (WHERE "is_duplicate")::int AS duplicates,
+        COUNT(*) FILTER (WHERE "status" = 'accepted' AND "winning_bid" IS NOT NULL)::int AS accepted_with_bid,
+        COALESCE(SUM("winning_bid") FILTER (WHERE "status" = 'accepted' AND "winning_bid" IS NOT NULL), 0)::float8 AS total_bid,
+        COALESCE(AVG("processing_time_ms"), 0)::float8 AS avg_latency,
+        COUNT(DISTINCT "caller_phone")::int AS unique_callers,
+        COUNT(*) FILTER (WHERE "call_connected")::int AS connected,
+        COUNT(*) FILTER (WHERE "converted")::int AS converted,
+        COALESCE(SUM("actual_payout") FILTER (WHERE "actual_payout" IS NOT NULL), 0)::float8 AS total_payout,
+        COALESCE(SUM("call_duration") FILTER (WHERE "call_duration" IS NOT NULL), 0)::float8 AS total_duration
+      FROM "inbound_ping"
+      ${whereSql}`;
 
-    const statusCount = (s: string) =>
-      byStatus.find((x) => x.status === s)?._count._all ?? 0;
-    const accepted = statusCount('accepted');
-    const rejected = statusCount('rejected');
-    const noBid = statusCount('no_bid');
-    const failed = statusCount('failed');
-
-    const acceptedWithBid = acceptedAgg._count._all ?? 0;
-    const totalBid = acceptedAgg._sum.winning_bid ?? 0;
+    const r = rows[0] ?? {};
+    const total = Number(r.total ?? 0);
+    const accepted = Number(r.accepted ?? 0);
+    const rejected = Number(r.rejected ?? 0);
+    const noBid = Number(r.no_bid ?? 0);
+    const failed = Number(r.failed ?? 0);
+    const duplicates = Number(r.duplicates ?? 0);
+    const acceptedWithBid = Number(r.accepted_with_bid ?? 0);
+    const totalBid = Number(r.total_bid ?? 0);
     const avgBid = acceptedWithBid > 0 ? totalBid / acceptedWithBid : 0;
-    const avgLatency = latencyAgg._avg.processing_time_ms ?? 0;
-    const uniqueCallers = Number(distinctCallers[0]?.count ?? 0);
-    const totalPayout = payoutAgg._sum.actual_payout ?? 0;
-    const avgDuration =
-      connected > 0 ? (durationAgg._sum.call_duration ?? 0) / connected : 0;
+    const avgLatency = Number(r.avg_latency ?? 0);
+    const uniqueCallers = Number(r.unique_callers ?? 0);
+    const connected = Number(r.connected ?? 0);
+    const converted = Number(r.converted ?? 0);
+    const totalPayout = Number(r.total_payout ?? 0);
+    const avgDuration = connected > 0 ? Number(r.total_duration ?? 0) / connected : 0;
 
     return {
       total_pings: total,
