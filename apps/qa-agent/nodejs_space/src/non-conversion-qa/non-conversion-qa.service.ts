@@ -1,9 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import FormData from 'form-data';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
+import { transcribeDetailed, TranscriptMetrics } from '../transcription/detailed-transcribe.js';
+
+/** Verdicts that claim no live agent ever engaged — the ones that were firing falsely. */
+const NO_AGENT_REASONS = new Set(['ivr_no_live_agent', 'dead_air_no_agent', 'excessive_hold_dropped']);
 
 export type FaultSide = 'buyer' | 'vendor' | 'external' | 'neutral';
 
@@ -97,30 +100,6 @@ export class NonConversionQaService {
     return Buffer.from(resp.data);
   }
 
-  /** Transcribe audio using Whisper API. */
-  private async transcribeAudio(audio: Buffer, apiKey: string): Promise<string> {
-    const formData = new FormData();
-    formData.append('file', audio, { filename: 'call.mp3', contentType: 'audio/mpeg' });
-    formData.append('model', 'whisper-1');
-    formData.append('response_format', 'text');
-
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        ...formData.getHeaders(),
-      },
-      body: formData.getBuffer(),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Whisper API error (${response.status}): ${errText.slice(0, 200)}`);
-    }
-
-    return response.text();
-  }
-
   /** Analyze one non-converted call recording with RTB-aware classification. */
   async reviewCall(call: any): Promise<CallReview> {
     const vendorName = call.traffic_source || 'Unknown Vendor';
@@ -141,10 +120,11 @@ export class NonConversionQaService {
 
     const audio = await this.downloadRecording(recordingUrl);
 
-    // Step 1: Transcribe with Whisper
-    const transcript = await this.transcribeAudio(audio, apiKey);
+    // Step 1: Timestamped, speaker-labeled transcription + hard facts
+    const tx = await transcribeDetailed(audio, apiKey);
+    const m = tx.metrics;
 
-    const prompt = this.buildPrompt({
+    const promptCtx = {
       vendorName,
       buyerName,
       campaignName,
@@ -154,38 +134,37 @@ export class NonConversionQaService {
       status,
       disposition,
       callerState,
-    });
+      metrics: m,
+    };
 
-    // Step 2: Analyze transcript with GPT-4o-mini
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'user',
-            content: `${prompt}\n\n--- CALL TRANSCRIPT ---\n${transcript}`,
-          },
-        ],
-        response_format: { type: 'json_object' },
-      }),
-    });
+    // Step 2: Classify
+    let parsed = await this.classify(this.buildPrompt(promptCtx), tx.dialogue, apiKey);
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`LLM API error (${response.status}): ${errText.slice(0, 200)}`);
+    // Step 3: Guard against false "no live agent / on hold / dead air" verdicts.
+    // If the transcript shows real back-and-forth, ask a focused verifier whether
+    // a live human from the buyer side spoke. If yes, re-classify with that fact
+    // locked in so the verdict cannot be a no-agent reason.
+    const guard: Record<string, any> = { metrics: m, original_reason: parsed.outcome_reason };
+    if (NO_AGENT_REASONS.has(parsed.outcome_reason) && this.hasConversationEvidence(m)) {
+      const verdict = await this.verifyLiveAgent(tx.dialogue, apiKey);
+      guard.verifier = verdict;
+      if (verdict.live_agent_spoke) {
+        parsed = await this.classify(
+          this.buildPrompt(promptCtx) +
+            `\n\nVERIFIED FACT: A live human representative on the buyer side DID speak with the caller ` +
+            `(evidence: "${String(verdict.evidence || '').slice(0, 200)}"). You MUST NOT answer ` +
+            `ivr_no_live_agent, dead_air_no_agent or excessive_hold_dropped. Pick the reason that explains why the live conversation did not convert.`,
+          tx.dialogue,
+          apiKey,
+        );
+        if (NO_AGENT_REASONS.has(parsed.outcome_reason)) {
+          parsed.outcome_reason = 'other';
+          parsed.fault_side = 'neutral';
+        }
+        guard.corrected = true;
+      }
     }
-
-    const data = (await response.json()) as any;
-    let content = data?.choices?.[0]?.message?.content?.trim() || '';
-    if (content.startsWith('```')) {
-      content = content.replace(/^```(json)?/i, '').replace(/```$/, '').trim();
-    }
-    const parsed = JSON.parse(content);
+    parsed._guard = guard;
 
     const faultSide = this.normalizeFault(parsed.fault_side);
 
@@ -217,6 +196,59 @@ export class NonConversionQaService {
     };
   }
 
+  /** Real back-and-forth: 2+ speakers trading turns with meaningful speech. */
+  private hasConversationEvidence(m: TranscriptMetrics): boolean {
+    if (m.diarized) return m.speakers >= 2 && m.turns >= 4 && m.speechSeconds >= 20;
+    // No speaker labels (whisper fallback): fall back to volume of speech.
+    return m.words >= 80 && m.speechSeconds >= 30;
+  }
+
+  private async chatJson(model: string, content: string, apiKey: string): Promise<any> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model,
+        temperature: 0,
+        messages: [{ role: 'user', content }],
+        response_format: { type: 'json_object' },
+      }),
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`LLM API error (${response.status}): ${errText.slice(0, 200)}`);
+    }
+    const data = (await response.json()) as any;
+    let out = data?.choices?.[0]?.message?.content?.trim() || '';
+    if (out.startsWith('```')) out = out.replace(/^```(json)?/i, '').replace(/```$/, '').trim();
+    return JSON.parse(out);
+  }
+
+  private classify(prompt: string, dialogue: string, apiKey: string): Promise<any> {
+    const model = process.env.NC_QA_MODEL || 'gpt-4o-mini';
+    return this.chatJson(model, `${prompt}\n\n--- CALL TRANSCRIPT (timestamped, speaker-labeled) ---\n${dialogue}`, apiKey);
+  }
+
+  /** Focused yes/no check, run only when a no-agent verdict conflicts with the transcript. */
+  private verifyLiveAgent(dialogue: string, apiKey: string): Promise<{ live_agent_spoke: boolean; evidence: string | null }> {
+    const model = process.env.NC_QA_VERIFY_MODEL || 'gpt-4o';
+    return this.chatJson(
+      model,
+      `Below is a timestamped, speaker-labeled phone call transcript. The caller dialed in and was routed to a business (the "buyer").
+
+Question: did a LIVE HUMAN representative of the business speak with the caller at any point?
+- Recorded/automated messages, IVR menus ("press 1", "enter your zip"), hold messages and voicemail greetings are NOT a live human.
+- A live human responds to what the caller says, asks follow-up questions, uses names, or reacts naturally.
+- Speaker labels may be imperfect; judge by content.
+
+Respond with RAW JSON only: {"live_agent_spoke": true|false, "evidence": "<short exact quote from the human rep, or null>"}
+
+--- TRANSCRIPT ---
+${dialogue}`,
+      apiKey,
+    ).then((r) => ({ live_agent_spoke: r.live_agent_spoke === true, evidence: r.evidence ?? null }));
+  }
+
   private normalizeFault(v: any): FaultSide {
     const s = String(v || '').toLowerCase();
     if (s.includes('buyer')) return 'buyer';
@@ -235,7 +267,12 @@ export class NonConversionQaService {
     status: string | null;
     disposition: string | null;
     callerState: string | null;
+    metrics: TranscriptMetrics;
   }): string {
+    const m = ctx.metrics;
+    const facts = m.diarized
+      ? `- Distinct speakers detected: ${m.speakers} | Speaker turn changes: ${m.turns} | Seconds of speech: ${m.speechSeconds}s | Last speech at: ${m.lastSpeechAt}s | Words: ${m.words}`
+      : `- Speaker labels unavailable | Seconds of speech: ${m.speechSeconds}s | Last speech at: ${m.lastSpeechAt}s | Words: ${m.words}`;
     return `You are a QA analyst for GrovLabs Inc, a company that brokers INBOUND phone calls using a REAL-TIME BIDDING (RTB) model.
 
 HOW THE RTB MODEL WORKS (critical for fault attribution):
@@ -265,13 +302,18 @@ CRITICAL - SUCCESSFUL CALLS THAT DIDN'T TECHNICALLY CONVERT:
 - Long calls (>2 minutes) with back-and-forth dialogue between agent and caller are almost always successful interactions, NOT failures.
 - "ivr_no_live_agent" means ONLY IVR/hold music with NO human agent ever speaking. If you see agent names or real conversation, a live agent DID speak.
 - Do NOT mark a call as "buyer fault" if the buyer's agent actually answered and had a substantive conversation.
+- Use the TRANSCRIPT FACTS below. Many speaker turn changes and lots of speech mean people were TALKING, which is not hold, dead air or IVR-only. A caller answering IVR prompts (zip code, "yes") is still IVR-only; a rep asking questions and reacting to answers is a live agent.
+- "excessive_hold_dropped" requires the transcript to actually show a long stretch of hold message/music near the END of the call with the caller dropping during it.
 
-CALL METADATA (for your reference, verify against what you actually hear):
+CALL METADATA (for your reference, verify against the transcript):
 - Vendor (traffic source): ${ctx.vendorName}
 - Buyer that received the call: ${ctx.buyerName || 'Unknown'}
 - Campaign: ${ctx.campaignName || 'Unknown'}
-- Total duration: ${ctx.duration}s | Answered duration: ${ctx.answeredDuration}s | Agent talk duration: ${ctx.agentDuration}s
+- Total duration: ${ctx.duration}s | Answered duration: ${ctx.answeredDuration}s (TrackDrive cannot see the buyer's agents, so it does not report agent talk time; judge that from the transcript)
 - TrackDrive status: ${ctx.status || 'unknown'} | Disposition: ${ctx.disposition || 'none'} | Caller state: ${ctx.callerState || 'unknown'}
+
+TRANSCRIPT FACTS (computed from the audio, reliable):
+${facts}
 
 Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
 {
