@@ -10,6 +10,7 @@ const PRICING = {
   'gpt-4': { input: 0.03, output: 0.06 },
   'gpt-3.5-turbo': { input: 0.0005, output: 0.0015 },
   'whisper-1': { input: 0.006, output: 0 }, // per minute, not tokens
+  'gpt-4o-transcribe-diarize': { input: 0.006, output: 0 }, // per minute, not tokens
 };
 
 export interface UsageEntry {
@@ -88,7 +89,7 @@ export class OpenAIUsageService {
     const pricing = PRICING[model as keyof typeof PRICING] || PRICING['gpt-4o'];
 
     let cost: number;
-    if (model === 'whisper-1' && audioMinutes) {
+    if (audioMinutes) {
       cost = audioMinutes * pricing.input;
     } else {
       cost = (inputTokens / 1000) * pricing.input + (outputTokens / 1000) * pricing.output;
