@@ -223,10 +223,24 @@ export class SalesQaService {
     const apiKey = this.config.get<string>('OPENAI_API_KEY', '');
     const recordingUrl = call.recording_url as string;
 
-    const audio = await this.downloadRecording(recordingUrl);
-
-    // Step 1: Transcribe with Whisper
-    const transcript = await this.transcribeAudio(audio, apiKey);
+    // Step 1: Transcript. Reuse the one the QA agent already saved for this call (transcribe once);
+    // only download + Whisper when there isn't one.
+    const tdCallId = String(call.id || call.uuid || call.call_id || '');
+    let transcript = '';
+    if (tdCallId) {
+      const saved = await this.prisma.call
+        .findUnique({ where: { trackdrive_call_id: tdCallId }, select: { transcript: { select: { transcript_text: true } } } })
+        .catch(() => null);
+      const text = saved?.transcript?.transcript_text || '';
+      if (text.trim().length > 40) {
+        transcript = text;
+        this.logger.log(`Sales QA ${tdCallId}: reusing saved transcript (no re-transcription)`);
+      }
+    }
+    if (!transcript) {
+      const audio = await this.downloadRecording(recordingUrl);
+      transcript = await this.transcribeAudio(audio, apiKey);
+    }
 
     const prompt = this.buildPrompt({
       vendorName,
