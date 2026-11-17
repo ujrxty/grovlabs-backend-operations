@@ -39,7 +39,7 @@ const navItems = [
   { href: '/sales-monitoring', label: 'Sales Monitoring', icon: ClipboardCheck },
   { href: '/loss-monitor', label: 'Loss Monitor', icon: Siren },
   { href: '/rtb-intelligence', label: 'RTB Intelligence', icon: Radio },
-  { href: '/billing', label: 'Billing', icon: Receipt },
+  { href: '/billing', label: 'Billing → Vault', icon: Receipt },
   { href: '/settings', label: 'Settings', icon: Settings },
   { href: '/settings/team', label: 'Team', icon: UsersRound },
   { href: '/settings/templates', label: 'Templates', icon: ScrollText },
