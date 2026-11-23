@@ -222,13 +222,24 @@ export class CampaignSyncService implements OnModuleInit, OnModuleDestroy {
         liveIds.add(primary.id);
       }
 
-      // Only live TrackDrive offers appear on the portal: hide every other active campaign (manual or stale).
-      // Safety: if TrackDrive returned no offers at all (API hiccup), hide nothing.
+      // Only live TrackDrive offers exist on the portal.
+      // - Hand-made campaigns with no TrackDrive offer (Mold Removal, Gutters...) are archived: gone from the portal
+      //   AND the admin list, rows kept for history.
+      // - TrackDrive cards whose offers are all paused just go inactive, so they come back when the offer does.
+      // Safety: if TrackDrive returned no offers at all (API hiccup), touch nothing.
       if (offers.length > 0 && liveIds.size > 0) {
-        const others = await this.prisma.campaign.findMany({ where: { archived: false, is_active: true, id: { notIn: [...liveIds] } } });
+        const others = await this.prisma.campaign.findMany({ where: { archived: false, id: { notIn: [...liveIds] } } });
         for (const c of others) {
-          await this.prisma.campaign.update({ where: { id: c.id }, data: { is_active: false, synced_at: new Date() } });
-          result.hidden.push(c.name);
+          if (c.source !== 'trackdrive') {
+            await this.prisma.campaign.update({
+              where: { id: c.id },
+              data: { is_active: false, archived: true, vertical_key: null, name: `${c.name} [archived ${c.id.slice(0, 6)}]`, synced_at: new Date() },
+            });
+            result.hidden.push(`${c.name} (archived)`);
+          } else if (c.is_active && !c.manual_overrides.includes('is_active')) {
+            await this.prisma.campaign.update({ where: { id: c.id }, data: { is_active: false, synced_at: new Date() } });
+            result.hidden.push(c.name);
+          }
         }
       }
 
