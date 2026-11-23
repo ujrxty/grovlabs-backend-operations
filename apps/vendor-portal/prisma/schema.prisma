@@ -121,6 +121,15 @@ model campaign {
   created_at         DateTime             @default(now())
   updated_at         DateTime             @updatedAt
   payout_display     String?
+  // TrackDrive sync (one card per vertical) + merge/archive
+  source               String    @default("manual")
+  vertical_key         String?   @unique
+  trackdrive_offer_ids String[]  @default([])
+  hours                String?
+  manual_overrides     String[]  @default([])
+  archived             Boolean   @default(false)
+  merged_into_id       String?
+  synced_at            DateTime?
   insertion_orders   insertion_order[]
   applications       vendor_application[]
 
@@ -144,6 +153,18 @@ model vendor_application {
   company_state    String?
   company_country  String?
   entity_type      String?
+  // Vetting (publisher due diligence)
+  traffic_sources  String?
+  lead_method      String?
+  sample_url       String?
+  consent_language String?
+  operating_states String?
+  operating_hours  String?
+  attestations     Json?
+  risk_score       Int?
+  risk_level       String?
+  risk_flags       Json?
+  vetted_at        DateTime?
   campaign_id      String
   status           String          @default("pending")
   status_reason    String?

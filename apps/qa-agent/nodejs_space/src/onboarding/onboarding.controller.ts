@@ -5,6 +5,7 @@ import {
 import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiQuery, ApiParam, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { OnboardingService } from './onboarding.service.js';
+import { CampaignSyncService } from './campaign-sync.service.js';
 import { ApplyDto } from './dto/apply.dto.js';
 import { ApproveDto, RejectDto, SignIODto, AddCampaignDto } from './dto/review.dto.js';
 import { CreateCampaignDto } from './dto/campaign.dto.js';
@@ -15,7 +16,7 @@ import type { Request } from 'express';
 export class OnboardingController {
   private readonly logger = new Logger(OnboardingController.name);
 
-  constructor(private readonly svc: OnboardingService) {}
+  constructor(private readonly svc: OnboardingService, private readonly sync: CampaignSyncService) {}
 
   // ==================== PUBLIC ENDPOINTS ====================
 
@@ -221,6 +222,27 @@ export class OnboardingController {
   @ApiParam({ name: 'id', description: 'Campaign ID' })
   async deleteCampaign(@Param('id') id: string) {
     return this.svc.deleteCampaign(id);
+  }
+
+  @Post('admin/campaigns/sync')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Sync campaigns from TrackDrive now', description: 'One card per vertical from active TrackDrive offers. Runs automatically every 15 minutes.' })
+  async syncCampaigns() {
+    return this.sync.sync({ forcePayouts: true });
+  }
+
+  @Get('admin/campaigns/sync')
+  @ApiOperation({ summary: 'Last TrackDrive campaign sync result' })
+  async lastSync() {
+    return this.sync.lastResult || { message: 'No sync has run yet' };
+  }
+
+  @Post('admin/campaigns/:id/merge')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Merge a campaign into another', description: 'Moves applications and IOs to into_id, then archives this campaign.' })
+  @ApiBody({ schema: { type: 'object', properties: { into_id: { type: 'string' } }, required: ['into_id'] } })
+  async mergeCampaign(@Param('id') id: string, @Body() body: { into_id: string }) {
+    return this.sync.merge(id, body.into_id);
   }
 
   @Get('admin/campaigns')

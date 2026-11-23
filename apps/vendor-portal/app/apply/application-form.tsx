@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { CheckCircle2, Loader2, AlertCircle, Building2, User, Mail, Phone, Globe, MessageSquare, ChevronDown, MapPin, Landmark } from 'lucide-react'
+import { CheckCircle2, Loader2, AlertCircle, Building2, User, Mail, Phone, Globe, MessageSquare, ChevronDown, MapPin, Landmark, Link2, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 
@@ -29,6 +29,28 @@ const US_STATES = [
   'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania',
   'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
   'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming', 'District of Columbia',
+]
+
+const TRAFFIC_SOURCES = [
+  'Google / Bing search', 'Facebook / Instagram', 'TikTok / YouTube', 'Native / display',
+  'SEO / organic sites', 'TV / radio', 'Direct mail', 'Email / SMS (opted-in)', 'Own call center', 'Other',
+]
+
+const LEAD_METHODS = [
+  { value: 'click_to_call', label: 'Click-to-call ads (caller dials us directly)' },
+  { value: 'landing_page', label: 'Landing page / website with a phone number' },
+  { value: 'lead_to_call', label: 'Lead form, then a call (lead-to-call)' },
+  { value: 'live_transfer', label: 'Live / warm transfer from my agents' },
+  { value: 'offline', label: 'Offline media (TV, radio, mail)' },
+  { value: 'other', label: 'Other' },
+]
+
+const ATTESTATIONS = [
+  { key: 'no_incentivized', label: 'No incentivized traffic', text: 'Callers are never paid, rewarded or offered prizes to call.' },
+  { key: 'no_robocalls', label: 'No robocalls or IVR-forced calls', text: 'No auto-dialers, prerecorded messages or calls forced through an IVR.' },
+  { key: 'no_unapproved_transfers', label: 'No unapproved transfers', text: 'No cold or warm transfers unless GrovLabs approves the campaign in writing.' },
+  { key: 'owns_traffic', label: 'I own or control this traffic', text: 'I generate the calls myself or have written rights from my sub-publishers, and I will disclose them.' },
+  { key: 'creative_approval', label: 'Creatives approved before launch', text: 'I will submit ads, scripts and landing pages for approval before sending calls.' },
 ]
 
 interface Campaign {
@@ -64,9 +86,30 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
     entity_type: '',
     referred_by: '',
     comments: '',
+    traffic_sources: [] as string[],
+    traffic_mix: '',
+    lead_method: '',
+    sample_url: '',
+    consent_language: '',
+    operating_states: 'Nationwide',
+    operating_hours: '',
+    attestations: {} as Record<string, boolean>,
     tcpa_agreed: false,
     terms_agreed: false,
   })
+
+  const needsConsent = ['lead_to_call', 'live_transfer'].includes(form?.lead_method ?? '')
+
+  const toggleSource = (src: string) => {
+    const cur = new Set(form?.traffic_sources ?? [])
+    if (cur.has(src)) cur.delete(src)
+    else cur.add(src)
+    updateField('traffic_sources', Array.from(cur))
+  }
+
+  const toggleAttestation = (key: string) => {
+    updateField('attestations', { ...(form?.attestations ?? {}), [key]: !(form?.attestations ?? {})[key] })
+  }
 
   useEffect(() => {
     const campaignIds = searchParams?.get?.('campaigns') ?? ''
@@ -121,6 +164,12 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
     if (!form?.company_country?.trim?.()) errs.company_country = 'Country is required'
     if (!form?.company_state?.trim?.()) errs.company_state = isUS ? 'Company state is required' : 'State / province / region is required'
     if (!form?.entity_type?.trim?.()) errs.entity_type = 'Entity type is required'
+    if (!(form?.traffic_sources ?? []).length) errs.traffic_sources = 'Pick at least one traffic source'
+    if (!form?.lead_method) errs.lead_method = 'Tell us how the calls are generated'
+    if (!form?.sample_url?.trim?.() || !/^https?:\/\/\S+\.\S+/.test(form?.sample_url?.trim?.() ?? '')) errs.sample_url = 'Link a live ad or landing page (https://...)'
+    if (needsConsent && (form?.consent_language?.trim?.()?.length ?? 0) < 40) errs.consent_language = 'Paste the exact consent language your form or agents use'
+    if (!form?.operating_states?.trim?.()) errs.operating_states = 'States are required'
+    if (ATTESTATIONS.some((a) => !(form?.attestations ?? {})[a.key])) errs.attestations = 'All traffic quality statements must be confirmed'
     if (!form?.tcpa_agreed) errs.tcpa_agreed = 'TCPA compliance agreement is required'
     if (!form?.terms_agreed) errs.terms_agreed = 'Terms agreement is required'
     setErrors(errs)
@@ -225,7 +274,7 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
                     {isSelected && <CheckCircle2 className="h-3 w-3 text-white" />}
                   </div>
                   <span className="font-medium text-white">{c?.name ?? ''}</span>
-                  <span className="text-xs text-[#c4ff00] ml-auto">{(c?.name ?? '').toLowerCase().includes('rtb') ? 'Variable' : (c?.payout_display ?? `$${c?.payout ?? '0'}`)}</span>
+                  <span className="text-xs text-[#c4ff00] ml-auto">{c?.payout_display ?? `$${c?.payout ?? '0'}`}</span>
                 </div>
               </div>
             )
@@ -451,6 +500,130 @@ export function ApplicationForm({ campaigns }: { campaigns: Campaign[] }) {
               placeholder="Anything else we should know?"
             />
           </div>
+        </div>
+      </div>
+
+      {/* Traffic & Vetting */}
+      <div className="space-y-4">
+        <div>
+          <h3 className="font-display font-semibold text-white flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#c4ff00]" /> Traffic &amp; Compliance</h3>
+          <p className="text-xs text-white/50 mt-1">Every publisher is vetted before going live. Clear answers here get you approved faster.</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-white/70 mb-2">Traffic sources *</label>
+          <div className="flex flex-wrap gap-2">
+            {TRAFFIC_SOURCES.map((src) => {
+              const on = (form?.traffic_sources ?? []).includes(src)
+              return (
+                <button
+                  type="button"
+                  key={src}
+                  onClick={() => toggleSource(src)}
+                  className={cn('rounded-full border px-3 py-1.5 text-xs transition-colors', on ? 'border-[#c4ff00]/60 bg-[#a3e635]/10 text-[#c4ff00]' : 'border-white/10 text-white/60 hover:border-white/30')}
+                >
+                  {src}
+                </button>
+              )
+            })}
+          </div>
+          {errors?.traffic_sources && <p className="text-xs text-red-600 mt-1">{errors.traffic_sources}</p>}
+          <input
+            type="text"
+            value={form?.traffic_mix ?? ''}
+            onChange={(e: any) => updateField('traffic_mix', e?.target?.value ?? '')}
+            className="mt-2 w-full rounded-lg border border-white/10 bg-[#0a0a0a] text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50"
+            placeholder="Rough mix, e.g. 70% Google search, 30% Facebook"
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-white/70 mb-1">How are the calls generated? *</label>
+            <div className="relative">
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none" />
+              <select
+                value={form?.lead_method ?? ''}
+                onChange={(e: any) => updateField('lead_method', e?.target?.value ?? '')}
+                className={cn('w-full rounded-lg border px-3 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.lead_method ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
+              >
+                <option value="">Select...</option>
+                {LEAD_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+              </select>
+            </div>
+            {errors?.lead_method && <p className="text-xs text-red-600 mt-1">{errors.lead_method}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-white/70 mb-1">Sample ad or landing page URL *</label>
+            <div className="relative">
+              <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+              <input
+                type="url"
+                value={form?.sample_url ?? ''}
+                onChange={(e: any) => updateField('sample_url', e?.target?.value ?? '')}
+                className={cn('w-full rounded-lg border pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.sample_url ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
+                placeholder="https://..."
+              />
+            </div>
+            {errors?.sample_url && <p className="text-xs text-red-600 mt-1">{errors.sample_url}</p>}
+          </div>
+        </div>
+
+        {needsConsent && (
+          <div>
+            <label className="block text-sm font-medium text-white/70 mb-1">Consent language (TCPA) *</label>
+            <textarea
+              value={form?.consent_language ?? ''}
+              onChange={(e: any) => updateField('consent_language', e?.target?.value ?? '')}
+              rows={3}
+              className={cn('w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.consent_language ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
+              placeholder="Paste the exact consent text on your form, or the disclosure your agents read."
+            />
+            {errors?.consent_language && <p className="text-xs text-red-600 mt-1">{errors.consent_language}</p>}
+          </div>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-white/70 mb-1">States you can send *</label>
+            <input
+              type="text"
+              value={form?.operating_states ?? ''}
+              onChange={(e: any) => updateField('operating_states', e?.target?.value ?? '')}
+              className={cn('w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50', errors?.operating_states ? 'border-red-300' : 'border-white/10 bg-[#0a0a0a] text-white')}
+              placeholder="Nationwide, or e.g. TX, FL, GA"
+            />
+            {errors?.operating_states && <p className="text-xs text-red-600 mt-1">{errors.operating_states}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-white/70 mb-1">Hours you run traffic</label>
+            <input
+              type="text"
+              value={form?.operating_hours ?? ''}
+              onChange={(e: any) => updateField('operating_hours', e?.target?.value ?? '')}
+              className="w-full rounded-lg border border-white/10 bg-[#0a0a0a] text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#a3e635]/50"
+              placeholder="e.g. 9am to 9pm EST, Mon to Sat"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-white/70">Traffic quality *</label>
+          {ATTESTATIONS.map((a) => (
+            <label key={a.key} className="flex items-start gap-3 rounded-lg border border-white/10 bg-[#0a0a0a] p-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!!(form?.attestations ?? {})[a.key]}
+                onChange={() => toggleAttestation(a.key)}
+                className="mt-0.5 h-4 w-4 rounded border-white/20 text-[#c4ff00] focus:ring-[#a3e635]/50"
+              />
+              <span>
+                <span className="block text-sm font-medium text-white">{a.label}</span>
+                <span className="block text-xs text-white/50 mt-0.5">{a.text}</span>
+              </span>
+            </label>
+          ))}
+          {errors?.attestations && <p className="text-xs text-red-600">{errors.attestations}</p>}
         </div>
       </div>
 

@@ -5,6 +5,8 @@ import { IOService } from './io.service.js';
 import { OnboardingNotificationService } from './notification.service.js';
 import { DiscordService } from '../discord/discord.service.js';
 import { ApplyDto } from './dto/apply.dto.js';
+import { SYNCED_FIELDS } from './campaign-sync.service.js';
+import { VettingService } from './vetting.service.js';
 import { randomBytes } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
@@ -20,12 +22,13 @@ export class OnboardingService {
     private readonly notif: OnboardingNotificationService,
     private readonly config: ConfigService,
     private readonly discord: DiscordService,
+    private readonly vetting: VettingService,
   ) {}
 
   // ==================== CAMPAIGNS ====================
 
   async listCampaigns(activeOnly = true) {
-    const where = activeOnly ? { is_active: true } : {};
+    const where = activeOnly ? { is_active: true, archived: false } : { archived: false };
     return this.prisma.campaign.findMany({
       where,
       orderBy: [{ sort_order: 'asc' }, { industry: 'asc' }, { name: 'asc' }],
@@ -34,6 +37,9 @@ export class OnboardingService {
         payout: true, payout_type: true, billing_cycle: true, min_duration: true,
         geographic_focus: true, allowed_traffic: true, restricted_traffic: true,
         requirements: true, compliance_notes: true, is_active: true, sort_order: true,
+        payout_display: true, hours: true, source: true, vertical_key: true, trackdrive_offer_ids: true,
+        manual_overrides: true, synced_at: true,
+        ...(activeOnly ? {} : { _count: { select: { applications: true } } }),
       },
     });
   }
@@ -49,13 +55,25 @@ export class OnboardingService {
   }
 
   async updateCampaign(id: string, data: any) {
-    await this.getCampaign(id);
-    return this.prisma.campaign.update({ where: { id }, data });
+    const current = await this.getCampaign(id);
+    const { reset_overrides, id: _id, created_at, updated_at, source, vertical_key, trackdrive_offer_ids, synced_at, archived, merged_into_id, manual_overrides, ...rest } = data || {};
+    // Anything edited by hand on a TrackDrive-synced campaign is pinned, so the sync never overwrites it.
+    let overrides: string[] = current.manual_overrides || [];
+    if (reset_overrides) overrides = [];
+    else if (current.source === 'trackdrive') {
+      for (const k of Object.keys(rest)) {
+        const before = (current as any)[k];
+        if (SYNCED_FIELDS.includes(k) && String(before ?? '') !== String(rest[k] ?? '') && !overrides.includes(k)) overrides.push(k);
+      }
+    }
+    return this.prisma.campaign.update({ where: { id }, data: { ...rest, manual_overrides: overrides } });
   }
 
   async toggleCampaign(id: string, isActive: boolean) {
-    await this.getCampaign(id);
-    return this.prisma.campaign.update({ where: { id }, data: { is_active: isActive } });
+    const current = await this.getCampaign(id);
+    const overrides = current.source === 'trackdrive' && !current.manual_overrides.includes('is_active')
+      ? [...current.manual_overrides, 'is_active'] : current.manual_overrides;
+    return this.prisma.campaign.update({ where: { id }, data: { is_active: isActive, manual_overrides: overrides } });
   }
 
   async deleteCampaign(id: string) {
@@ -63,7 +81,12 @@ export class OnboardingService {
     // Check if any applications exist for this campaign
     const appCount = await this.prisma.vendor_application.count({ where: { campaign_id: id } });
     if (appCount > 0) {
-      throw new BadRequestException(`Cannot delete campaign "${campaign.name}" — it has ${appCount} application(s). Deactivate it instead.`);
+      // Has history: archive instead of hard delete (hidden from the portal and the admin list, rows kept).
+      await this.prisma.campaign.update({
+        where: { id },
+        data: { is_active: false, archived: true, vertical_key: null, name: `${campaign.name} [archived ${id.slice(0, 6)}]` },
+      });
+      return { message: `Campaign "${campaign.name}" archived (it has ${appCount} application(s), so it was hidden instead of deleted). Use Merge to move them to another campaign.` };
     }
     await this.prisma.campaign.delete({ where: { id } });
     return { message: `Campaign "${campaign.name}" deleted` };
@@ -1035,6 +1058,12 @@ export class OnboardingService {
     const first = apps[0];
     const campaigns = apps.map(a => (a as any).campaign?.name || 'Unknown');
 
+    // Automatic vetting (risk score + red flags) before the reviewer sees it. Never blocks the alert.
+    const risk = await Promise.race([
+      this.vetting.vetApplications(applicationIds).catch((e) => { this.logger.warn(`Vetting failed: ${e.message}`); return null; }),
+      new Promise<null>((r) => setTimeout(() => r(null), 25_000)),
+    ]);
+
     // Send Discord notification
     const sent = await this.discord.sendApplicationNotification({
       companyName: first.company_name,
@@ -1049,6 +1078,12 @@ export class OnboardingService {
       comments: first.comments || undefined,
       campaigns,
       applicationIds,
+      leadMethod: first.lead_method || undefined,
+      sampleUrl: first.sample_url || undefined,
+      operatingStates: first.operating_states || undefined,
+      riskScore: risk?.score,
+      riskLevel: risk?.level,
+      riskFlags: risk?.flags?.map((f) => f.text),
       dashboardUrl: this.config.get<string>('DASHBOARD_URL', 'http://localhost:3001'),
     });
 

@@ -28,6 +28,14 @@ export async function POST(request: NextRequest) {
       company_state,
       company_country,
       entity_type,
+      traffic_sources,
+      traffic_mix,
+      lead_method,
+      sample_url,
+      consent_language,
+      operating_states,
+      operating_hours,
+      attestations,
       tcpa_agreed,
       terms_agreed,
       campaign_ids,
@@ -41,6 +49,17 @@ export async function POST(request: NextRequest) {
     if (!estimated_volume) return NextResponse.json({ success: false, error: 'Estimated volume is required' }, { status: 400 })
     if (!tcpa_agreed) return NextResponse.json({ success: false, error: 'TCPA agreement is required' }, { status: 400 })
     if (!terms_agreed) return NextResponse.json({ success: false, error: 'Terms agreement is required' }, { status: 400 })
+    const sources: string[] = Array.isArray(traffic_sources) ? traffic_sources.map((x: any) => String(x)).filter(Boolean).slice(0, 20) : []
+    if (sources.length === 0) return NextResponse.json({ success: false, error: 'Pick at least one traffic source' }, { status: 400 })
+    if (!lead_method) return NextResponse.json({ success: false, error: 'Tell us how the calls are generated' }, { status: 400 })
+    if (!/^https?:\/\/\S+\.\S+/.test(String(sample_url ?? '').trim())) return NextResponse.json({ success: false, error: 'A sample ad or landing page URL is required' }, { status: 400 })
+    if (['lead_to_call', 'live_transfer'].includes(lead_method) && String(consent_language ?? '').trim().length < 40) {
+      return NextResponse.json({ success: false, error: 'Consent language is required for lead-to-call and transfer traffic' }, { status: 400 })
+    }
+    const ATTEST_KEYS = ['no_incentivized', 'no_robocalls', 'no_unapproved_transfers', 'owns_traffic', 'creative_approval']
+    if (!attestations || ATTEST_KEYS.some((k) => !attestations?.[k])) {
+      return NextResponse.json({ success: false, error: 'All traffic quality statements must be confirmed' }, { status: 400 })
+    }
     if (!campaign_ids || !Array.isArray(campaign_ids) || campaign_ids.length === 0) {
       return NextResponse.json({ success: false, error: 'At least one campaign must be selected' }, { status: 400 })
     }
@@ -74,7 +93,14 @@ export async function POST(request: NextRequest) {
           email: email?.trim?.()?.toLowerCase?.() ?? '',
           phone: phone?.trim?.() ?? '',
           website: website?.trim?.() || null,
-          traffic_types: 'N/A', // Not collected per requirement
+          traffic_types: sources.join(', '),
+          traffic_sources: [sources.join(', '), String(traffic_mix ?? '').trim()].filter(Boolean).join(' | ').slice(0, 1000),
+          lead_method: String(lead_method).slice(0, 50),
+          sample_url: String(sample_url).trim().slice(0, 500),
+          consent_language: String(consent_language ?? '').trim().slice(0, 3000) || null,
+          operating_states: String(operating_states ?? '').trim().slice(0, 500) || null,
+          operating_hours: String(operating_hours ?? '').trim().slice(0, 200) || null,
+          attestations: { ...Object.fromEntries(ATTEST_KEYS.map((k) => [k, true])), ip, at: new Date().toISOString() },
           estimated_volume: estimated_volume ?? '',
           experience: experience?.trim?.() || null,
           referred_by: referred_by?.trim?.() || null,
@@ -138,6 +164,10 @@ export async function POST(request: NextRequest) {
         ${entity_type?.trim?.() ? `<p style="margin: 6px 0; color: #374151;"><strong>Entity Type:</strong> ${entity_type.trim()}</p>` : ''}
         <p style="margin: 6px 0; color: #374151;"><strong>Campaign(s):</strong> ${campaignNames}</p>
         <p style="margin: 6px 0; color: #374151;"><strong>Estimated Volume:</strong> ${estimated_volume ?? 'N/A'}</p>
+        <p style="margin: 6px 0; color: #374151;"><strong>Traffic:</strong> ${sources.join(', ')}${traffic_mix ? ` (${String(traffic_mix).trim()})` : ''}</p>
+        <p style="margin: 6px 0; color: #374151;"><strong>Method:</strong> ${lead_method}</p>
+        <p style="margin: 6px 0; color: #374151;"><strong>Sample:</strong> ${String(sample_url).trim()}</p>
+        <p style="margin: 6px 0; color: #374151;"><strong>States / Hours:</strong> ${operating_states ?? ''}${operating_hours ? ` / ${operating_hours}` : ''}</p>
         ${experience?.trim?.() ? `<p style="margin: 6px 0; color: #374151;"><strong>Experience:</strong> ${experience.trim()}</p>` : ''}
         ${referred_by?.trim?.() ? `<p style="margin: 6px 0; color: #374151;"><strong>Referred By:</strong> ${referred_by.trim()}</p>` : ''}
         ${comments?.trim?.() ? `<p style="margin: 6px 0; color: #374151;"><strong>Comments:</strong> ${comments.trim()}</p>` : ''}

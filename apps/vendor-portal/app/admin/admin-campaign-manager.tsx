@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import {
   Lock, Loader2, Plus, Pencil, Trash2, ToggleLeft, ToggleRight,
   AlertCircle, CheckCircle2, Search, ArrowUpDown, Shield, X,
-  Save, RefreshCw, Eye, EyeOff
+  Save, RefreshCw, Eye, EyeOff, GitMerge, Zap, RotateCcw, Archive
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -26,13 +26,17 @@ interface Campaign {
   restricted_traffic: string | null
   requirements: string | null
   compliance_notes: string | null
+  hours: string | null
   is_active: boolean
   sort_order: number
+  source?: string
+  manual_overrides?: string[]
+  synced_at?: string | null
   _count?: { applications?: number }
   applications?: any[]
 }
 
-const EMPTY_FORM: Omit<Campaign, 'id' | '_count' | 'applications'> = {
+const EMPTY_FORM: Omit<Campaign, 'id' | '_count' | 'applications' | 'source' | 'manual_overrides' | 'synced_at'> = {
   name: '',
   industry: '',
   call_type: 'Inbound Calls',
@@ -47,6 +51,7 @@ const EMPTY_FORM: Omit<Campaign, 'id' | '_count' | 'applications'> = {
   restricted_traffic: 'Robocalls, Cold Transfers, Auto-dialers',
   requirements: '',
   compliance_notes: '',
+  hours: '',
   is_active: true,
   sort_order: 0,
 }
@@ -83,6 +88,10 @@ export function AdminCampaignManager() {
 
   // Toggling state
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [syncing, setSyncing] = useState(false)
+  const [mergeFrom, setMergeFrom] = useState<Campaign | null>(null)
+  const [mergeInto, setMergeInto] = useState('')
+  const [merging, setMerging] = useState(false)
 
   // Check session on mount
   useEffect(() => {
@@ -204,6 +213,7 @@ export function AdminCampaignManager() {
       restricted_traffic: campaign.restricted_traffic ?? '',
       requirements: campaign.requirements ?? '',
       compliance_notes: campaign.compliance_notes ?? '',
+      hours: campaign.hours ?? '',
       is_active: campaign.is_active ?? true,
       sort_order: campaign.sort_order ?? 0,
     })
@@ -234,7 +244,7 @@ export function AdminCampaignManager() {
       payload.min_duration = payload.min_duration ? parseInt(String(payload.min_duration)) : null
       payload.sort_order = parseInt(String(payload.sort_order)) || 0
       // Clean empty strings to null
-      for (const key of ['description', 'payout_display', 'geographic_focus', 'allowed_traffic', 'restricted_traffic', 'requirements', 'compliance_notes']) {
+      for (const key of ['description', 'payout_display', 'geographic_focus', 'allowed_traffic', 'restricted_traffic', 'requirements', 'compliance_notes', 'hours']) {
         if (!payload[key]?.trim?.()) payload[key] = null
       }
 
@@ -278,7 +288,7 @@ export function AdminCampaignManager() {
       })
       const data = await res.json()
       if (res.ok) {
-        toast.success('Campaign deleted')
+        toast.success(data?.message ?? 'Campaign deleted')
         fetchCampaigns()
       } else {
         toast.error(data?.error ?? data?.message ?? 'Cannot delete campaign')
@@ -288,6 +298,52 @@ export function AdminCampaignManager() {
     } finally {
       setDeletingId(null)
     }
+  }
+
+  // Pull every active TrackDrive offer into the portal now (also runs every 15 min on its own)
+  const syncNow = async () => {
+    setSyncing(true)
+    try {
+      const res = await fetch('/api/admin/campaigns/sync', { method: 'POST', headers: getHeaders() })
+      const data = await res.json()
+      if (res.ok) {
+        const parts = [`${data?.live?.length ?? 0} live`]
+        if (data?.created?.length) parts.push(`${data.created.length} added`)
+        if (data?.merged?.length) parts.push(`${data.merged.length} merged`)
+        if (data?.hidden?.length) parts.push(`${data.hidden.length} hidden`)
+        toast.success(`Synced from TrackDrive: ${parts.join(', ')}`)
+        if (data?.unmatched?.length) toast.message(`Offers not matched to a vertical: ${data.unmatched.join(', ')}`)
+        fetchCampaigns()
+      } else toast.error(data?.error ?? data?.message ?? 'Sync failed')
+    } catch {
+      toast.error('Sync failed')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  const doMerge = async () => {
+    if (!mergeFrom || !mergeInto) return
+    setMerging(true)
+    try {
+      const res = await fetch(`/api/admin/campaigns/${mergeFrom.id}/merge`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ into_id: mergeInto }) })
+      const data = await res.json()
+      if (res.ok) {
+        toast.success(`${data?.message ?? 'Merged'} (${data?.applications_moved ?? 0} applications, ${data?.ios_moved ?? 0} IOs moved)`)
+        setMergeFrom(null); setMergeInto('')
+        fetchCampaigns()
+      } else toast.error(data?.error ?? data?.message ?? 'Merge failed')
+    } catch {
+      toast.error('Merge failed')
+    } finally {
+      setMerging(false)
+    }
+  }
+
+  const resetOverrides = async (c: Campaign) => {
+    const res = await fetch(`/api/admin/campaigns/${c.id}`, { method: 'PATCH', headers: getHeaders(), body: JSON.stringify({ reset_overrides: true }) })
+    if (res.ok) { toast.success('Back on TrackDrive values'); syncNow() }
+    else toast.error('Failed to reset')
   }
 
   const getAppCount = (c: Campaign) => {
@@ -372,6 +428,15 @@ export function AdminCampaignManager() {
             Refresh
           </button>
           <button
+            onClick={syncNow}
+            disabled={syncing}
+            className="rounded-lg border border-[#b87333]/30 bg-[#b87333]/5 px-3 py-2 text-sm font-medium text-[#b87333] hover:bg-[#b87333]/10 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            title="Pull every active TrackDrive offer into the portal (runs automatically every 15 minutes)"
+          >
+            {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+            Sync from TrackDrive
+          </button>
+          <button
             onClick={openAdd}
             className="rounded-lg bg-[#b87333] px-4 py-2 text-sm font-semibold text-white hover:bg-[#9a5f28] transition-colors flex items-center gap-1.5"
           >
@@ -436,14 +501,27 @@ export function AdminCampaignManager() {
                 ) : (
                   filtered.map((c: Campaign) => {
                     const appCount = getAppCount(c)
-                    const isRTB = (c.name ?? '').toLowerCase().includes('rtb')
-                    const payoutLabel = isRTB ? 'Variable' : (c.payout_display ?? `$${c.payout ?? 0}`)
+                    const payoutLabel = c.payout_display ?? `$${c.payout ?? 0}`
+                    const pinned = c.manual_overrides ?? []
                     return (
                       <tr key={c.id} className={cn('border-b border-gray-100 hover:bg-gray-50/50 transition-colors', !c.is_active && 'opacity-60')}>
                         <td className="px-4 py-3 text-gray-400 font-mono text-xs">{c.sort_order ?? 0}</td>
                         <td className="px-4 py-3">
-                          <p className="font-medium text-gray-900">{c.name ?? ''}</p>
-                          {c.geographic_focus && <p className="text-xs text-gray-400">{c.geographic_focus}</p>}
+                          <p className="font-medium text-gray-900 flex items-center gap-1.5 flex-wrap">
+                            {c.name ?? ''}
+                            {c.source === 'trackdrive' && (
+                              <span className="text-[10px] font-semibold uppercase tracking-wide rounded-full bg-blue-50 text-blue-700 px-1.5 py-0.5">TrackDrive</span>
+                            )}
+                          </p>
+                          {c.geographic_focus && <p className="text-xs text-gray-400">{c.geographic_focus}{c.hours ? ` · ${c.hours}` : ''}</p>}
+                          {c.source === 'trackdrive' && pinned.length > 0 && (
+                            <p className="text-[11px] text-amber-700 mt-0.5 flex items-center gap-1">
+                              Edited by hand: {pinned.join(', ')}
+                              <button onClick={() => resetOverrides(c)} className="underline hover:text-amber-900 inline-flex items-center gap-0.5" title="Go back to the values from TrackDrive">
+                                <RotateCcw className="h-3 w-3" /> reset
+                              </button>
+                            </p>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-gray-600">{c.industry ?? ''}</td>
                         <td className="px-4 py-3 text-gray-600 text-xs">{c.call_type ?? ''}</td>
@@ -484,25 +562,24 @@ export function AdminCampaignManager() {
                               <Pencil className="h-4 w-4" />
                             </button>
                             <button
-                              onClick={() => {
-                                if (appCount > 0) {
-                                  toast.error('Cannot delete — campaign has applications')
-                                  return
-                                }
-                                if (confirm(`Delete "${c.name}"? This cannot be undone.`)) {
-                                  deleteCampaign(c.id)
-                                }
-                              }}
-                              disabled={deletingId === c.id || appCount > 0}
-                              className={cn(
-                                'rounded-md p-1.5 transition-colors',
-                                appCount > 0
-                                  ? 'text-gray-200 cursor-not-allowed'
-                                  : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
-                              )}
-                              title={appCount > 0 ? 'Cannot delete — has applications' : 'Delete'}
+                              onClick={() => { setMergeFrom(c); setMergeInto('') }}
+                              className="rounded-md p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                              title="Merge into another campaign (moves applications and IOs)"
                             >
-                              {deletingId === c.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                              <GitMerge className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                const msg = appCount > 0
+                                  ? `"${c.name}" has ${appCount} application(s), so it will be archived (hidden everywhere, history kept). Tip: use Merge to move those applications to another campaign first. Continue?`
+                                  : `Delete "${c.name}"? This cannot be undone.`
+                                if (confirm(msg)) deleteCampaign(c.id)
+                              }}
+                              disabled={deletingId === c.id}
+                              className="rounded-md p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                              title={appCount > 0 ? 'Archive (has applications)' : 'Delete'}
+                            >
+                              {deletingId === c.id ? <Loader2 className="h-4 w-4 animate-spin" /> : appCount > 0 ? <Archive className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
                             </button>
                           </div>
                         </td>
@@ -662,17 +739,34 @@ export function AdminCampaignManager() {
                   </div>
                 </div>
 
-                {/* Geographic Focus */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Geographic Focus</label>
-                  <input
-                    type="text"
-                    value={form.geographic_focus ?? ''}
-                    onChange={(e: any) => setForm({ ...form, geographic_focus: e?.target?.value ?? '' })}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
-                    placeholder="Nationwide"
-                  />
+                {/* Geographic Focus + Hours */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Geographic Focus</label>
+                    <input
+                      type="text"
+                      value={form.geographic_focus ?? ''}
+                      onChange={(e: any) => setForm({ ...form, geographic_focus: e?.target?.value ?? '' })}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
+                      placeholder="Nationwide"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Hours</label>
+                    <input
+                      type="text"
+                      value={form.hours ?? ''}
+                      onChange={(e: any) => setForm({ ...form, hours: e?.target?.value ?? '' })}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b87333]/50"
+                      placeholder="9:00 AM to 9:00 PM EST, Mon to Sun"
+                    />
+                  </div>
                 </div>
+                {editingId && campaigns.find((x) => x.id === editingId)?.source === 'trackdrive' && (
+                  <p className="text-xs text-blue-700 bg-blue-50 rounded-lg px-3 py-2">
+                    Synced from TrackDrive. Any field you change here is pinned and the sync won&apos;t overwrite it.
+                  </p>
+                )}
 
                 {/* Description */}
                 <div>
@@ -756,6 +850,34 @@ export function AdminCampaignManager() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Merge Modal */}
+      {mergeFrom && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={(e: any) => { if (e?.target === e?.currentTarget) setMergeFrom(null) }}>
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-6">
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2"><GitMerge className="h-5 w-5 text-blue-600" /> Merge campaign</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Move all applications and IOs from <b>{mergeFrom.name}</b> into the campaign below. <b>{mergeFrom.name}</b> is then archived.
+            </p>
+            <select
+              value={mergeInto}
+              onChange={(e: any) => setMergeInto(e?.target?.value ?? '')}
+              className="mt-4 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+            >
+              <option value="">Keep this one…</option>
+              {campaigns.filter((x) => x.id !== mergeFrom.id).map((x) => (
+                <option key={x.id} value={x.id}>{x.name}{x.is_active ? '' : ' (inactive)'}</option>
+              ))}
+            </select>
+            <div className="flex justify-end gap-3 mt-5">
+              <button onClick={() => setMergeFrom(null)} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">Cancel</button>
+              <button onClick={doMerge} disabled={!mergeInto || merging} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1.5">
+                {merging ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitMerge className="h-4 w-4" />} Merge
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -63,6 +63,12 @@ export class DiscordService {
     campaigns: string[];
     applicationIds: string[];
     dashboardUrl?: string;
+    leadMethod?: string;
+    sampleUrl?: string;
+    operatingStates?: string;
+    riskScore?: number;
+    riskLevel?: string;
+    riskFlags?: string[];
   }): Promise<boolean> {
     const webhookUrl = await this.getWebhookUrl();
     if (!webhookUrl) {
@@ -100,6 +106,18 @@ export class DiscordService {
     }
     if (data.comments) {
       embed.fields!.push({ name: 'Comments', value: data.comments.substring(0, 200), inline: false });
+    }
+    if (data.leadMethod) embed.fields!.push({ name: 'Call Method', value: data.leadMethod, inline: true });
+    if (data.operatingStates) embed.fields!.push({ name: 'States', value: data.operatingStates.substring(0, 100), inline: true });
+    if (data.sampleUrl) embed.fields!.push({ name: 'Sample', value: data.sampleUrl.substring(0, 200), inline: false });
+    if (data.riskLevel) {
+      const icon = data.riskLevel === 'high' ? '🔴' : data.riskLevel === 'medium' ? '🟡' : '🟢';
+      embed.color = data.riskLevel === 'high' ? 0xef4444 : data.riskLevel === 'medium' ? 0xf59e0b : 0xa3e635;
+      embed.fields!.push({
+        name: `${icon} Vetting: ${data.riskLevel.toUpperCase()} risk (${data.riskScore ?? 0}/100)`,
+        value: (data.riskFlags?.length ? data.riskFlags.map((f) => `• ${f}`).join('\n') : 'No red flags found').substring(0, 1000),
+        inline: false,
+      });
     }
 
     embed.fields!.push({

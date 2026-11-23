@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Phone, MapPin, Clock, DollarSign, ChevronRight, CheckCircle2, Briefcase, ArrowRight } from 'lucide-react'
+import { Phone, MapPin, Clock, DollarSign, CheckCircle2, Briefcase, ArrowRight, Timer, CalendarClock } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 interface Campaign {
@@ -18,6 +18,7 @@ interface Campaign {
   min_duration: number | null
   requirements: string | null
   description: string | null
+  hours?: string | null
 }
 
 export function CampaignListing({ campaigns }: { campaigns: Campaign[] }) {
@@ -95,7 +96,7 @@ export function CampaignListing({ campaigns }: { campaigns: Campaign[] }) {
                         </span>
                       </div>
                       {campaign?.description && (
-                        <p className="mt-1 text-sm text-white/50 line-clamp-2">{campaign.description}</p>
+                        <p className="mt-1 text-sm text-white/50">{campaign.description}</p>
                       )}
                       <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                         <div className="flex items-center gap-1.5 text-white/60">
@@ -104,7 +105,7 @@ export function CampaignListing({ campaigns }: { campaigns: Campaign[] }) {
                         </div>
                         <div className="flex items-center gap-1.5 text-white/60">
                           <DollarSign className="h-3.5 w-3.5 text-[#c4ff00]" />
-                          <span className="font-medium text-[#c4ff00]">{(campaign?.name ?? '').toLowerCase().includes('rtb') ? 'Variable' : (campaign?.payout_display ?? `$${campaign?.payout ?? '0'}`)}</span>
+                          <span className="font-medium text-[#c4ff00]">{campaign?.payout_display ?? `$${campaign?.payout ?? '0'}`}</span>
                           <span className="text-xs text-white/40">{formatPayoutType(campaign?.payout_type ?? '')}</span>
                         </div>
                         {campaign?.geographic_focus && (
@@ -115,13 +116,23 @@ export function CampaignListing({ campaigns }: { campaigns: Campaign[] }) {
                         )}
                         {campaign?.min_duration != null && (campaign?.min_duration ?? 0) > 0 && (
                           <div className="flex items-center gap-1.5 text-white/60">
-                            <Clock className="h-3.5 w-3.5 text-[#c4ff00]/50" />
+                            <Timer className="h-3.5 w-3.5 text-[#c4ff00]/50" />
                             <span>{campaign.min_duration}s min duration</span>
                           </div>
                         )}
+                        {campaign?.hours && (
+                          <div className="flex items-center gap-1.5 text-white/60 col-span-2">
+                            <Clock className="h-3.5 w-3.5 text-[#c4ff00]/50" />
+                            <span>{campaign.hours}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1.5 text-white/60 col-span-2">
+                          <CalendarClock className="h-3.5 w-3.5 text-[#c4ff00]/50" />
+                          <span>Paid biweekly, Net 15</span>
+                        </div>
                       </div>
                       {campaign?.requirements && (
-                        <p className="mt-2 text-xs text-white/40 line-clamp-2">
+                        <p className="mt-2 text-xs text-white/40 line-clamp-3">
                           <span className="font-medium text-white/60">Requirements:</span> {campaign.requirements}
                         </p>
                       )}
