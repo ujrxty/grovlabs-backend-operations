@@ -61,7 +61,7 @@ export const VERTICALS: Vertical[] = [
 ];
 
 /** Fields the sync writes. If an admin edits one by hand it goes into manual_overrides and the sync leaves it alone. */
-export const SYNCED_FIELDS = ['name', 'industry', 'call_type', 'description', 'payout', 'payout_display', 'payout_type', 'min_duration', 'geographic_focus', 'requirements', 'hours', 'is_active'];
+export const SYNCED_FIELDS = ['name', 'sort_order', 'industry', 'call_type', 'description', 'payout', 'payout_display', 'payout_type', 'min_duration', 'geographic_focus', 'requirements', 'hours', 'is_active'];
 
 const DEFAULT_HOURS = '9:00 AM to 9:00 PM EST, Mon to Sun';
 const SYNC_EVERY_MS = 15 * 60 * 1000;
@@ -161,6 +161,7 @@ export class CampaignSyncService implements OnModuleInit, OnModuleDestroy {
 
       const result = { live: [] as string[], hidden: [] as string[], created: [] as string[], merged: [] as string[], unmatched };
       const all = await this.prisma.campaign.findMany({ where: { archived: false }, include: { _count: { select: { applications: true } } } });
+      const liveIds = new Set<string>();
 
       for (const v of VERTICALS) {
         const vOffers = byVertical.get(v.key) || [];
@@ -184,6 +185,7 @@ export class CampaignSyncService implements OnModuleInit, OnModuleDestroy {
           payout: pay.payout, payout_display: pay.display, payout_type: pay.type,
           min_duration: pay.minDuration ?? (v.industry === 'Home Services' ? 60 : null),
           geographic_focus: 'Nationwide', requirements: v.requirements, hours: DEFAULT_HOURS, is_active: true,
+          sort_order: (VERTICALS.indexOf(v) + 1) * 10,
         };
 
         if (!primary) {
@@ -217,6 +219,17 @@ export class CampaignSyncService implements OnModuleInit, OnModuleDestroy {
           result.merged.push(`${dup.name} → ${v.name}`);
         }
         result.live.push(`${v.name} (${vOffers.length} offer${vOffers.length > 1 ? 's' : ''}, ${pay.display})`);
+        liveIds.add(primary.id);
+      }
+
+      // Only live TrackDrive offers appear on the portal: hide every other active campaign (manual or stale).
+      // Safety: if TrackDrive returned no offers at all (API hiccup), hide nothing.
+      if (offers.length > 0 && liveIds.size > 0) {
+        const others = await this.prisma.campaign.findMany({ where: { archived: false, is_active: true, id: { notIn: [...liveIds] } } });
+        for (const c of others) {
+          await this.prisma.campaign.update({ where: { id: c.id }, data: { is_active: false, synced_at: new Date() } });
+          result.hidden.push(c.name);
+        }
       }
 
       this.lastResult = { at: new Date().toISOString(), ...result };
