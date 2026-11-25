@@ -21,6 +21,9 @@ export const CAMPAIGN_TO_TD_OFFER: Record<string, string> = {
   'Final Expense Inbounds': 'Final Expense inbounds RTB', 'Pest Control CPL': 'Pest Control CPL', 'ACA Transfers': 'ACA Transfers',
   'SSDI Transfers': 'SSDI', 'Final Expense CPA': 'Final Expense',
 };
+export { downloadCallGridRecording } from './callgrid-recording.js';
+import { downloadCallGridRecording, isCallGridRecording } from './callgrid-recording.js';
+
 const norm = (s: any) => String(s || '').toLowerCase().replace(/^\d+\s*-\s*/, '').replace(/[^a-z0-9]/g, '');
 type Ref = { id: string; name: string };
 
@@ -133,6 +136,7 @@ export class CallGridService {
 
   /** CallGrid recording links may need the API key; try plain first (same as TrackDrive links). */
   async downloadRecording(url: string): Promise<Buffer> {
+    if (isCallGridRecording(url)) return downloadCallGridRecording(url, this.config.get<string>('CALLGRID_API_KEY') || '');
     try {
       return Buffer.from((await axios.get(url, { responseType: 'arraybuffer', timeout: 120000 })).data);
     } catch (e: any) {

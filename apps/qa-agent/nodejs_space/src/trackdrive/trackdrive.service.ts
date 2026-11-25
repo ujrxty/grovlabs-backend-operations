@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
+import { downloadCallGridRecording, isCallGridRecording } from './callgrid-recording.js';
 
 @Injectable()
 export class TrackDriveService {
@@ -49,6 +50,8 @@ export class TrackDriveService {
   }
 
   async downloadRecording(recordingUrl: string): Promise<Buffer> {
+    // CallGrid calls flow through the same pipelines (bot, review); their recordings need the CallGrid key.
+    if (isCallGridRecording(recordingUrl)) return downloadCallGridRecording(recordingUrl, this.configService.get<string>('CALLGRID_API_KEY') || '');
     try {
       const response = await axios.get(recordingUrl, {
         responseType: 'arraybuffer',

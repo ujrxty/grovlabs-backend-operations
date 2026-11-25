@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { downloadCallGridRecording, isCallGridRecording } from '../trackdrive/callgrid-recording.js';
 import FormData from 'form-data';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
@@ -169,6 +170,7 @@ export class SalesQaService {
   }
 
   private async downloadRecording(url: string): Promise<Buffer> {
+    if (isCallGridRecording(url)) return downloadCallGridRecording(url);
     const resp = await axios.get(url, {
       responseType: 'arraybuffer',
       timeout: 120000,

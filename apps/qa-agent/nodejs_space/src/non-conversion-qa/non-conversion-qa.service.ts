@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
+import { downloadCallGridRecording } from '../trackdrive/callgrid-recording.js';
 import { transcribeDetailed, TranscriptMetrics } from '../transcription/detailed-transcribe.js';
 
 /** Verdicts that claim no live agent ever engaged — the ones that were firing falsely. */
@@ -91,6 +92,8 @@ export class NonConversionQaService {
 
   /** Download a recording following redirects (TrackDrive -> signed S3). */
   private async downloadRecording(url: string): Promise<Buffer> {
+    // CallGrid recordings (api.callgrid.com/api/recordings/...) need the API key, then 302 to signed S3.
+    if (/^https:\/\/api\.callgrid\.com\//.test(url)) return downloadCallGridRecording(url, this.config.get<string>('CALLGRID_API_KEY', ''));
     const resp = await axios.get(url, {
       responseType: 'arraybuffer',
       timeout: 120000,
