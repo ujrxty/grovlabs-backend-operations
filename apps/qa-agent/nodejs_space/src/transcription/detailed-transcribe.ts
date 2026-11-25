@@ -47,14 +47,48 @@ function fmtTime(s: number): string {
   return `${m}:${String(sec).padStart(2, '0')}`;
 }
 
+/** OpenAI's transcription upload limit is 25 MB; stay under it. */
+const MAX_UPLOAD = 24 * 1024 * 1024;
+
+/**
+ * Name/type the upload by its real format (TrackDrive sends MP3, CallGrid sends WAV).
+ * A WAV over the upload limit is cut to its first ~24 MB (about 12 minutes at 16 kHz),
+ * with the RIFF and data chunk sizes rewritten so the header stays valid.
+ */
+export function prepareAudio(audio: Buffer): { buf: Buffer; name: string; type: string } {
+  const magic = audio.subarray(0, 4).toString('latin1');
+  if (magic === 'RIFF' && audio.subarray(8, 12).toString('latin1') === 'WAVE') {
+    let buf = audio;
+    if (audio.length > MAX_UPLOAD) {
+      let off = 12;
+      while (off + 8 <= audio.length) {
+        const id = audio.subarray(off, off + 4).toString('latin1');
+        const size = audio.readUInt32LE(off + 4);
+        if (id === 'data') {
+          const keep = Math.max(0, MAX_UPLOAD - (off + 8)) & ~1;
+          buf = Buffer.from(audio.subarray(0, off + 8 + keep));
+          buf.writeUInt32LE(keep, off + 4);
+          buf.writeUInt32LE(buf.length - 8, 4);
+          break;
+        }
+        off += 8 + size + (size & 1);
+      }
+    }
+    return { buf, name: 'call.wav', type: 'audio/wav' };
+  }
+  if (magic === 'OggS') return { buf: audio, name: 'call.ogg', type: 'audio/ogg' };
+  return { buf: audio, name: 'call.mp3', type: 'audio/mpeg' };
+}
+
 async function callApi(
   audio: Buffer,
   apiKey: string,
   model: string,
 ): Promise<{ text: string; segments: TranscriptSegment[]; diarized: boolean }> {
   const diarize = model.includes('diarize');
+  const file = prepareAudio(audio);
   const fd = new FormData();
-  fd.append('file', new Blob([new Uint8Array(audio)], { type: 'audio/mpeg' }), 'call.mp3');
+  fd.append('file', new Blob([new Uint8Array(file.buf)], { type: file.type }), file.name);
   fd.append('model', model);
   fd.append('response_format', diarize ? 'diarized_json' : 'verbose_json');
   if (diarize) fd.append('chunking_strategy', 'auto');

@@ -95,28 +95,34 @@ export class CallGridService {
     return this.mapCache;
   }
 
-  /** A CallGrid call as the payload TrackDrive's call webhook would have sent (id prefixed "cg:"). */
-  async toTrackdrivePayload(c: any): Promise<Record<string, any>> {
+  /**
+   * A CallGrid call as the payload TrackDrive's call webhook would have sent (id prefixed "cg:").
+   * GET /call/{id} nests every field under `tags` as strings ("true"/"312") and puts the recording
+   * in `audioUrl`; the list endpoint returns the same fields flattened. Accept both shapes.
+   */
+  async toTrackdrivePayload(raw: any): Promise<Record<string, any>> {
+    const c: any = { ...raw, ...(raw?.tags || {}) };
+    const yes = (v: any) => v === true || v === 1 || v === 'true' || v === '1';
     const m = await this.maps().catch((e) => { this.logger.warn(`CallGrid name map failed: ${e.message}`); return null; });
     const b = c.DestinationId ? m?.buyer.get(c.DestinationId) || { id: `cg:${c.DestinationId}`, name: c.DestinationName || '' } : null;
     const s = m?.source.get(c.VendorId) || { id: `cg:${c.VendorId}`, name: c.VendorName || 'Unknown' };
     const camp = String(c.CampaignName || '').trim();
-    const converted = !!(c.paid || c.CallPaid || c.converted);
+    const converted = yes(c.paid) || yes(c.CallPaid) || yes(c.converted);
     return {
       platform: 'callgrid',
       id: `cg:${c.id}`,
       callgrid_id: c.id,
-      created_at: c.createdAt,
+      created_at: c.createdAt || c.date || c.UTCISODate,
       offer: CAMPAIGN_TO_TD_OFFER[camp] || camp || 'Unknown',
       offer_id: c.CampaignId || c.campaignId || '',
       buyer: b?.name || '', buyer_id: b?.id || '',
       traffic_source: s.name, traffic_source_name: s.name, traffic_source_id: s.id,
       buyer_converted: converted ? 'Converted' : 'Not Converted',
-      revenue: Number(c.revenue ?? c.RevenueAmount ?? 0) || 0,
-      payout: Number(c.payout ?? c.PayoutAmount ?? 0) || 0,
-      total_duration: Number(c.CallDurationFromInbound ?? c.callDuration ?? 0) || 0,
+      revenue: Number(c.revenue ?? c.RevenueAmount ?? c.CallRevenue ?? 0) || 0,
+      payout: Number(c.payout ?? c.PayoutAmount ?? c.CallPayout ?? 0) || 0,
+      total_duration: Number(c.CallDurationFromInbound ?? c.callDuration ?? c.CallDuration ?? 0) || 0,
       answered_duration: Number(c.CallDurationFromConnect ?? 0) || 0,
-      recording_url: c.callRecordingUrl || c.s3FileUrl || '',
+      recording_url: c.audioUrl || c.callRecordingUrl || c.s3FileUrl || '',
       caller_number: c.CallerId || c.from || '',
       caller_state: c.InboundStateCode || '',
       'token-state': c.InboundStateCode || '',
