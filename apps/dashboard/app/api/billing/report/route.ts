@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { cgCallsSafe } from '@/lib/callgrid'
 
 const TD_BASE_URL = `https://${process.env.TD_SUBDOMAIN || 'grovlabs'}.trackdrive.com/api/v1`
 
@@ -75,6 +76,9 @@ async function fetchAllConvertedCalls(
     if (page > 30) break // Safety: max 7500 calls
   }
 
+  // CallGrid calls from the same publisher (mapped to this TrackDrive traffic source id)
+  const cg = (await cgCallsSafe(from, to)).filter((c) => c.buyer_converted && String(c.traffic_source_id) === String(trafficSourceId))
+  allCalls.push(...(cg as any[]))
   return allCalls
 }
 

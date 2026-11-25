@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { cgCallsSafe } from '@/lib/callgrid'
 
 const TD_BASE_URL = `https://${process.env.TD_SUBDOMAIN || 'grovlabs'}.trackdrive.com/api/v1`
 
@@ -72,6 +73,9 @@ async function fetchAllConvertedCallsForBuyer(
     if (page > 30) break // Safety: max 7500 calls
   }
 
+  // CallGrid calls that went to this buyer (mapped to this TrackDrive buyer id)
+  const cg = (await cgCallsSafe(from, to)).filter((c) => c.buyer_converted && String(c.buyer_id) === String(buyerId))
+  allCalls.push(...(cg as any[]))
   return allCalls
 }
 

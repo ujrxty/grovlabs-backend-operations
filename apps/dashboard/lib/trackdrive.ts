@@ -1,4 +1,6 @@
 // TrackDrive API client for grovlabs.trackdrive.com
+// During the move to CallGrid, call-based numbers here include CallGrid calls too (lib/callgrid.ts).
+import { cgCallsSafe } from './callgrid'
 
 const TD_BASE_URL = `https://${process.env.TD_SUBDOMAIN || 'grovlabs'}.trackdrive.com/api/v1`
 
@@ -87,9 +89,10 @@ export async function getTDCallsCount(from: Date, to: Date): Promise<{ total: nu
     },
   })
 
+  const cg = await cgCallsSafe(from, to)
   return {
-    total: totalRes?.metadata?.total_count ?? 0,
-    converted: convertedRes?.metadata?.total_count ?? 0,
+    total: (totalRes?.metadata?.total_count ?? 0) + cg.length,
+    converted: (convertedRes?.metadata?.total_count ?? 0) + cg.filter((c) => c.buyer_converted).length,
   }
 }
 
@@ -130,7 +133,17 @@ export async function getTDRevenueForPeriod(from: Date, to: Date): Promise<TDRev
 
     if (!calls || calls.length === 0) break
 
-    for (const call of calls) {
+    for (const call of calls) addRevenue(call)
+
+    if (calls.length < perPage) break
+    page++
+    // Safety: max 20 pages (5000 converted calls)
+    if (page > 20) break
+  }
+
+  for (const call of await cgCallsSafe(from, to)) if (call.buyer_converted) addRevenue(call)
+
+  function addRevenue(call: any) {
       const rev = parseFloat(call.revenue) || parseFloat(call.buyer_revenue) || 0
       const pay = parseFloat(call.payout) || parseFloat(call.traffic_source_payout) || 0
       totalRevenue += rev
@@ -152,12 +165,6 @@ export async function getTDRevenueForPeriod(from: Date, to: Date): Promise<TDRev
       existingOffer.payout += pay
       existingOffer.conversions++
       offerMap.set(offerName, existingOffer)
-    }
-
-    if (calls.length < perPage) break
-    page++
-    // Safety: max 20 pages (5000 converted calls)
-    if (page > 20) break
   }
 
   const byBuyer = Array.from(buyerMap.entries())
@@ -305,7 +312,16 @@ export async function getVendorScorecard(from: Date, to: Date): Promise<Scorecar
 
     if (!calls || calls.length === 0) break
 
-    for (const call of calls) {
+    for (const call of calls) addCall(call)
+
+    if (calls.length < perPage) break
+    page++
+    if (page > 40) break // Safety: max 10,000 calls
+  }
+
+  for (const call of await cgCallsSafe(from, to)) addCall(call)
+
+  function addCall(call: any) {
       const vName = call.traffic_source || 'Unknown Vendor'
       const vId = String(call.traffic_source_id ?? vName)
       const cName = call.offer || 'Unknown Campaign'
@@ -338,11 +354,6 @@ export async function getVendorScorecard(from: Date, to: Date): Promise<Scorecar
         if (isNoAnswer) a.noAnswers++
         if (isConnected) a.connected++
       }
-    }
-
-    if (calls.length < perPage) break
-    page++
-    if (page > 40) break // Safety: max 10,000 calls
   }
 
   const round2 = (n: number) => Math.round(n * 100) / 100

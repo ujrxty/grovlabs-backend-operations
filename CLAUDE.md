@@ -68,12 +68,15 @@ Manual deploy: Render Dashboard → select service → Manual Deploy
 - `TD_PUBLIC_KEY` — TrackDrive API (for billing page)
 - `TD_PRIVATE_KEY` — TrackDrive API (for billing page)
 - `TD_SUBDOMAIN` — e.g. `grovlabs`
+- `CALLGRID_API_KEY` — CallGrid Organization API key (Admin). Billing reports, revenue cards and the vendor scorecard include CallGrid calls when set
 - `QA_AGENT_URL` — e.g. `https://api.grovlabs.com`
 
 **QA Agent (`grovlabs-qa-agent`):**
 - `TRACKDRIVE_PUBLIC_KEY` — TrackDrive API public key
 - `TRACKDRIVE_PRIVATE_KEY` — TrackDrive API private key
 - `TRACKDRIVE_BASE_URL` — e.g. `https://grovlabs.trackdrive.com`
+- `CALLGRID_API_KEY` — CallGrid Organization API key (Admin), for the CallGrid call webhook
+- `CALLGRID_WEBHOOK_KEY` — shared secret; CallGrid's webhook calls `/webhooks/callgrid?key=<this>`
 - `OPENAI_API_KEY` — for Whisper transcription + GPT-4o analysis
 - `DISCORD_WEBHOOK_URL` — for QA flagged call alerts
 - `TELEGRAM_BOT_TOKEN` — from @BotFather (for onboarding notifications)
@@ -349,6 +352,20 @@ Uses Resend for emails. Templates in `n2n.service.ts` with company details from 
 2. Get chat ID (add bot to group, send message, check updates API)
 3. Set webhook: `https://api.telegram.org/bot{TOKEN}/setWebhook?url={QA_AGENT_URL}/api/bot/webhook`
 4. Add env vars to QA Agent on Render
+
+## CallGrid (replacing TrackDrive, Nov 2026)
+
+Calls are moving from TrackDrive to CallGrid publisher by publisher, so both run in parallel.
+CallGrid data is mapped onto the TrackDrive ids everything already keys on: each CallGrid
+destination's notes say `TrackDrive: <buyer name>`, vendors match TrackDrive traffic sources by
+name, campaigns map to TrackDrive offer names (`CAMPAIGN_TO_TD_OFFER`). CallGrid call ids appear as `cg:<cuid>`.
+
+- **QA agent:** `src/trackdrive/callgrid.service.ts`; `POST /webhooks/callgrid?key=...` with body
+  `{"CallId":"[[tag:CallId]]"}` (CallGrid CALL webhook on CALL_ENDED + RECORDING_COMPLETED) runs the
+  normal QA pipeline. Recording must be enabled on the CallGrid campaign.
+- **Dashboard:** `lib/callgrid.ts`; billing reports, revenue cards and vendor scorecard merge CallGrid calls.
+- **API quirk:** `PATCH /api/campaign/{id}` with `campaignSources` replaces the whole source list and
+  issues new Grid IDs. Never use it on a campaign that already has sources.
 
 ## TrackDrive Integration
 

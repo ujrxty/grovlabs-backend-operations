@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
+import { CallGridService } from '../trackdrive/callgrid.service.js';
 import { TranscriptionService } from '../transcription/transcription.service.js';
 import { AnalysisService, AnalysisResult } from '../analysis/analysis.service.js';
 import { DiscordService } from '../discord/discord.service.js';
@@ -14,6 +15,7 @@ export class CallsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly trackdrive: TrackDriveService,
+    private readonly callgrid: CallGridService,
     private readonly transcription: TranscriptionService,
     private readonly analysis: AnalysisService,
     private readonly discord: DiscordService,
@@ -165,7 +167,9 @@ export class CallsService {
 
       // Step 5: Download recording
       this.logger.log(`Step 5: Downloading recording for ${trackdriveCallId}`);
-      const audioBuffer = await this.trackdrive.downloadRecording(recordingUrl);
+      const audioBuffer = trackdriveCallId.startsWith('cg:')
+        ? await this.callgrid.downloadRecording(recordingUrl)
+        : await this.trackdrive.downloadRecording(recordingUrl);
       this.logger.log(`Recording downloaded: ${audioBuffer.length} bytes`);
 
       // Step 6: Transcribe

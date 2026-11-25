@@ -2,6 +2,7 @@ import { Controller, Post, Get, Body, Headers, Query, Logger, HttpCode, HttpStat
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CallsService } from '../calls/calls.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
+import { CallGridService } from '../trackdrive/callgrid.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { NtfyService } from '../ntfy/ntfy.service.js';
 import { NonConversionQaService } from '../non-conversion-qa/non-conversion-qa.service.js';
@@ -20,7 +21,36 @@ export class WebhooksController {
     private readonly ntfy: NtfyService,
     private readonly nonConversionQa: NonConversionQaService,
     private readonly discord: DiscordService,
+    private readonly callgrid: CallGridService,
   ) {}
+
+  /**
+   * CallGrid call webhook (TrackDrive replacement). Set up in CallGrid as a CALL webhook on
+   * CALL_ENDED and RECORDING_COMPLETED, POST JSON {"CallId": "[[tag:CallId]]"} to
+   * /webhooks/callgrid?key=CALLGRID_WEBHOOK_KEY. We fetch the call from the CallGrid API and run it
+   * through the same pipeline as a TrackDrive webhook (QA, live alert, ping link).
+   * Safe to receive twice: a call is only analyzed once; a call skipped for "no recording" at
+   * CALL_ENDED is picked up again when RECORDING_COMPLETED arrives.
+   */
+  @Post('callgrid')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Receive CallGrid call webhooks' })
+  async handleCallgridWebhook(@Req() req: Request, @Body() body: any, @Query() query: Record<string, string>) {
+    const key = process.env.CALLGRID_WEBHOOK_KEY;
+    if (key && query?.key !== key) return { status: 'ignored', reason: 'bad key' };
+    const cgId = String(body?.CallId || body?.callId || body?.id || query?.CallId || '').trim();
+    if (!cgId || /^\[\[/.test(cgId)) return { status: 'ignored', reason: 'no CallId' };
+    if (!this.callgrid.enabled()) return { status: 'ignored', reason: 'CALLGRID_API_KEY not set' };
+    try {
+      const call = await this.callgrid.getCall(cgId);
+      if (!call?.id) return { status: 'ignored', reason: 'call not found in CallGrid' };
+      const payload = await this.callgrid.toTrackdrivePayload(call);
+      return this.processTrackdriveWebhook(req, {}, payload);
+    } catch (e: any) {
+      this.logger.error(`CallGrid webhook ${cgId}: ${e.message}`);
+      return { status: 'error', message: 'Failed to load call from CallGrid' };
+    }
+  }
 
   @Get('trackdrive')
   @ApiOperation({ summary: 'Receive TrackDrive webhook events (GET)' })
