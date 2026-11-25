@@ -9,6 +9,12 @@ import { NonConversionQaService } from '../non-conversion-qa/non-conversion-qa.s
 import { DiscordService } from '../discord/discord.service.js';
 import { Request } from 'express';
 
+/** "+13125550147" / "3125550147" -> "(312) 555-0147"; anything else as-is, empty -> "Unknown". */
+const fmtPhone = (raw: any): string => {
+  const d = String(raw || '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+  return d.length === 10 ? `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : String(raw || 'Unknown');
+};
+
 @ApiTags('Webhooks')
 @Controller('webhooks')
 export class WebhooksController {
@@ -254,9 +260,11 @@ export class WebhooksController {
             title: `QA Alert: ${review.fault_side.toUpperCase()} Fault`,
             color,
             fields: [
-              { name: 'Call ID', value: review.trackdrive_call_id, inline: true },
+              { name: 'Caller', value: fmtPhone(review.caller_number), inline: true },
               { name: 'Offer', value: review.campaign_name || 'Unknown', inline: true },
-              { name: review.fault_side === 'buyer' ? 'Buyer' : 'Vendor', value: review.fault_side === 'buyer' ? (review.buyer_name || 'Unknown') : review.vendor_name, inline: true },
+              { name: 'Call ID', value: review.trackdrive_call_id, inline: true },
+              { name: 'Publisher', value: review.vendor_name || 'Unknown', inline: true },
+              { name: 'Buyer', value: review.buyer_name || 'Unknown', inline: true },
               { name: 'Reason', value: review.outcome_reason.replace(/_/g, ' '), inline: true },
               { name: 'Duration', value: `${review.duration}s`, inline: true },
               { name: 'What Happened', value: (review.what_happened || '').slice(0, 500), inline: false },
@@ -275,7 +283,7 @@ export class WebhooksController {
         // Also send ntfy alert
         await this.ntfy.sendNotification({
           title: `QA: ${review.fault_side.toUpperCase()} fault - ${review.campaign_name || 'Unknown'}`,
-          message: `${review.outcome_reason.replace(/_/g, ' ')}\n${review.what_happened?.slice(0, 200) || ''}`,
+          message: `${fmtPhone(review.caller_number)} | ${review.vendor_name || '?'} -> ${review.buyer_name || '?'}\n${review.outcome_reason.replace(/_/g, ' ')}\n${review.what_happened?.slice(0, 200) || ''}`,
           priority: 'high',
           tags: ['warning'],
         });
