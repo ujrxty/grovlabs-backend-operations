@@ -49,11 +49,13 @@ export class CallsService {
       },
     });
 
+    // Keyed by call: a second webhook for the same call (CallGrid sends CALL_ENDED then
+    // RECORDING_COMPLETED) refreshes the waiting job instead of queuing a duplicate.
     await this.jobQueue.addJob('process_call', {
       callId: call.id,
       trackdriveCallId,
       webhookData,
-    });
+    }, 3, `call:${trackdriveCallId}`);
 
     return call.id;
   }

@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 
 export interface Job<T = any> {
   id: string;
+  /** Dedupe key: a second job with the same key while this one waits replaces its data. */
+  key?: string;
   data: T;
   attempts: number;
   maxAttempts: number;
@@ -9,6 +11,9 @@ export interface Job<T = any> {
   error?: string;
   createdAt: Date;
 }
+
+/** Max time one job may run before the queue moves on (it is retried like any other failure). */
+const JOB_TIMEOUT_MS = 10 * 60 * 1000;
 
 @Injectable()
 export class JobQueueService {
@@ -22,8 +27,21 @@ export class JobQueueService {
     this.logger.log(`Job handler registered: ${name}`);
   }
 
-  async addJob(name: string, data: any, maxAttempts = 3): Promise<string> {
+  /**
+   * Queue a job. With a `key`, a job still waiting for the same key is updated with the newer data
+   * instead of queuing a duplicate (CallGrid sends CALL_ENDED and RECORDING_COMPLETED for every call).
+   */
+  async addJob(name: string, data: any, maxAttempts = 3, key?: string): Promise<string> {
+    if (key) {
+      const waiting = this.queue.find((j) => j.status === 'pending' && j.key === key);
+      if (waiting) {
+        waiting.data = { ...data, _handlerName: name };
+        this.logger.log(`Job ${waiting.id} already queued for ${key}; updated with newer data`);
+        return waiting.id;
+      }
+    }
     const job: Job = {
+      key,
       id: `${name}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       data: { ...data, _handlerName: name },
       attempts: 0,
@@ -65,7 +83,12 @@ export class JobQueueService {
 
     try {
       this.logger.log(`Processing job ${job.id} (attempt ${job.attempts}/${job.maxAttempts})`);
-      await handler(job.data);
+      // Jobs run one at a time, so a hung download/transcription must not block the queue forever.
+      let timer: NodeJS.Timeout | undefined;
+      await Promise.race([
+        handler(job.data),
+        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`timed out after ${JOB_TIMEOUT_MS / 60000} min`)), JOB_TIMEOUT_MS); }),
+      ]).finally(() => clearTimeout(timer));
       job.status = 'completed';
       this.logger.log(`Job ${job.id} completed successfully`);
     } catch (error: any) {
