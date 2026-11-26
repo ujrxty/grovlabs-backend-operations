@@ -21,6 +21,17 @@ export class WebhooksController {
   private readonly logger = new Logger(WebhooksController.name);
   /** Calls whose real-time QA already started (CallGrid sends CALL_ENDED + RECORDING_COMPLETED). */
   private readonly realtimeStarted = new Map<string, number>();
+  /** Calls we already sent the ntfy live-call alert for. */
+  private readonly liveAlerted = new Map<string, number>();
+
+  /** True the first time a key is seen within 24h (and records it); prunes old keys. */
+  private firstTime(seen: Map<string, number>, key: string): boolean {
+    const now = Date.now();
+    for (const [k, t] of seen) if (now - t > 86400_000) seen.delete(k);
+    if (seen.has(key)) return false;
+    seen.set(key, now);
+    return true;
+  }
 
   constructor(
     private readonly callsService: CallsService,
@@ -141,8 +152,9 @@ export class WebhooksController {
       // Link call to ping for conversion tracking
       await this.linkCallToPing(payload);
 
-      // Send ntfy notification for live call
-      this.ntfy.sendLiveCallAlert({
+      // Send ntfy notification for live call, once per call: CallGrid fires two webhooks per call
+      // (CALL_ENDED + RECORDING_COMPLETED) and resends must not ping the phone again.
+      if (this.firstTime(this.liveAlerted, String(callId))) this.ntfy.sendLiveCallAlert({
         callId: String(callId),
         callerNumber: payload.caller_number || payload.caller_id,
         callerState: payload.caller_state || payload.state,
