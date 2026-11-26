@@ -65,6 +65,36 @@ export class CallGridService {
     return this.get(`/call/${encodeURIComponent(callId)}`);
   }
 
+  /**
+   * Every CallGrid call in a time range, as TrackDrive-shaped payloads (same shape the webhook uses),
+   * so the daily QA jobs (non-conversion + sales) can review CallGrid calls next to TrackDrive ones.
+   */
+  async callsForRange(fromIso: string, toIso: string, maxPages = 40): Promise<Record<string, any>[]> {
+    if (!this.enabled()) return [];
+    const raw: any[] = [];
+    let after: any = null;
+    for (let page = 0; page < maxPages; page++) {
+      const params = new URLSearchParams({ startDate: new Date(fromIso).toISOString(), endDate: new Date(toIso).toISOString(), maxItems: '500', useCursor: 'true' });
+      if (after) params.set('searchAfter', JSON.stringify(after));
+      let res: any;
+      for (let attempt = 1; ; attempt++) {
+        try { res = (await this.http().get(`/call?${params}`)).data; break; }
+        catch (e: any) {
+          const s = e?.response?.status;
+          if ((s === 429 || s >= 500) && attempt < 4) { await new Promise((r) => setTimeout(r, 2000 * attempt)); continue; }
+          throw e;
+        }
+      }
+      raw.push(...(res?.data || []));
+      if (!res?.hasMore || !res?.nextCursor) break;
+      after = res.nextCursor;
+    }
+    const out: Record<string, any>[] = [];
+    for (const c of raw) out.push(await this.toTrackdrivePayload(c));
+    this.logger.log(`CallGrid ${fromIso} -> ${toIso}: ${out.length} calls`);
+    return out;
+  }
+
   private async tdSources(): Promise<any[]> {
     const out: any[] = [];
     let cursor: string | null = null;

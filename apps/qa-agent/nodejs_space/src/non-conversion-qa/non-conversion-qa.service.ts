@@ -4,6 +4,7 @@ import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
 import { downloadCallGridRecording } from '../trackdrive/callgrid-recording.js';
+import { CallGridService } from '../trackdrive/callgrid.service.js';
 import { transcribeDetailed, TranscriptMetrics } from '../transcription/detailed-transcribe.js';
 
 /** Verdicts that claim no live agent ever engaged — the ones that were firing falsely. */
@@ -40,6 +41,7 @@ export class NonConversionQaService {
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
     private readonly td: TrackDriveService,
+    private readonly cg: CallGridService,
   ) {}
 
   /** Get timezone from scheduler settings, default to America/New_York */
@@ -80,7 +82,10 @@ export class NonConversionQaService {
   async fetchNonConvertedCalls(dateStr: string): Promise<any[]> {
     const tz = await this.getTimezone();
     const { from, to } = this.tzRange(dateStr, tz);
-    const all = await this.td.fetchAllCallsForRange(from, to, 100);
+    const tdCalls = await this.td.fetchAllCallsForRange(from, to, 100);
+    // CallGrid calls too (TrackDrive -> CallGrid migration); a CallGrid outage must not block the TrackDrive review.
+    const cgCalls = await this.cg.callsForRange(from, to).catch((e) => { this.logger.warn(`CallGrid calls unavailable: ${e.message}`); return []; });
+    const all = [...tdCalls, ...cgCalls];
     const nonConverted = all.filter(
       (c) => String(c.buyer_converted) !== 'Converted' && !!c.recording_url,
     );
@@ -788,10 +793,19 @@ Respond with RAW JSON ONLY (no markdown, no code blocks) in this exact shape:
     this.logger.log(`Starting non-conversion review for ${dateStr} (cap ${cap})`);
     const nonConverted = await this.fetchNonConvertedCalls(dateStr);
     const totalNonConverted = nonConverted.length;
-    const toReview = nonConverted.slice(0, cap);
+    // Calls the real-time QA already reviewed are reused, not re-analyzed (same verdict, no second AI run).
+    const ids = nonConverted.map((c) => String(c.id ?? c.call_id ?? ''));
+    const existing = ids.length
+      ? await this.prisma.non_conversion_review.findMany({ where: { trackdrive_call_id: { in: ids } }, orderBy: { created_at: 'desc' } })
+      : [];
+    const existingById = new Map<string, any>();
+    for (const r of existing) if (!existingById.has(r.trackdrive_call_id)) existingById.set(r.trackdrive_call_id, r);
+    const toReview = nonConverted.filter((c) => !existingById.has(String(c.id ?? c.call_id ?? ''))).slice(0, cap);
+    this.logger.log(`Reusing ${existingById.size} existing reviews, analyzing ${toReview.length} new calls`);
 
-    const { reviews, failures } = await this.reviewCallsBatched(toReview, 5);
-    const stored = await this.storeReviews(reviews, dateStr);
+    const { reviews: fresh, failures } = await this.reviewCallsBatched(toReview, 5);
+    const stored = await this.storeReviews(fresh, dateStr);
+    const reviews: CallReview[] = [...fresh, ...([...existingById.values()] as CallReview[])];
 
     const buyerFault = reviews.filter((r) => r.fault_side === 'buyer').length;
     const vendorFault = reviews.filter((r) => r.fault_side === 'vendor').length;

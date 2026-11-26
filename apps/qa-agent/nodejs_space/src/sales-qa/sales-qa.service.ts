@@ -5,6 +5,7 @@ import { downloadCallGridRecording, isCallGridRecording } from '../trackdrive/ca
 import FormData from 'form-data';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { TrackDriveService } from '../trackdrive/trackdrive.service.js';
+import { CallGridService } from '../trackdrive/callgrid.service.js';
 
 /**
  * The lead's outcome on a billable (connected + converted) call, focused on
@@ -56,6 +57,7 @@ export class SalesQaService {
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
     private readonly td: TrackDriveService,
+    private readonly cg: CallGridService,
   ) {}
 
   // ---------------------------------------------------------------------------
@@ -157,7 +159,10 @@ export class SalesQaService {
   async fetchConvertedCalls(dateStr: string): Promise<any[]> {
     const tz = await this.getTimezone();
     const { from, to } = this.tzRange(dateStr, tz);
-    const all = await this.td.fetchAllCallsForRange(from, to, 100);
+    const tdCalls = await this.td.fetchAllCallsForRange(from, to, 100);
+    // CallGrid calls too (TrackDrive -> CallGrid migration); a CallGrid outage must not block the TrackDrive review.
+    const cgCalls = await this.cg.callsForRange(from, to).catch((e) => { this.logger.warn(`CallGrid calls unavailable: ${e.message}`); return []; });
+    const all = [...tdCalls, ...cgCalls];
     const converted = all.filter(
       (c) =>
         (String(c.buyer_converted) === 'Converted' || c.buyer_converted === true) &&

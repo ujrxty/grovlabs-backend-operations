@@ -19,6 +19,8 @@ const fmtPhone = (raw: any): string => {
 @Controller('webhooks')
 export class WebhooksController {
   private readonly logger = new Logger(WebhooksController.name);
+  /** Calls whose real-time QA already started (CallGrid sends CALL_ENDED + RECORDING_COMPLETED). */
+  private readonly realtimeStarted = new Map<string, number>();
 
   constructor(
     private readonly callsService: CallsService,
@@ -157,9 +159,20 @@ export class WebhooksController {
       const duration = Number(payload.total_duration) || Number(payload.answered_duration) || 0;
 
       if (!isConverted && hasRecording && duration > 10) {
-        this.runRealtimeQA(payload).catch((err) => {
-          this.logger.error(`Real-time QA failed: ${err.message}`);
-        });
+        // Once per call: CallGrid fires two webhooks per call, and each used to start its own
+        // review (two AI runs, two Discord alerts). Forget entries after 24h.
+        const key = String(callId);
+        const now = Date.now();
+        for (const [k, t] of this.realtimeStarted) if (now - t > 86400_000) this.realtimeStarted.delete(k);
+        if (this.realtimeStarted.has(key)) {
+          this.logger.log(`Real-time QA already started for ${key}, skipping duplicate webhook`);
+        } else {
+          this.realtimeStarted.set(key, now);
+          this.runRealtimeQA(payload).catch((err) => {
+            this.realtimeStarted.delete(key); // let a later webhook retry a failed review
+            this.logger.error(`Real-time QA failed: ${err.message}`);
+          });
+        }
       }
 
       return {
@@ -239,6 +252,12 @@ export class WebhooksController {
    */
   private async runRealtimeQA(payload: any): Promise<void> {
     const callId = payload.id || payload.call_id;
+    // Already reviewed (e.g. before a restart, or a resend): don't analyze or alert again.
+    const existing = await this.prisma.non_conversion_review.findFirst({ where: { trackdrive_call_id: String(callId) }, select: { id: true } });
+    if (existing) {
+      this.logger.log(`Real-time QA skipped for ${callId}: already reviewed`);
+      return;
+    }
     this.logger.log(`Real-time QA starting for call ${callId}`);
 
     try {
@@ -289,6 +308,7 @@ export class WebhooksController {
         });
       }
     } catch (err: any) {
+      this.realtimeStarted.delete(String(callId)); // failed: let the next webhook for this call retry
       this.logger.error(`Real-time QA error for call ${callId}: ${err.message}`);
     }
   }
