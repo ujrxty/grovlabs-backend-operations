@@ -23,6 +23,8 @@ export class WebhooksController {
   private readonly realtimeStarted = new Map<string, number>();
   /** Calls we already sent the ntfy live-call alert for. */
   private readonly liveAlerted = new Map<string, number>();
+  /** Calls we already sent the "billable but barely" alert for. */
+  private readonly nearBufferAlerted = new Map<string, number>();
 
   /** True the first time a key is seen within 24h (and records it); prunes old keys. */
   private firstTime(seen: Map<string, number>, key: string): boolean {
@@ -187,6 +189,11 @@ export class WebhooksController {
         }
       }
 
+      // "Billable but barely": converted calls that ended just past the buyer's buffer.
+      if (isConverted && this.firstTime(this.nearBufferAlerted, String(callId))) {
+        this.alertNearBuffer(payload).catch((err) => this.logger.warn(`Near-buffer alert failed: ${err.message}`));
+      }
+
       return {
         status: 'accepted',
         call_id: callId,
@@ -257,6 +264,57 @@ export class WebhooksController {
     } catch (err: any) {
       this.logger.warn(`Failed to link call to ping: ${err.message}`);
     }
+  }
+
+  /**
+   * Billable call that ended within NEAR_BUFFER_SECONDS (default 20) past the buyer's buffer.
+   * These are the calls that come back as disputes/returns. Red when the buyer's side hung up
+   * (agent dropped the caller right after the buffer), amber when the caller did.
+   * Only CallGrid payloads carry the buffer and who hung up, so TrackDrive calls are skipped.
+   */
+  private async alertNearBuffer(payload: any): Promise<void> {
+    const buffer = Number(payload.billable_duration) || 0;
+    const talk = Number(payload.answered_duration) || Number(payload.total_duration) || 0;
+    const window = Number(process.env.NEAR_BUFFER_SECONDS || 20);
+    if (!buffer || !talk || talk < buffer || talk - buffer > window) return;
+
+    const endedBy = String(payload.ended_by || '');
+    const buyerHungUp = endedBy === 'callee';
+    const who = buyerHungUp ? 'buyer hung up' : endedBy === 'caller' ? 'caller hung up' : endedBy ? `ended by ${endedBy}` : 'ended by ?';
+    const over = talk - buffer;
+    const money = `$${(Number(payload.revenue) || 0).toFixed(2)} rev / $${(Number(payload.payout) || 0).toFixed(2)} payout`;
+    const title = `${buyerHungUp ? 'Buyer dropped at buffer' : 'Billable but barely'}: ${payload.offer || 'Unknown'}`;
+    this.logger.log(`Near-buffer call ${payload.id}: ${talk}s vs ${buffer}s buffer, ${who}`);
+
+    const settings = await this.prisma.scheduler_settings.findUnique({ where: { id: 'singleton' } });
+    if (settings?.discord_enabled && settings?.discord_webhook_url) {
+      await fetch(settings.discord_webhook_url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ embeds: [{
+          title,
+          color: buyerHungUp ? 0xdc2626 : 0xf59e0b,
+          fields: [
+            { name: 'Talk time', value: `${talk}s (buffer ${buffer}s, +${over}s)`, inline: true },
+            { name: 'Ended', value: who, inline: true },
+            { name: 'Money', value: money, inline: true },
+            { name: 'Buyer', value: payload.buyer || 'Unknown', inline: true },
+            { name: 'Publisher', value: payload.traffic_source || 'Unknown', inline: true },
+            { name: 'Caller', value: fmtPhone(payload.caller_number), inline: true },
+            { name: 'Call ID', value: String(payload.id), inline: false },
+          ],
+          footer: { text: 'GrovLabs near-buffer watch' },
+          timestamp: new Date().toISOString(),
+        }] }),
+      });
+    }
+
+    await this.ntfy.sendNotification({
+      title,
+      message: `${talk}s vs ${buffer}s buffer (+${over}s), ${who}\n${payload.traffic_source || '?'} -> ${payload.buyer || '?'}\n${fmtPhone(payload.caller_number)} | ${money}`,
+      priority: buyerHungUp ? 'high' : 'default',
+      tags: [buyerHungUp ? 'rotating_light' : 'hourglass'],
+    });
   }
 
   /**

@@ -155,6 +155,9 @@ export class CallGridService {
       payout: Number(c.payout ?? c.PayoutAmount ?? c.CallPayout ?? 0) || 0,
       total_duration: Number(c.CallDurationFromInbound ?? c.callDuration ?? c.CallDuration ?? 0) || 0,
       answered_duration: Number(c.CallDurationFromConnect ?? 0) || 0,
+      // The buyer's billable buffer (seconds) and who hung up: caller | callee (buyer side) | system.
+      billable_duration: Number(c.RevenueDuration ?? c.WinningBidDuration ?? c.PayoutDuration ?? 0) || 0,
+      ended_by: String(c.CallEndedBy || '').toLowerCase(),
       recording_url: c.audioUrl || c.callRecordingUrl || c.s3FileUrl || '',
       caller_number: c.CallerId || c.from || '',
       caller_state: c.InboundStateCode || '',
